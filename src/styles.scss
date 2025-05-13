@@ -1,1 +1,65 @@
-/* You can add global styles to this file, and also import other style files */
+/* Import and customize Angular Material theme */
+@use '@angular/material' as mat;
+@use "tailwindcss";
+
+// Apply theme to HTML element with new theming API
+html {
+  color-scheme: light dark;
+  @include mat.theme((
+    color: mat.$violet-palette,
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+// Base styles
+html, body { height: 100%; }
+body { 
+  margin: 0; 
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+}
+
+// Utility classes for snackbar colors
+.snackbar-success {
+  .mdc-snackbar__surface {
+    background-color: #16a34a; // bg-green-600 equivalent
+  }
+}
+
+.snackbar-error {
+  .mdc-snackbar__surface {
+    background-color: #dc2626; // bg-red-600 equivalent
+  }
+}
+
+.snackbar-info {
+  .mdc-snackbar__surface {
+    background-color: #2563eb; // bg-blue-600 equivalent
+  }
+}
+
+// Fix for mat-dialog overflow
+.mat-mdc-dialog-container .mdc-dialog__surface {
+  overflow: hidden;
+}
+
+// Custom scrollbar styling
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #f3f4f6; // bg-gray-100 equivalent
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #9ca3af; // bg-gray-400 equivalent
+  border-radius: 0.25rem; // rounded equivalent
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #6b7280; // bg-gray-500 equivalent
+}
