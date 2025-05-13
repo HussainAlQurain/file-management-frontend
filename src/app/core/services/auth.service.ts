@@ -27,6 +27,7 @@ export class AuthService {
   
   login(credentials: LoginRequest): Observable<Auth> {
     this.loadingSignal.set(true);
+    
     return this.http.post<Auth>(`${this.baseUrl}/login`, credentials).pipe(
       tap(auth => {
         this.setSession(auth);
@@ -51,13 +52,11 @@ export class AuthService {
   }
   
   getToken(): string | null {
-    const auth = this.authSignal();
-    return auth ? auth.accessToken : null;
+    return this.authSignal()?.token ?? null;
   }
   
   hasRole(role: string): boolean {
-    const user = this.currentUserSignal();
-    return user ? user.roles.includes(role) : false;
+    return this.currentUserSignal()?.roles.includes(role) ?? false;
   }
   
   requireRole(role: string): boolean {
@@ -77,20 +76,25 @@ export class AuthService {
   private setSession(auth: Auth): void {
     localStorage.setItem(this.tokenKey, JSON.stringify(auth));
     this.authSignal.set(auth);
-    this.currentUserSignal.set(auth.user);
+    this.currentUserSignal.set(auth.user ?? null); // Handle optional user
   }
   
   private loadTokenFromStorage(): void {
     const authJson = localStorage.getItem(this.tokenKey);
+    
     if (authJson) {
       try {
         const auth: Auth = JSON.parse(authJson);
         this.authSignal.set(auth);
-        this.currentUserSignal.set(auth.user);
+        this.currentUserSignal.set(auth.user ?? null);
       } catch (e) {
-        console.error('Error loading auth token from storage', e);
         localStorage.removeItem(this.tokenKey);
       }
     }
+  }
+  
+  // Public method to force reload the token (useful for debugging)
+  reloadTokenFromStorage(): void {
+    this.loadTokenFromStorage();
   }
 }

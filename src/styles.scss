@@ -1,10 +1,12 @@
 /* Import and customize Angular Material theme */
 @use '@angular/material' as mat;
-@use "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 // Apply theme to HTML element with new theming API
 html {
-  color-scheme: light dark;
+  color-scheme: light;
   @include mat.theme((
     color: mat.$violet-palette,
     typography: Roboto,

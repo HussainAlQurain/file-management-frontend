@@ -1,8 +1,7 @@
 export interface Auth {
-  accessToken: string;
-  tokenType: string;
-  expiresIn: number;
-  user: User;
+  token: string; // JWT token returned by backend
+  // Optionally include other fields if backend provides, e.g., tokenType, expiresIn
+  user?: User; // User object if returned by backend
 }
 
 export interface User {

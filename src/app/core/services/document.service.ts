@@ -11,40 +11,37 @@ import { toParams } from '../utils/api-utils';
 })
 export class DocumentService {
   private http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiBase}/documents`;
-  
+  private readonly documentsApiUrl = `${environment.apiBase}/documents`; // Renamed from baseUrl
+
   list(query: DocQuery): Observable<Page<Document>> {
-    return this.http.get<Page<Document>>(this.baseUrl, { params: toParams(query) });
+    return this.http.get<Page<Document>>(`${this.documentsApiUrl}/search`, { params: toParams(query) }); // Changed to /search endpoint
   }
   
   get(id: number): Observable<Document> {
-    return this.http.get<Document>(`${this.baseUrl}/${id}`);
+    return this.http.get<Document>(`${this.documentsApiUrl}/${id}`);
   }
   
   create(document: Partial<Document>, files?: File[]): Observable<Document> {
     if (files && files.length > 0) {
-      return this.multipartRequest(this.baseUrl, document, files);
+      return this.multipartRequest(this.documentsApiUrl, document, files);
     }
-    return this.http.post<Document>(this.baseUrl, document);
+    return this.http.post<Document>(this.documentsApiUrl, document);
   }
   
   update(id: number, document: Partial<Document>, files?: File[]): Observable<Document> {
     if (files && files.length > 0) {
-      return this.multipartRequest(`${this.baseUrl}/${id}`, document, files, 'PUT');
+      return this.multipartRequest(`${this.documentsApiUrl}/${id}`, document, files, 'PUT');
     }
-    return this.http.put<Document>(`${this.baseUrl}/${id}`, document);
+    return this.http.put<Document>(`${this.documentsApiUrl}/${id}`, document);
   }
   
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    return this.http.delete<void>(`${this.documentsApiUrl}/${id}`);
   }
   
   checkPermission(id: number, permission: string): Observable<boolean> {
-    return this.http.head<any>(`${this.baseUrl}/${id}?perm=${permission}`, { observe: 'response' })
+    return this.http.head<any>(`${this.documentsApiUrl}/${id}?perm=${permission}`, { observe: 'response' })
       .pipe(
-        // If we get a 200, the user has permission
-        // Otherwise, a 403 will be thrown
-        // Converting response to boolean
         map(() => true)
       );
   }
@@ -52,8 +49,8 @@ export class DocumentService {
   private multipartRequest(url: string, data: any, files: File[], method = 'POST'): Observable<Document> {
     const formData = new FormData();
     
-    // Add document data as JSON
-    formData.append('document', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+    // Add document data as JSON, ensuring the part name is 'dto'
+    formData.append('dto', new Blob([JSON.stringify(data)], { type: 'application/json' })); // Changed 'document' to 'dto'
     
     // Add files
     files.forEach(file => {

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -11,6 +11,7 @@ import { DocumentService } from '../../core/services/document.service';
 import { Document } from '../../core/models/document.model';
 import { StatsCardsComponent } from '../components/stats-cards/stats-cards.component';
 import { RecentDocsTableComponent } from '../components/recent-docs-table/recent-docs-table.component';
+import { DebugInfoComponent } from '../../shared/components/debug-info/debug-info.component';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -23,13 +24,17 @@ import { RecentDocsTableComponent } from '../components/recent-docs-table/recent
     MatButtonModule,
     MatTableModule,
     StatsCardsComponent,
-    RecentDocsTableComponent
+    RecentDocsTableComponent,
+    DebugInfoComponent
   ],
   template: `
     <div class="dashboard">
       <header class="mb-6">
         <h1 class="text-2xl font-bold">Dashboard</h1>
       </header>
+      
+      <!-- Debug Component - For development only -->
+      <app-debug-info></app-debug-info>
       
       <!-- Stats Cards -->
       <app-stats-cards class="mb-8 block"></app-stats-cards>
@@ -54,6 +59,7 @@ import { RecentDocsTableComponent } from '../components/recent-docs-table/recent
 })
 export class DashboardPageComponent implements OnInit {
   private documentService = inject(DocumentService);
+  private destroyRef = inject(DestroyRef);
   
   recentDocuments = signal<Document[]>([]);
   isLoading = signal(false);
@@ -70,7 +76,7 @@ export class DashboardPageComponent implements OnInit {
       size: 5, 
       sort: 'createdAt,desc' 
     })
-    .pipe(takeUntilDestroyed())
+    .pipe(takeUntilDestroyed(this.destroyRef))
     .subscribe({
       next: (result) => {
         this.recentDocuments.set(result.content);
