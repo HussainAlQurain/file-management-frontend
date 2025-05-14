@@ -38,23 +38,29 @@ export interface UpdateResourceTypeDto {
 
 export interface FieldDefinitionDto {
   id: number;
-  name: string;
-  kind: FieldType; // Assuming FieldKind from backend maps to FieldType
+  name: string; // Field's code/identifier
+  label?: string; // Display label for the field
+  kind: FieldType;
   required: boolean;
   uniqueWithinType: boolean;
-  // Add other properties if present in backend's FieldDefinitionDTO, like 'label' or 'options' if needed
+  options?: string[]; // Added for SELECT type fields
+  // Add other properties if present in backend's FieldDefinitionDTO
 }
 
 export interface CreateFieldDto {
-  name: string;
-  kind: FieldType; // Assuming FieldKind from backend maps to FieldType
+  name: string; // Field's code/identifier
+  label?: string; // Display label for the field
+  kind: FieldType;
   required: boolean;
   uniqueWithinType: boolean;
+  options?: string[]; // Added for SELECT type fields
 }
 
 export interface UpdateFieldDto {
-  name?: string;
+  name?: string; // Field's code/identifier
+  label?: string; // Display label for the field
   kind?: FieldType;
   required?: boolean;
   uniqueWithinType?: boolean;
+  options?: string[]; // Added for SELECT type fields
 }

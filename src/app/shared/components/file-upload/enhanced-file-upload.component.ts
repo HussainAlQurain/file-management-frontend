@@ -4,8 +4,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { HttpEventType } from '@angular/common/http';
 
-// Ensure FileUploadProgress interface is defined
 export interface FileUploadProgress {
   file: File;
   progress: number;
@@ -14,7 +14,7 @@ export interface FileUploadProgress {
 }
 
 @Component({
-  selector: 'app-file-upload',
+  selector: 'app-enhanced-file-upload',
   standalone: true,
   imports: [CommonModule, MatButtonModule, MatIconModule, MatTooltipModule, MatProgressBarModule],
   template: `
@@ -54,50 +54,76 @@ export interface FileUploadProgress {
             </button>
           </div>
           
-          <p *ngIf="maxFileSize" class="mt-2 text-xs text-gray-500">
-            Max file size: {{ formatFileSize(maxFileSize) }}
-          </p>
+          @if (maxFileSize) {
+            <p class="mt-2 text-xs text-gray-500">
+              Max file size: {{ formatFileSize(maxFileSize) }}
+            </p>
+          }
           
-          <p *ngIf="allowedExtensions && allowedExtensions.length > 0" class="mt-1 text-xs text-gray-500">
-            Allowed file types: {{ allowedExtensions.join(', ') }}
-          </p>
+          @if (allowedExtensions && allowedExtensions.length > 0) {
+            <p class="mt-1 text-xs text-gray-500">
+              Allowed file types: {{ allowedExtensions.join(', ') }}
+            </p>
+          }
         </div>
       </div>
       
-      <div *ngIf="selectedFiles.length" class="mt-4">
-        <h4 class="text-lg font-medium mb-2">Selected Files</h4>
-        <ul class="space-y-2">
-          <li *ngFor="let file of selectedFiles; trackBy: trackByFileName" class="flex flex-col p-2 bg-gray-50 rounded">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center">
-                <mat-icon class="text-gray-400 mr-2">insert_drive_file</mat-icon>
-                <span class="truncate max-w-xs">{{ file.name }}</span>
-                <span class="ml-2 text-xs text-gray-500">({{ formatFileSize(file.size) }})</span>
-              </div>
-              <button 
-                mat-icon-button 
-                color="warn" 
-                matTooltip="Remove file"
-                (click)="removeFile(file)">
-                <mat-icon>clear</mat-icon>
+      @if (selectedFiles.length) {
+        <div class="mt-4">
+          <h4 class="text-lg font-medium mb-2">Selected Files</h4>
+          <ul class="space-y-2">
+            @for (file of selectedFiles; track file.name) {
+              <li class="flex flex-col p-2 bg-gray-50 rounded">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <mat-icon class="text-gray-400 mr-2">insert_drive_file</mat-icon>
+                    <span class="truncate max-w-xs">{{ file.name }}</span>
+                    <span class="ml-2 text-xs text-gray-500">({{ formatFileSize(file.size) }})</span>
+                  </div>
+                  <div class="flex items-center">
+                    @if (getFileProgress(file)?.uploaded) {
+                      <mat-icon class="text-success mr-2">check_circle</mat-icon>
+                    }
+                    <button 
+                      mat-icon-button 
+                      color="warn" 
+                      matTooltip="Remove file"
+                      (click)="removeFile(file)">
+                      <mat-icon>clear</mat-icon>
+                    </button>
+                  </div>
+                </div>
+                
+                @if (getFileProgress(file)) {
+                  <div class="mt-2 w-full">
+                    <mat-progress-bar 
+                      [value]="getFileProgress(file)?.progress || 0" 
+                      [color]="getFileProgress(file)?.error ? 'warn' : 'primary'">
+                    </mat-progress-bar>
+                    
+                    @if (getFileProgress(file)?.error) {
+                      <p class="text-xs text-warn mt-1">{{ getFileProgress(file)?.error }}</p>
+                    }
+                  </div>
+                }
+                
+                @if (getFileValidationError(file)) {
+                  <p class="text-xs text-warn mt-1">{{ getFileValidationError(file) }}</p>
+                }
+              </li>
+            }
+          </ul>
+          
+          @if (hasUploadedFiles() && showRemoveAll) {
+            <div class="mt-4 text-right">
+              <button mat-button color="warn" (click)="removeAllAttachments()">
+                <mat-icon>delete_forever</mat-icon>
+                Remove All Attachments
               </button>
             </div>
-            
-            <div *ngIf="getFileProgress(file)" class="mt-2 w-full">
-              <mat-progress-bar 
-                [value]="getFileProgress(file)?.progress || 0" 
-                [color]="getFileProgress(file)?.error ? 'warn' : 'primary'">
-              </mat-progress-bar>
-              
-              <p *ngIf="getFileProgress(file)?.error" class="text-xs text-warn mt-1">{{ getFileProgress(file)?.error }}</p>
-              
-              <p *ngIf="getFileProgress(file)?.uploaded" class="text-xs text-success mt-1">Upload complete</p>
-            </div>
-            
-            <p *ngIf="getFileValidationError(file)" class="text-xs text-warn mt-1">{{ getFileValidationError(file) }}</p>
-          </li>
-        </ul>
-      </div>
+          }
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -112,7 +138,7 @@ export interface FileUploadProgress {
     }
   `]
 })
-export class FileUploadComponent {
+export class EnhancedFileUploadComponent {
   @Input() multiple = true;
   @Input() accept = '';
   @Input() title = 'Drag and drop files here';
@@ -120,10 +146,12 @@ export class FileUploadComponent {
   @Input() maxFileSize?: number; // Maximum file size in bytes
   @Input() allowedExtensions?: string[]; // Array of allowed file extensions
   @Input() uploadProgress: FileUploadProgress[] = [];
+  @Input() showRemoveAll = true;
 
   @Output() filesChanged = new EventEmitter<File[]>();
   @Output() fileChanged = new EventEmitter<File | null>(); // For single file mode
   @Output() fileValidationFailed = new EventEmitter<{file: File, reason: string}>();
+  @Output() removeAllFiles = new EventEmitter<void>();
 
   selectedFiles: File[] = [];
   isDragover = false;
@@ -208,6 +236,13 @@ export class FileUploadComponent {
     }
   }
   
+  removeAllAttachments(): void {
+    this.selectedFiles = [];
+    this.fileValidationErrors.clear();
+    this.filesChanged.emit([]);
+    this.removeAllFiles.emit();
+  }
+  
   formatFileSize(size: number): string {
     if (size < 1024) {
       return size + ' B';
@@ -227,9 +262,8 @@ export class FileUploadComponent {
   getFileValidationError(file: File): string | undefined {
     return this.fileValidationErrors.get(file.name);
   }
-
-  // Add this method for the template's trackBy
-  public trackByFileName(index: number, item: File): string {
-    return item.name;
+  
+  hasUploadedFiles(): boolean {
+    return this.uploadProgress.some(p => p.uploaded);
   }
 }

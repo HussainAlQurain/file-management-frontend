@@ -44,12 +44,11 @@ import { ResourceType } from '../../../core/models/resource-type.model';
           <input matInput formControlName="resourceCodeEquals" placeholder="Exact resource code...">
           <mat-icon matSuffix>fingerprint</mat-icon>
         </mat-form-field>
-        
-        <mat-form-field appearance="outline" class="w-full">
+          <mat-form-field appearance="outline" class="w-full">
           <mat-label>Resource Type</mat-label>
           <mat-select formControlName="resourceTypeIdEquals">
             <mat-option [value]="null">All Types</mat-option>
-            <mat-option *ngFor="let type of resourceTypes; trackBy: trackById" [value]="type.id">{{ type.name }}</mat-option>
+            <mat-option *ngFor="let type of resourceTypes; trackBy: trackById" [value]="type.id">{{ type.code }}</mat-option>
           </mat-select>
         </mat-form-field>
 

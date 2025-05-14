@@ -11,23 +11,22 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog'; // Added MatDialogModule
-import { CdkDragDrop, moveItemInArray, DragDropModule } from '@angular/cdk/drag-drop'; // Added DragDropModule
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { CdkDragDrop, moveItemInArray, DragDropModule } from '@angular/cdk/drag-drop';
 
 import { ResourceTypeService } from '../../../core/services/resource-type.service';
-// Updated imports to use DTOs
-import { ResourceType, FieldType, FieldDefinitionDto, CreateFieldDto, UpdateFieldDto, UpdateResourceTypeDto, CreateResourceTypeDto } from '../../../core/models/resource-type.model';
+import { ResourceType, FieldType, FieldDefinitionDto, CreateFieldDto, UpdateFieldDto, UpdateResourceTypeDto } from '../../../core/models/resource-type.model';
 import { SnackbarService } from '../../../core/services/snackbar.service';
 import { switchMap, tap, catchError, finalize } from 'rxjs/operators';
 import { of, forkJoin, Observable } from 'rxjs';
-// ConfirmDialogComponent import - ensure this path is correct
-// import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+
+import { ConfirmDialogComponent, ConfirmDialogData } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { FieldDialogComponent, FieldDialogData } from '../components/field-dialog/field-dialog.component';
 
 
 @Component({
   selector: 'app-resource-type-edit-page',
-  standalone: true,
-  imports: [
+  standalone: true,  imports: [
     CommonModule,
     RouterModule,
     ReactiveFormsModule,
@@ -40,9 +39,10 @@ import { of, forkJoin, Observable } from 'rxjs';
     MatIconModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
-    MatDialogModule, // Added MatDialogModule
-    DragDropModule, // Added DragDropModule
-    // ConfirmDialogComponent - if used as standalone, add here
+    MatDialogModule,
+    DragDropModule,
+    ConfirmDialogComponent,
+    FieldDialogComponent
   ],
   template: `
     <div class="p-4 md:p-8">
@@ -107,7 +107,7 @@ import { of, forkJoin, Observable } from 'rxjs';
                   @for (field of currentFields(); track field.id; let i = $index) {
                     <div cdkDrag class="p-4 border rounded-md shadow-sm bg-gray-50 flex justify-between items-center">
                       <div class="flex-grow">
-                        <p class="font-medium">{{field.name}} ({{field.kind}})</p>
+                        <p class="font-medium">{{field.label || field.name}} ({{field.kind}})</p>
                         <p class="text-sm text-gray-600">
                           Required: {{field.required ? 'Yes' : 'No'}}, 
                           Unique: {{field.uniqueWithinType ? 'Yes' : 'No'}}
@@ -117,7 +117,7 @@ import { of, forkJoin, Observable } from 'rxjs';
                         <button mat-icon-button (click)="openEditFieldDialog(field)" matTooltip="Edit Field">
                           <mat-icon>edit</mat-icon>
                         </button>
-                        <button mat-icon-button color="warn" (click)="removeField(field.id, field.name)" matTooltip="Remove Field">
+                        <button mat-icon-button color="warn" (click)="removeField(field.id, field.label || field.name)" matTooltip="Remove Field">
                           <mat-icon>delete</mat-icon>
                         </button>
                          <button mat-icon-button cdkDragHandle matTooltip="Reorder Field">
@@ -184,13 +184,13 @@ export class ResourceTypeEditPageComponent implements OnInit {
               this.isLoadingDetails.set(false);
               this.resourceType.set(null);
               this.snackbar.error('Failed to load resource type details: ' + (err.error?.message || err.message));
-              this.router.navigate(['/admin/resource-types']);
+              this.router.navigate(['/resource-types']);
               return of(null);
             })
           );
         } else {
           this.snackbar.error('No Resource Type ID provided.');
-          this.router.navigate(['/admin/resource-types']);
+          this.router.navigate(['/resource-types']);
           return of(null);
         }
       })
@@ -283,29 +283,30 @@ export class ResourceTypeEditPageComponent implements OnInit {
     const typeId = this.resourceTypeId();
     if (!typeId) return;
 
-    // This would typically open a MatDialog with a component for the form
-    // For now, let's simulate the call and add a field directly
-    // const dialogRef = this.dialog.open(FieldEditDialogComponent, { data: { typeId }});
-    // dialogRef.afterClosed().subscribe(result => { if (result) this.loadFieldsForCurrentType(); });
-    
-    // Placeholder: Directly call service for adding a new field
-    const newFieldData: CreateFieldDto = { 
-      name: `new_field_${Date.now() % 1000}`, 
-      kind: FieldType.TEXT, 
-      required: false, 
-      uniqueWithinType: false 
-    }; // This should come from a dialog form
+    const dialogRef = this.dialog.open(FieldDialogComponent, {
+      width: '500px',
+      data: { 
+        action: 'add',
+        resourceTypeId: typeId,
+        title: 'Add New Field'
+      } as FieldDialogData
+    });
 
-    this.isLoadingFields.set(true);
-    this.resourceTypeService.addField(typeId, newFieldData).pipe(
-      finalize(() => this.isLoadingFields.set(false))
-    ).subscribe({
-      next: (addedField) => {
-        this.currentFields.update(fields => [...fields, addedField]);
-        // this.sortFields();
-        this.snackbar.success(`Field "${addedField.name}" added.`);
-      },
-      error: err => this.snackbar.error('Failed to add field: ' + (err.error?.message || err.message))
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && typeof result !== 'boolean') {
+        const newFieldDto: CreateFieldDto = result;
+        this.isLoadingFields.set(true);
+        
+        this.resourceTypeService.addField(typeId, newFieldDto).pipe(
+          finalize(() => this.isLoadingFields.set(false))
+        ).subscribe({
+          next: (addedField) => {
+            this.currentFields.update(fields => [...fields, addedField]);
+            this.snackbar.success(`Field "${addedField.name}" added successfully.`);
+          },
+          error: err => this.snackbar.error('Failed to add field: ' + (err.error?.message || err.message))
+        });
+      }
     });
   }
 
@@ -313,21 +314,31 @@ export class ResourceTypeEditPageComponent implements OnInit {
     const typeId = this.resourceTypeId();
     if (!typeId) return;
 
-    // const dialogRef = this.dialog.open(FieldEditDialogComponent, { data: { typeId, field: fieldToEdit }});
-    // dialogRef.afterClosed().subscribe(result => { if (result) this.loadFieldsForCurrentType(); });
-    
-    // Placeholder: Simulate update
-    const updatedFieldData: UpdateFieldDto = { name: fieldToEdit.name + '_updated' }; // From dialog
-    this.isLoadingFields.set(true);
-    this.resourceTypeService.updateField(typeId, fieldToEdit.id, updatedFieldData).pipe(
-      finalize(() => this.isLoadingFields.set(false))
-    ).subscribe({
-      next: (updatedField) => {
-         this.currentFields.update(fields => fields.map(f => f.id === updatedField.id ? updatedField : f));
-         // this.sortFields();
-         this.snackbar.success(`Field "${updatedField.name}" updated.`);
-      },
-      error: err => this.snackbar.error('Failed to update field: ' + (err.error?.message || err.message))
+    const dialogRef = this.dialog.open(FieldDialogComponent, {
+      width: '500px',
+      data: { 
+        action: 'edit',
+        resourceTypeId: typeId,
+        field: fieldToEdit,
+        title: `Edit Field: ${fieldToEdit.name}`
+      } as FieldDialogData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && typeof result !== 'boolean') {
+        const updatedFieldDto: UpdateFieldDto = result;
+        this.isLoadingFields.set(true);
+        
+        this.resourceTypeService.updateField(typeId, fieldToEdit.id, updatedFieldDto).pipe(
+          finalize(() => this.isLoadingFields.set(false))
+        ).subscribe({
+          next: (updatedField) => {
+            this.currentFields.update(fields => fields.map(f => f.id === updatedField.id ? updatedField : f));
+            this.snackbar.success(`Field "${updatedField.name}" updated successfully.`);
+          },
+          error: err => this.snackbar.error('Failed to update field: ' + (err.error?.message || err.message))
+        });
+      }
     });
   }
 
@@ -335,61 +346,70 @@ export class ResourceTypeEditPageComponent implements OnInit {
     const typeId = this.resourceTypeId();
     if (!typeId) return;
 
-    // Add confirmation dialog here
-    // const dialogRef = this.dialog.open(ConfirmDialogComponent, { data: { title: 'Confirm Deletion', message: `Are you sure you want to delete field "${fieldName}"?` }});
-    // dialogRef.afterClosed().subscribe(confirmed => { if (confirmed) { ... actual deletion ... } });
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: { 
+        title: 'Confirm Deletion', 
+        message: `Are you sure you want to delete field "${fieldName}"?`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        dangerous: true
+      } as ConfirmDialogData
+    });
 
-    this.isLoadingFields.set(true);
-    this.resourceTypeService.removeField(typeId, fieldId).pipe(
-      finalize(() => this.isLoadingFields.set(false))
-    ).subscribe({
-      next: () => {
-        this.currentFields.update(fields => fields.filter(f => f.id !== fieldId));
-        this.snackbar.success(`Field "${fieldName}" removed.`);
-      },
-      error: err => this.snackbar.error('Failed to remove field: ' + (err.error?.message || err.message))
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.isLoadingFields.set(true);
+        this.resourceTypeService.removeField(typeId, fieldId).pipe(
+          finalize(() => this.isLoadingFields.set(false))
+        ).subscribe({
+          next: () => {
+            this.currentFields.update(fields => fields.filter(f => f.id !== fieldId));
+            this.snackbar.success(`Field "${fieldName}" removed successfully.`);
+          },
+          error: err => this.snackbar.error('Failed to remove field: ' + (err.error?.message || err.message))
+        });
+      }
     });
   }
-  
+
   dropField(event: CdkDragDrop<FieldDefinitionDto[]>) {
     const typeId = this.resourceTypeId();
-    if (!typeId) return;
+    if (!typeId) {
+      this.snackbar.error('Resource Type ID is missing. Cannot reorder fields.');
+      return;
+    }
 
     const updatedFields = [...this.currentFields()];
     moveItemInArray(updatedFields, event.previousIndex, event.currentIndex);
+    
+    // Optimistically update the UI
     this.currentFields.set(updatedFields);
 
-    // Here you would typically call a backend service to update the order of all fields.
-    // This might involve sending the entire list of field IDs in their new order.
-    // For example: this.resourceTypeService.updateFieldOrder(typeId, updatedFields.map(f => f.id))
-    // As the backend does not explicitly have an "update order" endpoint for all fields at once,
-    // and PUT on /fields/{fieldId} is for individual field updates, this is a bit tricky.
-    // The existing backend structure implies fields are managed individually or as part of the ResourceType PUT.
-    // If the ResourceType PUT replaces all fields, then saving the main form would handle order.
-    // If not, a dedicated endpoint or a more complex update strategy is needed.
-    // For now, we'll assume the order is visual and will be saved if the main "Save Details" is hit
-    // OR if individual field updates also allow reordering (which they don't seem to from the DTOs).
-
-    this.snackbar.info('Field order changed locally. Ensure to save changes if applicable through a main form save.');
-    // If your backend supports reordering via the main ResourceType update, you might mark the form dirty.
-    // Or, if you had a specific endpoint:
-    /*
     const fieldOrderPayload = updatedFields.map((field, index) => ({ id: field.id, order: index }));
-    this.isLoadingFields.set(true);
-    this.resourceTypeService.updateFieldsOrder(typeId, fieldOrderPayload).pipe( // Imaginary endpoint
+    
+    this.isLoadingFields.set(true); // Use isLoadingFields or a new signal for reordering
+
+    this.resourceTypeService.updateFieldsOrder(typeId, fieldOrderPayload).pipe(
       finalize(() => this.isLoadingFields.set(false))
     ).subscribe({
-      next: (response) => {
-        this.currentFields.set(response); // Assuming backend returns the reordered list
+      next: () => {
         this.snackbar.success('Field order updated successfully.');
+        // Optionally, re-fetch the resource type or fields if the backend returns the updated state
+        // or if there's a possibility of concurrent modifications.
+        // For now, we assume the optimistic update is sufficient.
+        // If re-fetching:
+        // this.loadFieldsForCurrentType(); // or this.refreshResourceTypeDetails();
       },
       error: (err) => {
         this.snackbar.error('Failed to update field order: ' + (err.error?.message || err.message));
-        // Revert to previous order on error
-        moveItemInArray(updatedFields, event.currentIndex, event.previousIndex);
-        this.currentFields.set(updatedFields);
+        // Revert to the previous order if the backend call fails
+        // To do this, you might need to store the order before moveItemInArray
+        // For simplicity, we're not reverting here, but it's good practice.
+        // A quick way to revert if you had previousOrder: this.currentFields.set(previousOrder);
+        // Consider re-fetching to get the true state from the server:
+        this.loadFieldsForCurrentType(); // Re-fetch to ensure UI consistency
       }
     });
-    */
   }
 }

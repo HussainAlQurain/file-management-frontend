@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormGroup, FormBuilder } from '@angular/forms';
@@ -86,6 +86,7 @@ export class DocumentListPageComponent implements OnInit {
   private documentService = inject(DocumentService);
   private resourceTypeService = inject(ResourceTypeService);
   private fb = inject(FormBuilder);
+  private destroyRef = inject(DestroyRef);
   
   documents = signal<Page<Document>>({
     content: [],
@@ -119,7 +120,7 @@ export class DocumentListPageComponent implements OnInit {
     this.isLoading.set(true);
     
     this.documentService.list(this.query)
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (result) => {
           this.documents.set(result);
@@ -133,7 +134,7 @@ export class DocumentListPageComponent implements OnInit {
   
   loadResourceTypes(): void {
     this.resourceTypeService.getAll()
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (result) => {
           this.resourceTypes.set(result);

@@ -1,19 +1,17 @@
-import { Component, OnInit, inject, signal, effect, WritableSignal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatSortModule, Sort } from '@angular/material/sort';
+import { Component, OnInit, inject, signal, ViewChild, AfterViewInit } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { DatePipe } from '@angular/common';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatSortModule, MatSort } from '@angular/material/sort';
 
 import { ResourceTypeService } from '../../../core/services/resource-type.service';
 import { ResourceType } from '../../../core/models/resource-type.model';
-import { Page } from '../../../core/models/document.model';
 import { SnackbarService } from '../../../core/services/snackbar.service';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
@@ -21,17 +19,17 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
   selector: 'app-resource-type-list-page',
   standalone: true,
   imports: [
-    CommonModule,
-    RouterModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatSortModule,
+    RouterLink,
     MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
     MatCardModule,
-    MatTooltipModule,
-    MatDialogModule
+    MatIconModule,
+    MatTableModule,
+    MatProgressSpinnerModule,
+    MatDialogModule, // MatDialogModule is needed for MatDialog service
+    DatePipe,
+    MatPaginatorModule,
+    MatSortModule
+    // ConfirmDialogComponent is not directly used in the template, so not needed here
   ],
   template: `
     <div class="p-4">
@@ -57,7 +55,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
               </div>
             } @else {
               <div class="overflow-auto">
-                <table mat-table [dataSource]="dataSource" matSort (matSortChange)="announceSortChange($event)" class="w-full">
+                <table mat-table [dataSource]="dataSource" matSort class="w-full">
                   <!-- ID Column -->
                   <ng-container matColumnDef="id">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
@@ -65,7 +63,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
                   </ng-container>
 
                   <!-- Code Column -->
-                  <ng-container matColumnDef="name">
+                  <ng-container matColumnDef="code">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>Code</th>
                     <td mat-cell *matCellDef="let rt">{{rt.code}}</td>
                   </ng-container>
@@ -73,13 +71,13 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
                   <!-- Description Column -->
                   <ng-container matColumnDef="description">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>Description</th>
-                    <td mat-cell *matCellDef="let rt" class="truncate max-w-xs">{{rt.description || '-'}}</td>
+                    <td mat-cell *matCellDef="let rt">{{rt.description}}</td>
                   </ng-container>
 
                   <!-- Fields Count Column -->
                   <ng-container matColumnDef="fieldsCount">
-                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Fields</th>
-                    <td mat-cell *matCellDef="let rt">{{rt.fields?.length || 0}}</td>
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header class="text-center">Fields</th>
+                    <td mat-cell *matCellDef="let rt" class="text-center">{{rt.fields?.length || 0}}</td>
                   </ng-container>
 
                   <!-- Created At Column -->
@@ -92,7 +90,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
                   <ng-container matColumnDef="actions">
                     <th mat-header-cell *matHeaderCellDef class="text-right">Actions</th>
                     <td mat-cell *matCellDef="let rt" class="text-right">
-                      <button mat-icon-button [routerLink]="[rt.id]" matTooltip="Edit Resource Type">
+                      <button mat-icon-button color="primary" [routerLink]="['edit', rt.id]" matTooltip="Edit Resource Type">
                         <mat-icon>edit</mat-icon>
                       </button>
                       <button mat-icon-button color="warn" (click)="onDeleteResourceType(rt)" matTooltip="Delete Resource Type">
@@ -106,10 +104,9 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
                 </table>
               </div>
               <mat-paginator 
-                [length]="totalElements()" 
-                [pageSize]="pageSize()" 
+                [length]="dataSource.data.length" 
+                [pageSize]="10" 
                 [pageSizeOptions]="[5, 10, 25, 100]"
-                (page)="handlePageEvent($event)"
                 aria-label="Select page of resource types">
               </mat-paginator>
             }
@@ -117,74 +114,46 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
         </mat-card-content>
       </mat-card>
     </div>
-  `
+  `,
 })
-export class ResourceTypeListPageComponent implements OnInit {
+export class ResourceTypeListPageComponent implements OnInit, AfterViewInit {
   private resourceTypeService = inject(ResourceTypeService);
   private snackbar = inject(SnackbarService);
   private dialog = inject(MatDialog);
 
   isLoading = signal(true);
-  resourceTypesPage: WritableSignal<Page<ResourceType> | null> = signal(null);
   
   dataSource = new MatTableDataSource<ResourceType>([]);
   displayedColumns: string[] = ['id', 'code', 'description', 'fieldsCount', 'createdAt', 'actions'];
 
-  currentPage = signal(0);
-  pageSize = signal(10);
-  sortActive = signal('createdAt');
-  sortDirection = signal<'asc' | 'desc' | '' >('desc');
-  totalElements = signal(0);
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
 
-  constructor() {
-    effect(() => {
-      this.loadResourceTypes(
-        this.currentPage(), 
-        this.pageSize(), 
-        this.sortActive(), 
-        this.sortDirection() as 'asc' | 'desc'
-      );
-    });
-  }
+  constructor() {}
 
   ngOnInit(): void {
-    // Initial load is handled by the effect
+    // Data loading will be triggered in ngAfterViewInit
   }
 
-  loadResourceTypes(page: number, size: number, sort: string, direction: 'asc' | 'desc'): void {
-    this.isLoading.set(true);
-    const params: Record<string, any> = { page, size };
-    if (sort && direction) {
-      params['sort'] = `${sort},${direction}`;
-    }
+  ngAfterViewInit(): void {
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+    this.fetchAllResourceTypes();
+  }
 
-    this.resourceTypeService.list(params).subscribe({
-      next: (pageData) => {
-        this.resourceTypesPage.set(pageData);
-        this.dataSource.data = pageData.content;
-        this.totalElements.set(pageData.totalElements);
+  fetchAllResourceTypes(): void {
+    this.isLoading.set(true);
+    this.resourceTypeService.listAllNonPaged().subscribe({
+      next: (data) => {
+        this.dataSource.data = data;
         this.isLoading.set(false);
       },
       error: (err) => {
         this.isLoading.set(false);
         this.snackbar.error('Failed to load resource types: ' + (err.error?.message || err.message));
         this.dataSource.data = [];
-        this.totalElements.set(0);
       }
     });
-  }
-
-  handlePageEvent(event: PageEvent): void {
-    this.isLoading.set(true);
-    this.currentPage.set(event.pageIndex);
-    this.pageSize.set(event.pageSize);
-  }
-
-  announceSortChange(sortState: Sort): void {
-    this.isLoading.set(true);
-    this.currentPage.set(0);
-    this.sortActive.set(sortState.active);
-    this.sortDirection.set(sortState.direction);
   }
 
   onDeleteResourceType(resourceType: ResourceType): void {
@@ -199,18 +168,14 @@ export class ResourceTypeListPageComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(confirmed => {
       if (confirmed) {
-        this.isLoading.set(true);
+        this.isLoading.set(true); 
         this.resourceTypeService.delete(resourceType.id).subscribe({
           next: () => {
             this.snackbar.success(`Resource type "${resourceType.code}" deleted successfully.`);
-            if (this.dataSource.data.length === 1 && this.currentPage() > 0) {
-              this.currentPage.set(this.currentPage() - 1);
-            } else {
-              this.loadResourceTypes(this.currentPage(), this.pageSize(), this.sortActive(), this.sortDirection() as 'asc' | 'desc');
-            }
+            this.fetchAllResourceTypes(); // Refresh data by re-fetching all
           },
           error: (err) => {
-            this.isLoading.set(false);
+            this.isLoading.set(false); // Ensure loading is false on error too
             this.snackbar.error('Failed to delete resource type: ' + (err.error?.message || err.message));
           }
         });

@@ -191,27 +191,86 @@ export class ResourceTypeCreatePageComponent implements OnInit {
     });
   }
 
+  // Check for duplicate field names/codes when adding a new field
+  private checkDuplicateFieldName(fieldName: string): boolean {
+    const fieldsArray = this.fields.value;
+    return fieldsArray.filter((field: any) => field.name.toLowerCase() === fieldName.toLowerCase()).length > 1;
+  }
+
+  // Validate the entire form for duplicate fields before submission
+  private validateFieldNames(): boolean {
+    const fieldsArray = this.fields.value;
+    const fieldNames = fieldsArray.map((field: any) => field.name.toLowerCase());
+    
+    // Check for duplicates by comparing the original array length with the Set length
+    const uniqueFieldNames = new Set(fieldNames);
+    if (uniqueFieldNames.size !== fieldNames.length) {
+      this.snackbar.error('Duplicate field names found. Field names must be unique.');
+      return false;
+    }
+    return true;
+  }
   onSubmit(): void {
     if (this.resourceTypeForm.invalid) {
       this.snackbar.error('Please fill all required fields correctly.');
       this.resourceTypeForm.markAllAsTouched(); // Mark all fields as touched to show errors
       return;
     }
+    
+    // Check for duplicate field names
+    if (!this.validateFieldNames()) {
+      return;
+    }
+    
     this.isSubmitting.set(true);
 
+    // Step 1: Create the resource type first with just code and description
     const formValue = this.resourceTypeForm.value;
-    const payload = {
-      ...formValue,
-      fields: formValue.fields.map((field: any, index: number) => ({
-        ...field,
-        options: field.type === FieldType.SELECT && field.options ? field.options.split(',').map((s: string) => s.trim()).filter((s: string) => s) : [],
-        order: index // Ensure order is sequential from 0
-      }))
-    };    this.resourceTypeService.create(payload).subscribe({
+    const createResourceTypeDto = {
+      code: formValue.code,
+      description: formValue.description
+    };
+
+    // Step 2: Create the resource type first
+    this.resourceTypeService.create(createResourceTypeDto).subscribe({
       next: (createdResourceType) => {
-        this.isSubmitting.set(false);
-        this.snackbar.success(`Resource type "${createdResourceType.code}" created successfully.`);
-        this.router.navigate(['/resource-types']);
+        // Step 3: Then add fields one by one
+        const fieldsToAdd = formValue.fields;
+        
+        if (fieldsToAdd && fieldsToAdd.length > 0) {
+          // Add fields sequentially using recursive function
+          const addFieldsSequentially = (fields: any[], index = 0) => {
+            if (index >= fields.length) {
+              this.isSubmitting.set(false);
+              this.snackbar.success(`Resource type "${createdResourceType.code}" created successfully with ${fields.length} fields.`);
+              this.router.navigate(['/admin/resource-types']);
+              return;
+            }
+
+            const field = fields[index];
+            const fieldDto = {
+              name: field.name,
+              kind: field.type,
+              required: field.required,
+              uniqueWithinType: false
+            };
+            
+            this.resourceTypeService.addField(createdResourceType.id, fieldDto).subscribe({
+              next: () => addFieldsSequentially(fields, index + 1),
+              error: (err) => {
+                this.snackbar.error(`Added ${index} fields but failed to add field "${field.name}": ${err.error?.message || err.message}`);
+                // Continue with next field despite error
+                addFieldsSequentially(fields, index + 1);
+              }
+            });
+          };
+          
+          addFieldsSequentially(fieldsToAdd);
+        } else {
+          this.isSubmitting.set(false);
+          this.snackbar.success(`Resource type "${createdResourceType.code}" created successfully.`);
+          this.router.navigate(['/admin/resource-types']);
+        }
       },
       error: (err) => {
         this.isSubmitting.set(false);

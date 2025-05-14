@@ -12,6 +12,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatListModule } from '@angular/material/list';
 
 import { DocumentService } from '../../core/services/document.service';
 import { ResourceTypeService } from '../../core/services/resource-type.service';
@@ -20,6 +21,7 @@ import { Document } from '../../core/models/document.model';
 import { ResourceType, FieldDefinitionDto, FieldType } from '../../core/models/resource-type.model';
 import { FileUploadComponent } from '../../shared/components/file-upload/file-upload.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-document-edit-page',
@@ -38,7 +40,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     MatSelectModule,
     MatDatepickerModule,
     MatCheckboxModule,
-    FileUploadComponent
+    FileUploadComponent,
+    MatListModule // Added for mat-list used for existing attachments
   ],
   template: `
     <div class="p-4 md:p-8">
@@ -116,19 +119,23 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                         </div>
 
                         <mat-form-field appearance="outline" class="w-full" *ngSwitchCase="FieldType.SELECT">
-                          <mat-label>{{ field.name }}</mat-label>
+                          <mat-label>{{ field.label || field.name }}</mat-label>
                           <mat-select [formControlName]="field.name" [required]="field.required">
-                            @for (option of (field as any).options; track option) {
-                              <mat-option [value]="option">{{ option }}</mat-option>
+                            @if(field.options && field.options.length > 0) {
+                              @for (option of field.options; track option) {
+                                <mat-option [value]="option">{{ option }}</mat-option>
+                              }
+                            } @else {
+                              <mat-option disabled>No options available</mat-option>
                             }
                           </mat-select>
                           @if (metadataFormGroup.get(field.name)?.hasError('required')) {
-                            <mat-error>{{ field.name }} is required.</mat-error>
+                            <mat-error>{{ field.label || field.name }} is required.</mat-error>
                           }
                         </mat-form-field>
 
                         <mat-form-field appearance="outline" class="w-full" *ngSwitchDefault>
-                            <mat-label>{{ field.name }} (Unsupported type: {{field.kind}})</mat-label>
+                            <mat-label>{{ field.label || field.name }} (Unsupported type: {{field.kind}})</mat-label>
                             <input matInput [formControlName]="field.name" [required]="field.required" readonly>
                         </mat-form-field>
 
@@ -136,6 +143,30 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                     }
                   </div>
                 }
+              }
+
+              <!-- Existing Attachments -->
+              @if (document()?.attachments && document()!.attachments.length > 0) {
+                <h3 class="text-xl font-medium mt-6 mb-3 border-b pb-2">Existing Attachments</h3>
+                <mat-list>
+                  @for (att of document()?.attachments; track att.id; let i = $index) {
+                    <mat-list-item>
+                      <mat-icon matListItemIcon>attachment</mat-icon>
+                      <div matListItemTitle>
+                        <a [href]="getAttachmentDownloadUrl(att.key)" target="_blank" class="hover:underline">
+                          {{ att.fileName }}
+                        </a>
+                      </div>
+                      <div matListItemMeta>
+                        <button mat-icon-button color="warn" type="button" (click)="markAttachmentForRemoval(att.id, i)" matTooltip="Remove Attachment">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+                    </mat-list-item>
+                  }
+                </mat-list>
+              } @else {
+                <p class="text-gray-500 mt-4">No existing attachments.</p>
               }
 
               <!-- File Upload for New Attachments -->
@@ -189,6 +220,7 @@ export class DocumentEditPageComponent implements OnInit {
   document: WritableSignal<Document | null> = signal(null);
   resourceType: WritableSignal<ResourceType | null> = signal(null);
   newAttachments: WritableSignal<File[]> = signal([]);
+  removedAttachmentIds: WritableSignal<number[]> = signal([]);
 
   editForm!: FormGroup;
   FieldType = FieldType; 
@@ -221,6 +253,7 @@ export class DocumentEditPageComponent implements OnInit {
     this.documentService.get(id).subscribe({
       next: doc => {
         this.document.set(doc);
+        this.removedAttachmentIds.set([]); // Reset removed IDs on load
         if (doc.resourceTypeId) {
           this.resourceTypeService.get(doc.resourceTypeId).subscribe({
             next: rt => {
@@ -273,14 +306,16 @@ export class DocumentEditPageComponent implements OnInit {
 
     fields.forEach(field => {
       const validators = field.required ? [Validators.required] : [];
+      // Use field.label or field.name for display, but field.name for formControlName
       let value: any = existingMetadata?.[field.name] ?? null;
       if (field.kind === FieldType.DATE && value) {
         value = new Date(value as string); 
       }
-      // Ensure default value for checkbox if null/undefined
       if (field.kind === FieldType.CHECKBOX && (value === null || value === undefined)) {
-        value = false;
+        value = false; // Default to false for checkboxes if not present in metadata
       }
+      // For SELECT fields, if the existing value is not in options, it might be better to set it to null or default.
+      // However, Angular's mat-select handles this by not selecting anything if value is not in options.
       metadataGroup.addControl(field.name, this.fb.control(value, validators));
     });
   }
@@ -307,6 +342,25 @@ export class DocumentEditPageComponent implements OnInit {
     this.newAttachments.set(files);
   }
 
+  markAttachmentForRemoval(attachmentId: number, index: number): void {
+    this.removedAttachmentIds.update(ids => [...ids, attachmentId]);
+    // Optimistically remove from the displayed list
+    this.document.update(doc => {
+      if (doc && doc.attachments) {
+        doc.attachments.splice(index, 1);
+      }
+      return doc;
+    });
+    this.snackbar.info('Attachment marked for removal. Save changes to confirm.');
+  }
+
+  getAttachmentDownloadUrl(storageKey: string): string {
+    const docId = this.documentId();
+    // Ensure environment.apiBase does not end with a slash if documentsApiUrl already includes it.
+    // Or construct carefully. For now, assuming direct construction.
+    return `${environment.apiBase}/documents/${docId}/files/${storageKey}`;
+  }
+
   onSubmit(): void {
     if (this.editForm.invalid) {
       this.editForm.markAllAsTouched();
@@ -316,12 +370,25 @@ export class DocumentEditPageComponent implements OnInit {
     this.isSubmitting.set(true);
 
     const formValue = this.editForm.value;
-    const updatedDocument: Partial<Document> = {
-      title: formValue.title,
-      description: formValue.description,
-      tags: formValue.tags ? formValue.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t) : [],
-      metadata: this.prepareMetadataForSubmit(formValue.metadata)
+    
+    // Backend DTO for update expects 'fieldValues' for metadata
+    const dtoForBackend = {
+        title: formValue.title,
+        // description and tags are not in the backend UpdateDocumentDTO based on user prompt
+        fieldValues: this.prepareMetadataForSubmit(formValue.metadata)
     };
+
+    const formData = new FormData();
+    formData.append('dto', new Blob([JSON.stringify(dtoForBackend)], { type: 'application/json' }));
+
+    if (this.removedAttachmentIds().length > 0) {
+      // Backend expects a list of Longs for removedAttachmentIds
+      this.removedAttachmentIds().forEach(id => formData.append('removedAttachmentIds', id.toString()));
+    }
+
+    this.newAttachments().forEach(file => {
+      formData.append('newAttachments', file, file.name);
+    });
 
     const docId = this.documentId();
     if (!docId) {
@@ -330,7 +397,7 @@ export class DocumentEditPageComponent implements OnInit {
         return;
     }
 
-    this.documentService.update(docId, updatedDocument, this.newAttachments()).subscribe({
+    this.documentService.update(docId, formData).subscribe({
       next: (savedDoc) => {
         this.isSubmitting.set(false);
         this.snackbar.success('Document updated successfully!');
@@ -348,17 +415,35 @@ export class DocumentEditPageComponent implements OnInit {
     const rt = this.resourceType();
     if (rt && rt.fields) {
       rt.fields.forEach(field => {
+        // Use field.name for retrieving from form and for payload key
         if (metadataFormValue.hasOwnProperty(field.name)) {
           let value = metadataFormValue[field.name];
           if (field.kind === FieldType.DATE && value instanceof Date) {
             preparedMetadata[field.name] = value.toISOString().split('T')[0]; 
-          } else if (value !== null && value !== '') {
+          } else if (value !== null && value !== '') { // Keep non-empty values
             preparedMetadata[field.name] = value;
-          } else if (value === '' && field.kind !== FieldType.TEXT) { 
-             preparedMetadata[field.name] = null;
-          } else if (value === '' && field.kind === FieldType.TEXT) {
+          } else if (value === '' && field.kind !== FieldType.TEXT && field.kind !== FieldType.TEXTAREA) { 
+            // For non-text fields, empty string might mean 'not set' or null
+            // Backend should handle type conversion for boolean, number if empty string is sent.
+            // Explicitly setting to null for non-text, non-textarea fields if empty.
+            preparedMetadata[field.name] = null;
+          } else if (value === '' && (field.kind === FieldType.TEXT || field.kind === FieldType.TEXTAREA)) {
+            // Allow empty strings for text and textarea fields
             preparedMetadata[field.name] = '';
+          } else if (value === null && field.kind === FieldType.CHECKBOX) {
+            // Ensure checkbox has a boolean value
+             preparedMetadata[field.name] = false;
+          } else if (value === null) {
+            // For other types, if value is null, send null
+            preparedMetadata[field.name] = null;
           }
+          // If a field is not in metadataFormValue (e.g. disabled), it won't be included.
+          // If it's optional and not provided, it's fine.
+          // If it's required, form validation should catch it.
+        } else if (field.kind === FieldType.CHECKBOX) {
+          // If a checkbox is not in the form value (e.g. if it was never touched and not in original metadata),
+          // it defaults to false.
+          preparedMetadata[field.name] = false;
         }
       });
     }

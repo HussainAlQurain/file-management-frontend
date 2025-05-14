@@ -22,7 +22,7 @@ export class ResourceTypeService {
   }
 
   getAll(): Observable<ResourceType[]> {
-    return this.http.get<ResourceType[]>(`${this.baseUrl}/all`);
+    return this.http.get<ResourceType[]>(`${this.baseUrl}`);
   }
   
   get(id: number): Observable<ResourceType> {
@@ -55,5 +55,10 @@ export class ResourceTypeService {
 
   updateField(typeId: number, fieldId: number, fieldDto: UpdateFieldDto): Observable<FieldDefinitionDto> {
     return this.http.put<FieldDefinitionDto>(`${this.baseUrl}/${typeId}/fields/${fieldId}`, fieldDto);
+  }
+
+  // Update field order within a resource type
+  updateFieldsOrder(typeId: number, fieldOrderPayload: { id: number, order: number }[]): Observable<void> {
+    return this.http.put<void>(`${this.baseUrl}/${typeId}/fields/order`, fieldOrderPayload);
   }
 }
