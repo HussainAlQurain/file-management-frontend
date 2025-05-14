@@ -20,55 +20,55 @@ interface Stats {
   standalone: true,
   imports: [CommonModule, MatCardModule, MatIconModule],
   template: `
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <!-- Total Documents -->
-      <mat-card class="w-full">
-        <mat-card-content class="flex items-center">
-          <div class="mr-4 bg-blue-100 rounded-full p-3">
+      <mat-card class="w-full h-full shadow-sm">
+        <mat-card-content class="flex items-center p-4">
+          <div class="mr-4 bg-blue-100 rounded-full p-4">
             <mat-icon class="text-blue-700">description</mat-icon>
           </div>
           <div>
-            <div class="text-sm text-gray-500 font-medium">Total Documents</div>
-            <div class="text-xl font-bold">{{ stats().totalDocuments }}</div>
+            <div class="text-sm text-gray-500 font-medium mb-1">Total Documents</div>
+            <div class="text-2xl font-bold">{{ stats().totalDocuments }}</div>
           </div>
         </mat-card-content>
       </mat-card>
       
       <!-- Documents Today -->
-      <mat-card class="w-full">
-        <mat-card-content class="flex items-center">
-          <div class="mr-4 bg-green-100 rounded-full p-3">
+      <mat-card class="w-full h-full shadow-sm">
+        <mat-card-content class="flex items-center p-4">
+          <div class="mr-4 bg-green-100 rounded-full p-4">
             <mat-icon class="text-green-700">today</mat-icon>
           </div>
           <div>
-            <div class="text-sm text-gray-500 font-medium">Added Today</div>
-            <div class="text-xl font-bold">{{ stats().documentsToday }}</div>
+            <div class="text-sm text-gray-500 font-medium mb-1">Added Today</div>
+            <div class="text-2xl font-bold">{{ stats().documentsToday }}</div>
           </div>
         </mat-card-content>
       </mat-card>
       
       <!-- My Documents -->
-      <mat-card class="w-full">
-        <mat-card-content class="flex items-center">
-          <div class="mr-4 bg-purple-100 rounded-full p-3">
+      <mat-card class="w-full h-full shadow-sm">
+        <mat-card-content class="flex items-center p-4">
+          <div class="mr-4 bg-purple-100 rounded-full p-4">
             <mat-icon class="text-purple-700">folder_special</mat-icon>
           </div>
           <div>
-            <div class="text-sm text-gray-500 font-medium">My Documents</div>
-            <div class="text-xl font-bold">{{ stats().myDocuments }}</div>
+            <div class="text-sm text-gray-500 font-medium mb-1">My Documents</div>
+            <div class="text-2xl font-bold">{{ stats().myDocuments }}</div>
           </div>
         </mat-card-content>
       </mat-card>
       
       <!-- Pending Reviews -->
-      <mat-card class="w-full">
-        <mat-card-content class="flex items-center">
-          <div class="mr-4 bg-amber-100 rounded-full p-3">
+      <mat-card class="w-full h-full shadow-sm">
+        <mat-card-content class="flex items-center p-4">
+          <div class="mr-4 bg-amber-100 rounded-full p-4">
             <mat-icon class="text-amber-700">pending_actions</mat-icon>
           </div>
           <div>
-            <div class="text-sm text-gray-500 font-medium">Pending Reviews</div>
-            <div class="text-xl font-bold">{{ stats().pendingReviews }}</div>
+            <div class="text-sm text-gray-500 font-medium mb-1">Pending Reviews</div>
+            <div class="text-2xl font-bold">{{ stats().pendingReviews }}</div>
           </div>
         </mat-card-content>
       </mat-card>

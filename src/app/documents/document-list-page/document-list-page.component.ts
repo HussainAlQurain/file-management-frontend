@@ -75,8 +75,8 @@ import { DocumentTableComponent } from '../components/document-table/document-ta
         [documents]="documents().content"
         [loading]="isLoading()"
         [totalItems]="documents().totalElements"
-        [pageSize]="query.size"
-        [pageIndex]="query.page"
+        [pageSize]="pageSize"
+        [pageIndex]="pageIndex"
         (page)="onPageChange($event)">
       </app-document-table>
     </div>
@@ -150,5 +150,14 @@ export class DocumentListPageComponent implements OnInit {
     this.query.page = event.pageIndex;
     this.query.size = event.pageSize;
     this.loadDocuments();
+  }
+
+  // Add getters for pageSize and pageIndex to ensure they are always numbers
+  get pageSize(): number {
+    return this.query.size ?? 10; // Default to 10 if undefined
+  }
+
+  get pageIndex(): number {
+    return this.query.page ?? 0; // Default to 0 if undefined
   }
 }

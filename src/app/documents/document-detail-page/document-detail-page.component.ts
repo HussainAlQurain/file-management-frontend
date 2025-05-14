@@ -1,26 +1,22 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule, ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject, signal, WritableSignal, computed } from '@angular/core';
+import { CommonModule, DatePipe, KeyValuePipe } from '@angular/common';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
-import {MatChipsModule} from '@angular/material/chips';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MatListModule } from '@angular/material/list';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatTabsModule } from '@angular/material/tabs';
 
 import { DocumentService } from '../../core/services/document.service';
-import { AuthService } from '../../core/services/auth.service';
+import { Document, Attachment } from '../../core/models/document.model';
 import { SnackbarService } from '../../core/services/snackbar.service';
-import { Document } from '../../core/models/document.model';
-import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
-import { AttachmentListComponent } from '../components/attachment-list/attachment-list.component';
-import { TagChipsComponent } from '../components/tag-chips/tag-chips.component';
-import { VersionTimelineComponent } from '../components/version-timeline/version-timeline.component';
-import { AclDialogComponent } from '../components/acl-dialog/acl-dialog.component';
+import { FileSizePipe } from '../../shared/pipes/file-size.pipe';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-document-detail-page',
@@ -28,221 +24,214 @@ import { AclDialogComponent } from '../components/acl-dialog/acl-dialog.componen
   imports: [
     CommonModule,
     RouterModule,
+    DatePipe,
+    KeyValuePipe,
+    FileSizePipe,
     MatCardModule,
-    MatButtonModule,
+    MatProgressSpinnerModule,
+    MatListModule,
     MatIconModule,
-    MatTabsModule,
+    MatButtonModule,
     MatChipsModule,
     MatTooltipModule,
-    MatDialogModule,
     MatDividerModule,
-    MatProgressSpinnerModule,
-    TagChipsComponent,
-    AttachmentListComponent,
-    VersionTimelineComponent
+    MatExpansionModule,
+    MatTabsModule
   ],
   template: `
-    <div class="document-detail-page">
+    <div class="p-4 md:p-8">
       @if (isLoading()) {
-        <div class="flex justify-center my-8">
-          <mat-spinner diameter="40"></mat-spinner>
+        <div class="flex justify-center items-center min-h-[300px]">
+          <mat-spinner diameter="60"></mat-spinner>
         </div>
-      } @else if (document()) {
-        <header class="mb-6">
-          <div class="flex justify-between items-start">
-            <div>
-              <h1 class="text-2xl font-bold">{{ document()?.title }}</h1>
-              <p class="text-gray-500 mt-1">
-                <span>{{ document()?.resourceTypeName }}</span>
-                <span class="mx-2">•</span>
-                <span>Version {{ document()?.version }}</span>
-              </p>
-            </div>
-            
-            <div class="flex gap-2">
-              <button 
-                mat-icon-button 
-                color="primary" 
-                matTooltip="Manage Access"
-                (click)="openAclDialog()">
-                <mat-icon>people</mat-icon>
-              </button>
-              
-              <button 
-                mat-stroked-button 
-                color="primary"
-                [routerLink]="['/documents', document()?.id, 'edit']">
-                <mat-icon>edit</mat-icon>
-                Edit
-              </button>
-              
-              <button 
-                mat-stroked-button 
-                color="warn"
-                (click)="confirmDelete()">
-                <mat-icon>delete</mat-icon>
-                Delete
-              </button>
-            </div>
-          </div>
-          
-          <!-- Tags -->
-          <app-tag-chips 
-            [tags]="document()?.tags || []"
-            [readonly]="true"
-            class="mt-3 block">
-          </app-tag-chips>
-        </header>
-        
-        <!-- Main Content -->
-        <mat-card class="mb-6">
-          <mat-card-content>
-            <div class="mb-4">
-              <h3 class="text-lg font-medium">Description</h3>
-              <p class="mt-1">{{ document()?.description || 'No description provided.' }}</p>
-            </div>
-            
-            <mat-divider class="my-4"></mat-divider>
-            
-            <div class="mt-4">
-              <h3 class="text-lg font-medium mb-2">Metadata</h3>
-              @if (document()?.metadata && getMetadataKeys().length) {
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  @for (key of getMetadataKeys(); track key) {
-                    <div>
-                      <span class="text-gray-500">{{ key }}:</span>
-                      <span class="ml-2">{{ document()?.metadata[key] }}</span>
-                    </div>
+      } @else {
+        @if (document(); as doc) {
+          @if(doc) {
+            <mat-card class="mb-6">
+              <mat-card-header class="!pb-2">
+                <mat-card-title class="text-2xl font-semibold">{{ doc.title }}</mat-card-title>
+                <mat-card-subtitle>
+                  Resource Type: {{ doc.resourceTypeName || 'N/A' }} | Version: {{ doc.version }}
+                </mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content>
+                @if (doc.description) {
+                  <p class="text-gray-700 mb-4">{{ doc.description }}</p>
+                }
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm mb-4">
+                  <div><strong>ID:</strong> {{ doc.id }}</div>
+                  <div><strong>Created By:</strong> {{ doc.createdByName || 'System' }}</div>
+                  <div><strong>Created At:</strong> {{ doc.createdAt | date:'medium' }}</div>
+                  <div><strong>Updated At:</strong> {{ doc.updatedAt | date:'medium' }}</div>
+                </div>
+
+                @if (doc.tags && doc.tags.length) {
+                  <div class="mb-4">
+                    <strong class="mr-2">Tags:</strong>
+                    <mat-chip-listbox aria-label="Document tags">
+                      @for (tag of doc.tags; track tag) {
+                        <mat-chip disabled>{{tag}}</mat-chip>
+                      }
+                    </mat-chip-listbox>
+                  </div>
+                }
+              </mat-card-content>
+              <mat-card-actions class="!pt-0 !pb-3 !px-4">
+                <button mat-stroked-button color="primary" [routerLink]="['/documents', doc.id, 'edit']">
+                  <mat-icon>edit</mat-icon> Edit Document
+                </button>
+                <button mat-stroked-button [routerLink]="['/documents', doc.id, 'acl']">
+                  <mat-icon>security</mat-icon> Manage ACL
+                </button>
+                <button mat-stroked-button [routerLink]="['/documents', doc.id, 'versions']">
+                  <mat-icon>history</mat-icon> View Versions
+                </button>
+              </mat-card-actions>
+            </mat-card>
+
+            <mat-tab-group animationDuration="0ms">
+              <mat-tab label="Attachments">
+                <div class="py-4">
+                  @if (doc.attachments && doc.attachments.length) {
+                    <h3 class="text-xl font-medium mb-3">Attachments ({{doc.attachments.length}})</h3>
+                    <mat-list role="list">
+                      @for (attachment of doc.attachments; track attachment.id) {
+                        <mat-list-item role="listitem" class="h-auto py-2">
+                          <mat-icon matListItemIcon>attachment</mat-icon>
+                          <div matListItemTitle class="font-medium">{{ attachment.fileName }}</div>
+                          <div matListItemLine class="text-xs text-gray-500">
+                            Size: {{ attachment.fileSize | fileSize }} | Type: {{ attachment.contentType }}
+                          </div>
+                          <div matListItemMeta>
+                            <a mat-icon-button [href]="getAttachmentDownloadUrl(attachment)" target="_blank" matTooltip="Download {{attachment.fileName}}">
+                              <mat-icon>download</mat-icon>
+                            </a>
+                          </div>
+                        </mat-list-item>
+                        <mat-divider></mat-divider>
+                      }
+                    </mat-list>
+                  } @else {
+                    <p class="text-gray-500 text-center py-6">No attachments found for this document.</p>
                   }
                 </div>
-              } @else {
-                <p class="text-gray-500">No metadata available.</p>
-              }
-            </div>
-          </mat-card-content>
-        </mat-card>
-        
-        <!-- Tabs for Attachments, Versions, etc. -->
-        <mat-tab-group animationDuration="0ms">
-          <mat-tab label="Attachments">
-            <div class="py-4">
-              <app-attachment-list 
-                [attachments]="document()?.attachments || []">
-              </app-attachment-list>
-            </div>
-          </mat-tab>
-          
-          <mat-tab label="Version History">
-            <div class="py-4">
-              <app-version-timeline 
-                [documentId]="document()?.id || 0"
-                [currentVersion]="document()?.version || 1">
-              </app-version-timeline>
-            </div>
-          </mat-tab>
-        </mat-tab-group>
-      } @else {
-        <div class="text-center py-8 text-gray-500">
-          <p>Document not found</p>
-          <button 
-            mat-flat-button 
-            color="primary" 
-            class="mt-4"
-            routerLink="/documents">
-            Return to Documents
-          </button>
-        </div>
+              </mat-tab>
+
+              <mat-tab label="Metadata">
+                <div class="py-4">
+                  @if (getMetadataKeys(doc.metadata).length > 0) {
+                    <h3 class="text-xl font-medium mb-3">Metadata</h3>
+                    <mat-list role="list">
+                      @for (item of doc.metadata | keyvalue; track item.key) {
+                        <mat-list-item role="listitem" class="h-auto py-2">
+                          <div matListItemTitle class="font-semibold">{{ item.key }}:</div>
+                          <div matListItemLine class="whitespace-pre-wrap">{{ formatMetadataValue(item.value) }}</div>
+                        </mat-list-item>
+                         <mat-divider></mat-divider>
+                      }
+                    </mat-list>
+                  } @else {
+                    <p class="text-gray-500 text-center py-6">No metadata available for this document.</p>
+                  }
+                </div>
+              </mat-tab>
+            </mat-tab-group>
+          } @else {
+            <mat-card class="text-center p-8">
+              <mat-icon class="text-6xl text-gray-400">error_outline</mat-icon>
+              <h2 class="text-2xl font-semibold mt-4 mb-2">Document Not Found</h2>
+              <p class="text-gray-600 mb-6">The document you are looking for does not exist or could not be loaded.</p>
+              <button mat-stroked-button routerLink="/documents">
+                <mat-icon>arrow_back</mat-icon> Back to Documents List
+              </button>
+            </mat-card>
+          }
+        } @else { <!-- This case should ideally not be reached if document() is initialized to null and loading works -->
+            <mat-card class="text-center p-8">
+              <mat-icon class="text-6xl text-gray-400">error_outline</mat-icon>
+              <h2 class="text-2xl font-semibold mt-4 mb-2">Document data is unavailable</h2>
+               <button mat-stroked-button routerLink="/documents">
+                <mat-icon>arrow_back</mat-icon> Back to Documents List
+              </button>
+            </mat-card>
+        }
       }
     </div>
-  `
+  `,
+  styles: [`
+    mat-list-item {
+      height: auto !important; /* Override default fixed height */
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+    }
+    .mat-mdc-list-item-unscoped-content {
+      width: 100%;
+    }
+  `]
 })
 export class DocumentDetailPageComponent implements OnInit {
+  private documentService = inject(DocumentService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private documentService = inject(DocumentService);
-  private dialog = inject(MatDialog);
   private snackbar = inject(SnackbarService);
-  private authService = inject(AuthService);
-  
-  document = signal<Document | null>(null);
-  isLoading = signal(false);
-  
+
+  isLoading = signal(true);
+  document: WritableSignal<Document | null> = signal(null);
+  documentId = signal<number | null>(null);
+  apiBaseUrl = environment.apiBase;
+
   ngOnInit(): void {
-    this.loadDocument();
+    this.route.paramMap.subscribe(params => {
+      const id = params.get('id');
+      if (id) {
+        this.documentId.set(+id);
+        this.loadDocument(+id);
+      } else {
+        this.isLoading.set(false);
+        this.snackbar.error('Document ID not found in URL.');
+        this.router.navigate(['/documents']);
+      }
+    });
   }
-  
-  loadDocument(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    if (!id) {
-      this.snackbar.error('Invalid document ID');
-      this.router.navigate(['/documents']);
-      return;
+
+  loadDocument(id: number): void {
+    this.isLoading.set(true);
+    this.documentService.get(id).subscribe({
+      next: (doc) => {
+        this.document.set(doc);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.document.set(null);
+        this.snackbar.error('Failed to load document: ' + (err.error?.message || err.message));
+      }
+    });
+  }
+
+  getAttachmentDownloadUrl(attachment: Attachment): string {
+    if (!this.documentId()) return '#';
+    return `${this.apiBaseUrl}/documents/${this.documentId()}/files/${attachment.key}`;
+  }
+
+  getMetadataKeys(metadata: Record<string, any> | undefined | null): string[] {
+    return metadata ? Object.keys(metadata) : [];
+  }
+
+  formatMetadataValue(value: any): string {
+    if (value === null || value === undefined) return 'N/A';
+    if (Array.isArray(value)) {
+      return value.length > 0 ? value.join(', ') : 'N/A';
     }
-    
-    this.isLoading.set(true);
-    this.documentService.get(id)
-      .pipe(takeUntilDestroyed())
-      .subscribe({
-        next: (doc) => {
-          this.document.set(doc);
-          this.isLoading.set(false);
-        },
-        error: () => {
-          this.isLoading.set(false);
-        }
-      });
-  }
-  
-  getMetadataKeys(): string[] {
-    const doc = this.document();
-    if (!doc?.metadata) return [];
-    return Object.keys(doc.metadata);
-  }
-  
-  openAclDialog(): void {
-    if (!this.document()?.id) return;
-    
-    this.dialog.open(AclDialogComponent, {
-      width: '500px',
-      data: this.document()?.id
-    });
-  }
-  
-  confirmDelete(): void {
-    if (!this.document()?.id) return;
-    
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      data: {
-        title: 'Delete Document',
-        message: `Are you sure you want to delete "${this.document()?.title}"? This action cannot be undone.`,
-        confirmText: 'Delete',
-        cancelText: 'Cancel',
-        dangerous: true
-      }
-    });
-    
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.deleteDocument();
-      }
-    });
-  }
-  
-  deleteDocument(): void {
-    if (!this.document()?.id) return;
-    
-    this.isLoading.set(true);
-    this.documentService.delete(this.document()!.id)
-      .pipe(takeUntilDestroyed())
-      .subscribe({
-        next: () => {
-          this.snackbar.success('Document deleted successfully');
-          this.router.navigate(['/documents']);
-        },
-        error: () => {
-          this.isLoading.set(false);
-        }
-      });
+    if (typeof value === 'object') {
+      return JSON.stringify(value, null, 2);
+    }
+    if (typeof value === 'boolean') { 
+      return value ? 'Yes' : 'No';
+    }
+    if (typeof value === 'string' && value.startsWith('http')) {
+        return value;
+    }
+    return String(value);
   }
 }

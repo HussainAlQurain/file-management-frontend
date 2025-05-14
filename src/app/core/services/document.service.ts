@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { Document, DocQuery, Page } from '../models/document.model';
+import { Document, DocQuery, Page, DocumentVersionInfo } from '../models/document.model';
 import { toParams } from '../utils/api-utils';
 
 @Injectable({
@@ -19,6 +19,10 @@ export class DocumentService {
   
   get(id: number): Observable<Document> {
     return this.http.get<Document>(`${this.documentsApiUrl}/${id}`);
+  }
+
+  getVersions(id: number): Observable<DocumentVersionInfo[]> {
+    return this.http.get<DocumentVersionInfo[]>(`${this.documentsApiUrl}/${id}/versions`);
   }
   
   create(document: Partial<Document>, files?: File[]): Observable<Document> {

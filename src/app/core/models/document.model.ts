@@ -27,8 +27,11 @@ export interface DocQuery {
   page?: number;
   size?: number;
   sort?: string;
-  search?: string;
-  resourceTypeId?: number;
+  search?: string; // General search term, can be used by backend if it supports a global search
+  titleContains?: string; // Specific to title
+  resourceCodeEquals?: string;
+  resourceTypeIdEquals?: number; // Renamed from resourceTypeId for clarity with backend
+  ownerIdEquals?: number; // Added from backend DTO
   tags?: string[];
   fromDate?: string;
   toDate?: string;
@@ -56,4 +59,13 @@ export interface Page<T> {
   };
   numberOfElements: number;
   empty: boolean;
+}
+
+export interface DocumentVersionInfo {
+  id: number; // This likely refers to the main document ID, or a specific version record ID if backend provides it
+  version: number;
+  createdAt: string;
+  createdById: number;
+  createdByName?: string; // Optional, if backend provides it directly
+  // Add any other relevant fields that GET /documents/{id}/versions might return, e.g., a brief comment or change summary
 }

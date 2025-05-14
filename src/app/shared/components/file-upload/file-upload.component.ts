@@ -47,7 +47,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
         </div>
       </div>
       
-      @if (selectedFiles?.length) {
+      @if (selectedFiles.length) {
         <div class="mt-4">
           <h4 class="text-lg font-medium mb-2">Selected Files</h4>
           <ul class="space-y-2">
@@ -83,9 +83,11 @@ export class FileUploadComponent {
   @Input() accept = '';
   @Input() title = 'Drag and drop files here';
   @Input() subtitle = 'or click to select files';
-  
+  @Input() isRequired = false; // Added for visual cues if needed, though not used for validation here
+
   @Output() filesChanged = new EventEmitter<File[]>();
-  
+  @Output() fileChanged = new EventEmitter<File | null>(); // For single file mode
+
   selectedFiles: File[] = [];
   isDragover = false;
   
@@ -121,18 +123,22 @@ export class FileUploadComponent {
   removeFile(file: File): void {
     this.selectedFiles = this.selectedFiles.filter(f => f !== file);
     this.filesChanged.emit(this.selectedFiles);
+    if (!this.multiple) {
+      this.fileChanged.emit(null);
+    }
   }
   
   private handleFiles(files: FileList): void {
     if (this.multiple) {
       // Append files to existing selection
       this.selectedFiles = [...this.selectedFiles, ...Array.from(files)];
+      this.filesChanged.emit(this.selectedFiles);
     } else {
       // Replace with single file
       this.selectedFiles = Array.from(files).slice(0, 1);
+      this.fileChanged.emit(this.selectedFiles.length > 0 ? this.selectedFiles[0] : null);
+      this.filesChanged.emit(this.selectedFiles); // Also emit for consistency if some components listen to this
     }
-    
-    this.filesChanged.emit(this.selectedFiles);
   }
   
   formatFileSize(bytes: number): string {

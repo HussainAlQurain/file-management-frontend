@@ -44,4 +44,11 @@ export class UserService {
   updateProfile(profile: Partial<User>): Observable<User> {
     return this.http.put<User>(`${this.baseUrl}/profile`, profile);
   }
+  
+  /**
+   * Change current user's password via /profile/password
+   */
+  changePassword(oldPassword: string, newPassword: string): Observable<any> {
+    return this.http.post(`${environment.apiBase}/profile/password`, { oldPassword, newPassword });
+  }
 }

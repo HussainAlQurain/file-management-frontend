@@ -28,56 +28,47 @@ export const routes: Routes = [
         loadComponent: () => import('./dashboard/dashboard-page/dashboard-page.component').then(c => c.DashboardPageComponent)
       },
       
-      // Documents - temporarily using NotFoundComponent
+      // Documents
       {
         path: 'documents',
-        loadChildren: () => [
-          { path: '', loadComponent: () => import('./shared/components/not-found/not-found.component').then(c => c.NotFoundComponent) }
+        children: [
+          { path: '', loadComponent: () => import('./documents/document-list-page/document-list-page.component').then(c => c.DocumentListPageComponent) },
+          { path: 'new', loadComponent: () => import('./documents/document-create-page/document-create-page.component').then(c => c.DocumentCreatePageComponent) },
+          { path: ':id', loadComponent: () => import('./documents/document-detail-page/document-detail-page.component').then(c => c.DocumentDetailPageComponent), canActivate: [canViewDocGuard] },
+          { path: ':id/edit', loadComponent: () => import('./documents/document-edit-page/document-edit-page.component').then(c => c.DocumentEditPageComponent), canActivate: [canEditDocGuard] },
+          { path: ':id/acl', loadComponent: () => import('./documents/document-acl-page/document-acl-page.component').then(c => c.DocumentAclPageComponent), canActivate: [canEditDocGuard] },
+          { path: ':id/history', loadComponent: () => import('./documents/document-versions-page/document-versions-page.component').then(c => c.DocumentVersionsPageComponent), canActivate: [canViewDocGuard] }
         ]
       },
-      {
-        path: 'documents/new',
-        loadComponent: () => import('./shared/components/not-found/not-found.component').then(c => c.NotFoundComponent)
-      },
-      {
-        path: 'documents/:id',
-        loadComponent: () => import('./shared/components/not-found/not-found.component').then(c => c.NotFoundComponent),
-        canActivate: [canViewDocGuard]
-      },
-      {
-        path: 'documents/:id/edit',
-        loadComponent: () => import('./shared/components/not-found/not-found.component').then(c => c.NotFoundComponent),
-        canActivate: [canEditDocGuard]
-      },
       
-      // Resource Types (Admin only) - temporarily using NotFoundComponent
+      // Resource Types (Admin only)
       {
         path: 'resource-types',
-        loadComponent: () => import('./shared/components/not-found/not-found.component').then(c => c.NotFoundComponent),
-        canActivate: [roleGuard('SYS_ADMIN')]
-      },
-      {
-        path: 'resource-types/:id',
-        loadComponent: () => import('./shared/components/not-found/not-found.component').then(c => c.NotFoundComponent),
-        canActivate: [roleGuard('SYS_ADMIN')]
+        children: [
+          { path: '', loadComponent: () => import('./admin/resource-types/resource-type-list-page/resource-type-list-page.component').then(c => c.ResourceTypeListPageComponent), canActivate: [roleGuard('SYS_ADMIN')] },
+          { path: 'new', loadComponent: () => import('./admin/resource-types/resource-type-create-page/resource-type-create-page.component').then(c => c.ResourceTypeCreatePageComponent), canActivate: [roleGuard('SYS_ADMIN')] },
+          { path: ':id', loadComponent: () => import('./admin/resource-types/resource-type-edit-page/resource-type-edit-page.component').then(c => c.ResourceTypeEditPageComponent), canActivate: [roleGuard('SYS_ADMIN')] }
+        ]
       },
       
-      // Users (Admin only) - temporarily using NotFoundComponent
+      // Users (Admin only)
       {
         path: 'users',
-        loadComponent: () => import('./shared/components/not-found/not-found.component').then(c => c.NotFoundComponent),
-        canActivate: [roleGuard('SYS_ADMIN')]
-      },
-      {
-        path: 'users/:id',
-        loadComponent: () => import('./shared/components/not-found/not-found.component').then(c => c.NotFoundComponent),
-        canActivate: [roleGuard('SYS_ADMIN')]
+        children: [
+          { path: '', loadComponent: () => import('./admin/users/user-list-page/user-list-page.component').then(c => c.UserListPageComponent), canActivate: [roleGuard('SYS_ADMIN')] },
+          { path: 'new', loadComponent: () => import('./admin/users/user-create-page/user-create-page.component').then(c => c.UserCreatePageComponent), canActivate: [roleGuard('SYS_ADMIN')] },
+          { path: ':id', loadComponent: () => import('./admin/users/user-edit-page/user-edit-page.component').then(c => c.UserEditPageComponent), canActivate: [roleGuard('SYS_ADMIN')] }
+        ]
       },
       
-      // User profile - temporarily using NotFoundComponent
+      // User profile
       {
         path: 'profile',
-        loadComponent: () => import('./shared/components/not-found/not-found.component').then(c => c.NotFoundComponent)
+        children: [
+          { path: '', redirectTo: 'me', pathMatch: 'full' },
+          { path: 'me', loadComponent: () => import('./core/components/profile/my-profile.component').then(c => c.MyProfileComponent) },
+          { path: 'change-password', loadComponent: () => import('./core/components/profile/change-password.component').then(c => c.ChangeMyPasswordComponent) }
+        ]
       }
     ]
   },

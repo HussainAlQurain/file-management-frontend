@@ -11,7 +11,6 @@ import { DocumentService } from '../../core/services/document.service';
 import { Document } from '../../core/models/document.model';
 import { StatsCardsComponent } from '../components/stats-cards/stats-cards.component';
 import { RecentDocsTableComponent } from '../components/recent-docs-table/recent-docs-table.component';
-import { DebugInfoComponent } from '../../shared/components/debug-info/debug-info.component';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -24,17 +23,13 @@ import { DebugInfoComponent } from '../../shared/components/debug-info/debug-inf
     MatButtonModule,
     MatTableModule,
     StatsCardsComponent,
-    RecentDocsTableComponent,
-    DebugInfoComponent
+    RecentDocsTableComponent
   ],
   template: `
     <div class="dashboard">
       <header class="mb-6">
         <h1 class="text-2xl font-bold">Dashboard</h1>
       </header>
-      
-      <!-- Debug Component - For development only -->
-      <app-debug-info></app-debug-info>
       
       <!-- Stats Cards -->
       <app-stats-cards class="mb-8 block"></app-stats-cards>
