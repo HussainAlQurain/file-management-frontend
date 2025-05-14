@@ -10,11 +10,17 @@ export interface AclRequest {
 }
 
 export interface AclEntryResponse {
-  id?: number; // This might not be provided by all backend GET /acl responses
-  principalType: string; // e.g., 'USER', 'GROUP'
+  id?: number;
+  principalType: string;
   principalId: number;
-  principalName?: string; // Display name, helpful if backend provides it
+  principalName?: string;
   permission: string;
+}
+
+export interface AclGrantDto {
+  action: 'grant' | 'revoke';
+  userId: number;
+  permission: string; // 'VIEW', 'EDIT', or 'DELETE'
 }
 
 @Injectable({
@@ -26,19 +32,21 @@ export class AclService {
   constructor(private http: HttpClient) {}
 
   getAcls(documentId: number): Observable<AclEntryResponse[]> {
-    const url = `${this.baseUrl}/${documentId}/acl`;
-    return this.http.get<AclEntryResponse[]>(url);
+    return this.http.get<AclEntryResponse[]>(`${this.baseUrl}/${documentId}/acl`);
   }
 
+  updateAcl(documentId: number, aclGrant: AclGrantDto): Observable<any> {
+    return this.http.post(`${this.baseUrl}/${documentId}/acl`, aclGrant);
+  }
+  
+  // For backward compatibility
   grant(documentId: number, userId: number, permission: string): Observable<any> {
-    const url = `${this.baseUrl}/${documentId}/acl`;
-    const body: AclRequest = { action: 'grant', userId, permission };
-    return this.http.post(url, body);
+    const aclGrant: AclGrantDto = { action: 'grant', userId, permission };
+    return this.updateAcl(documentId, aclGrant);
   }
-
+  
   revoke(documentId: number, userId: number, permission: string): Observable<any> {
-    const url = `${this.baseUrl}/${documentId}/acl`;
-    const body: AclRequest = { action: 'revoke', userId, permission };
-    return this.http.post(url, body);
+    const aclGrant: AclGrantDto = { action: 'revoke', userId, permission };
+    return this.updateAcl(documentId, aclGrant);
   }
 }

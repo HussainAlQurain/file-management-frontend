@@ -62,14 +62,14 @@ export class MyProfileComponent implements OnInit {
   ngOnInit(): void {
     this.isLoading.set(true);
     // Fetch the full profile from the dedicated endpoint
-    this.userService.getProfile().subscribe({
-      next: (profileData) => {
+    this.userService.getMyProfile().subscribe({
+      next: (profileData: User) => {
         this.user.set(profileData);
         // Optionally update the authService's currentUserSignal if it makes sense for your app
         // this.authService.currentUserSignal.set(profileData); 
         this.isLoading.set(false);
       },
-      error: (err) => {
+      error: (err: any) => {
         this.isLoading.set(false);
         this.snackbar.error('Failed to load profile. ' + (err.error?.message || ''));
         // Fallback to user data from token if API fails, though it might be stale/incomplete

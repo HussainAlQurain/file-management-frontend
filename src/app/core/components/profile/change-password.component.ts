@@ -8,7 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router } from '@angular/router';
-import { UserService } from '../../services/user.service';
+import { UserService, ChangePasswordDTO } from '../../services/user.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { AsyncBtnComponent } from '../../../shared/components/async-btn/async-btn.component';
 
@@ -95,7 +95,14 @@ export class ChangeMyPasswordComponent {
     }
     this.isLoading.set(true);
     const { oldPassword, newPassword } = this.passwordForm.value;
-    this.userService.changePassword(oldPassword, newPassword).subscribe({
+    
+    const dto: ChangePasswordDTO = {
+      oldPassword,
+      newPassword,
+      confirmPassword: newPassword
+    };
+    
+    this.userService.changePassword(dto).subscribe({
       next: () => {
         this.isLoading.set(false);
         this.snackbar.success('Password changed successfully.');

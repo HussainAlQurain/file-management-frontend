@@ -59,9 +59,13 @@ import { DocumentTableComponent } from '../components/document-table/document-ta
           New Document
         </button>
       </header>
-      
-      <!-- Filters -->
-      <mat-card class="mb-6">
+      <div class="mb-4 flex justify-end">
+        <button mat-stroked-button color="primary" (click)="toggleFilters()">
+          <mat-icon>{{ showFilters() ? 'expand_less' : 'expand_more' }}</mat-icon>
+          {{ showFilters() ? 'Hide Filters' : 'Show Filters' }}
+        </button>
+      </div>
+      <mat-card class="mb-6" *ngIf="showFilters()">
         <mat-card-content>
           <app-document-filters
             [resourceTypes]="resourceTypes()"
@@ -69,8 +73,6 @@ import { DocumentTableComponent } from '../components/document-table/document-ta
           </app-document-filters>
         </mat-card-content>
       </mat-card>
-      
-      <!-- Results Table -->
       <app-document-table
         [documents]="documents().content"
         [loading]="isLoading()"
@@ -110,6 +112,9 @@ export class DocumentListPageComponent implements OnInit {
     size: 10,
     sort: 'createdAt,desc'
   };
+  
+  showFilters = signal(false);
+  toggleFilters() { this.showFilters.set(!this.showFilters()); }
   
   ngOnInit(): void {
     this.loadResourceTypes();

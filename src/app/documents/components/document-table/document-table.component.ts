@@ -46,45 +46,52 @@ import { Document } from '../../../core/models/document.model';
               </td>
             </ng-container>
             
-            <!-- Resource Type Column -->
-            <ng-container matColumnDef="resourceType">
-              <th mat-header-cell *matHeaderCellDef>Resource Type</th>
-              <td mat-cell *matCellDef="let document">{{ document.resourceTypeName }}</td>
+            <!-- Resource Code Column -->
+            <ng-container matColumnDef="resourceCode">
+              <th mat-header-cell *matHeaderCellDef>Resource Code</th>
+              <td mat-cell *matCellDef="let document">{{ document.resourceCode }}</td>
             </ng-container>
             
-            <!-- Tags Column -->
-            <ng-container matColumnDef="tags">
-              <th mat-header-cell *matHeaderCellDef>Tags</th>
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let document">{{ document.status }}</td>
+            </ng-container>
+            
+            <!-- Owner Column -->
+            <ng-container matColumnDef="owner">
+              <th mat-header-cell *matHeaderCellDef>Owner</th>
+              <td mat-cell *matCellDef="let document">{{ document.owner?.username || document.owner?.email }}</td>
+            </ng-container>
+            
+            <!-- Mime Type Column -->
+            <ng-container matColumnDef="mimeType">
+              <th mat-header-cell *matHeaderCellDef>Mime Type</th>
+              <td mat-cell *matCellDef="let document">{{ document.mimeType }}</td>
+            </ng-container>
+            
+            <!-- Created At Column -->
+            <ng-container matColumnDef="createdAt">
+              <th mat-header-cell *matHeaderCellDef>Created At</th>
+              <td mat-cell *matCellDef="let document">{{ document.createdAt | date:'medium' }}</td>
+            </ng-container>
+            
+            <!-- Updated At Column -->
+            <ng-container matColumnDef="updatedAt">
+              <th mat-header-cell *matHeaderCellDef>Updated At</th>
+              <td mat-cell *matCellDef="let document">{{ document.updatedAt | date:'medium' }}</td>
+            </ng-container>
+            
+            <!-- Field Values Column -->
+            <ng-container matColumnDef="fieldValues">
+              <th mat-header-cell *matHeaderCellDef>Fields</th>
               <td mat-cell *matCellDef="let document">
-                <div class="flex flex-wrap gap-1 max-w-xs">
-                  @for (tag of document.tags.slice(0, 2); track tag) {
-                    <mat-chip color="accent" selected class="text-xs">{{ tag }}</mat-chip>
-                  }
-                  @if (document.tags.length > 2) {
-                    <span class="text-xs text-gray-500">+{{ document.tags.length - 2 }} more</span>
-                  }
+                <div *ngIf="document.fieldValues">
+                  <div *ngFor="let key of objectKeys(document.fieldValues)">
+                    <span class="font-semibold">{{ key }}:</span> {{ document.fieldValues[key] }}<br />
+                  </div>
                 </div>
               </td>
-            </ng-container>
-            
-            <!-- Created Date Column -->
-            <ng-container matColumnDef="createdAt">
-              <th mat-header-cell *matHeaderCellDef>Created</th>
-              <td mat-cell *matCellDef="let document">
-                {{ document.createdAt | date:'medium' }}
-              </td>
-            </ng-container>
-            
-            <!-- Created By Column -->
-            <ng-container matColumnDef="createdBy">
-              <th mat-header-cell *matHeaderCellDef>Created By</th>
-              <td mat-cell *matCellDef="let document">{{ document.createdByName }}</td>
-            </ng-container>
-            
-            <!-- Version Column -->
-            <ng-container matColumnDef="version">
-              <th mat-header-cell *matHeaderCellDef>Version</th>
-              <td mat-cell *matCellDef="let document">{{ document.version }}</td>
             </ng-container>
             
             <!-- Actions Column -->
@@ -152,7 +159,11 @@ export class DocumentTableComponent {
   @Output() delete = new EventEmitter<number>();
   @Output() view = new EventEmitter<number>();
   
-  displayedColumns: string[] = ['title', 'resourceType', 'tags', 'createdAt', 'createdBy', 'version', 'actions'];
+  displayedColumns: string[] = ['title', 'resourceCode', 'status', 'owner', 'mimeType', 'createdAt', 'updatedAt', 'fieldValues', 'actions'];
+  
+  objectKeys(obj: any): string[] {
+    return obj ? Object.keys(obj) : [];
+  }
   
   onPageChange(event: PageEvent): void {
     this.page.emit(event);

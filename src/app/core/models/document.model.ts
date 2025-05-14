@@ -4,14 +4,16 @@ export interface Document {
   description?: string;
   resourceTypeId: number;
   resourceTypeName?: string;
+  resourceCode: string;
   createdBy: number;
   createdByName?: string;
   createdAt: string;
   updatedAt: string;
   tags: string[];
   version: number;
+  primaryFile?: Attachment;
   attachments: Attachment[];
-  metadata: Record<string, any>;
+  fieldValues: Record<string, any>;
 }
 
 export interface Attachment {
@@ -19,7 +21,7 @@ export interface Attachment {
   fileName: string;
   fileSize: number;
   contentType: string;
-  key: string;
+  storageKey: string;
   createdAt: string;
 }
 
@@ -31,6 +33,7 @@ export interface DocQuery {
   titleContains?: string; // Specific to title
   resourceCodeEquals?: string;
   resourceTypeIdEquals?: number; // Renamed from resourceTypeId for clarity with backend
+  createdByIdEquals?: number; // Add this to match backend
   ownerIdEquals?: number; // Added from backend DTO
   tags?: string[];
   fromDate?: string;
@@ -68,4 +71,19 @@ export interface DocumentVersionInfo {
   createdById: number;
   createdByName?: string; // Optional, if backend provides it directly
   // Add any other relevant fields that GET /documents/{id}/versions might return, e.g., a brief comment or change summary
+}
+
+export interface CreateDocumentDto {
+  title: string;
+  resourceTypeId: number;
+  resourceCode: string;
+  mimeType?: string;
+  parentId?: number;
+  fieldValues: Record<string, string>;
+  tagNames?: string[];
+}
+
+export interface UpdateDocumentDto {
+  title?: string;
+  fieldValues?: Record<string, any>;
 }

@@ -10,7 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import { UserService } from '../../../core/services/user.service';
+import { UserService, CreateUserDTO } from '../../../core/services/user.service';
 import { SnackbarService } from '../../../core/services/snackbar.service';
 import { User, UserRole } from '../../../core/models/auth.model';
 import { AsyncBtnComponent } from '../../../shared/components/async-btn/async-btn.component';
@@ -119,7 +119,7 @@ export class UserCreatePageComponent {
     }
 
     this.isSubmitting.set(true);
-    const userData: Partial<User> = this.userForm.value;
+    const userData: CreateUserDTO = this.userForm.value;
 
     this.userService.create(userData).subscribe({
       next: (newUser) => {

@@ -17,7 +17,7 @@ import { MatListModule } from '@angular/material/list';
 import { DocumentService } from '../../core/services/document.service';
 import { ResourceTypeService } from '../../core/services/resource-type.service';
 import { SnackbarService } from '../../core/services/snackbar.service';
-import { Document } from '../../core/models/document.model';
+import { Document, UpdateDocumentDto } from '../../core/models/document.model';
 import { ResourceType, FieldDefinitionDto, FieldType } from '../../core/models/resource-type.model';
 import { FileUploadComponent } from '../../shared/components/file-upload/file-upload.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -153,7 +153,7 @@ import { environment } from '../../../environments/environment';
                     <mat-list-item>
                       <mat-icon matListItemIcon>attachment</mat-icon>
                       <div matListItemTitle>
-                        <a [href]="getAttachmentDownloadUrl(att.key)" target="_blank" class="hover:underline">
+                        <a [href]="getAttachmentDownloadUrl(att.storageKey)" target="_blank" class="hover:underline">
                           {{ att.fileName }}
                         </a>
                       </div>
@@ -258,7 +258,7 @@ export class DocumentEditPageComponent implements OnInit {
           this.resourceTypeService.get(doc.resourceTypeId).subscribe({
             next: rt => {
               this.resourceType.set(rt);
-              this.buildMetadataForm(rt.fields, doc.metadata);
+              this.buildMetadataForm(rt.fields, doc.fieldValues);
               this.patchForm(doc);
               this.isLoading.set(false);
             },
@@ -288,8 +288,8 @@ export class DocumentEditPageComponent implements OnInit {
       description: doc.description,
       tags: doc.tags ? doc.tags.join(', ') : ''
     });
-    if (doc.metadata) {
-      this.metadataFormGroup.patchValue(this.prepareMetadataForForm(doc.metadata));
+    if (doc.fieldValues) {
+      this.metadataFormGroup.patchValue(this.prepareMetadataForForm(doc.fieldValues));
     }
   }
   
@@ -297,7 +297,7 @@ export class DocumentEditPageComponent implements OnInit {
     return this.editForm.get('metadata') as FormGroup;
   }
 
-  buildMetadataForm(fields: FieldDefinitionDto[], existingMetadata?: Record<string, any>): void {
+  buildMetadataForm(fields: FieldDefinitionDto[], existingFieldValues?: Record<string, any>): void {
     const metadataGroup = this.metadataFormGroup;
     // Clear existing controls before rebuilding
     Object.keys(metadataGroup.controls).forEach(key => {
@@ -307,7 +307,7 @@ export class DocumentEditPageComponent implements OnInit {
     fields.forEach(field => {
       const validators = field.required ? [Validators.required] : [];
       // Use field.label or field.name for display, but field.name for formControlName
-      let value: any = existingMetadata?.[field.name] ?? null;
+      let value: any = existingFieldValues?.[field.name] ?? null;
       if (field.kind === FieldType.DATE && value) {
         value = new Date(value as string); 
       }
@@ -320,18 +320,18 @@ export class DocumentEditPageComponent implements OnInit {
     });
   }
 
-  prepareMetadataForForm(metadata: Record<string, any>): Record<string, any> {
+  prepareMetadataForForm(fieldValues: Record<string, any>): Record<string, any> {
     const prepared: Record<string, any> = {};
     const rtFields = this.resourceType()?.fields;
-    if (!rtFields) return metadata; // Return as is if no fields definition
+    if (!rtFields) return fieldValues; // Return as is if no fields definition
 
-    for (const key in metadata) {
-      if (metadata.hasOwnProperty(key)) {
+    for (const key in fieldValues) {
+      if (fieldValues.hasOwnProperty(key)) {
         const rtField = rtFields.find(f => f.name === key);
-        if (rtField?.kind === FieldType.DATE && metadata[key]) {
-          prepared[key] = new Date(metadata[key] as string);
+        if (rtField?.kind === FieldType.DATE && fieldValues[key]) {
+          prepared[key] = new Date(fieldValues[key] as string);
         } else {
-          prepared[key] = metadata[key];
+          prepared[key] = fieldValues[key];
         }
       }
     }
@@ -372,7 +372,7 @@ export class DocumentEditPageComponent implements OnInit {
     const formValue = this.editForm.value;
     
     // Backend DTO for update expects 'fieldValues' for metadata
-    const dtoForBackend = {
+    const dtoForBackend: UpdateDocumentDto = {
         title: formValue.title,
         // description and tags are not in the backend UpdateDocumentDTO based on user prompt
         fieldValues: this.prepareMetadataForSubmit(formValue.metadata)

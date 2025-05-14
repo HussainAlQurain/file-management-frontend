@@ -50,6 +50,14 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Name</mat-label>
+              <input matInput formControlName="name" required>
+              @if (resourceTypeForm.get('name')?.hasError('required')) {
+                <mat-error>Name is required.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
               <mat-label>Description (Optional)</mat-label>
               <textarea matInput formControlName="description" cdkTextareaAutosize cdkAutosizeMinRows="2" cdkAutosizeMaxRows="5"></textarea>
             </mat-form-field>
@@ -145,6 +153,7 @@ export class ResourceTypeCreatePageComponent implements OnInit {
   ngOnInit(): void {
     this.resourceTypeForm = this.fb.group({
       code: ['', [Validators.required, Validators.pattern(/^[A-Z0-9_]+$/)]],
+      name: ['', Validators.required],
       description: [''],
       fields: this.fb.array([])
     });
@@ -228,6 +237,7 @@ export class ResourceTypeCreatePageComponent implements OnInit {
     const formValue = this.resourceTypeForm.value;
     const createResourceTypeDto = {
       code: formValue.code,
+      name: formValue.name,
       description: formValue.description
     };
 
@@ -243,7 +253,7 @@ export class ResourceTypeCreatePageComponent implements OnInit {
             if (index >= fields.length) {
               this.isSubmitting.set(false);
               this.snackbar.success(`Resource type "${createdResourceType.code}" created successfully with ${fields.length} fields.`);
-              this.router.navigate(['/admin/resource-types']);
+              this.router.navigate(['/resource-types']);
               return;
             }
 
@@ -269,7 +279,7 @@ export class ResourceTypeCreatePageComponent implements OnInit {
         } else {
           this.isSubmitting.set(false);
           this.snackbar.success(`Resource type "${createdResourceType.code}" created successfully.`);
-          this.router.navigate(['/admin/resource-types']);
+          this.router.navigate(['/resource-types']);
         }
       },
       error: (err) => {

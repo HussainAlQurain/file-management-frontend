@@ -3,22 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { Document, DocQuery, Page, DocumentVersionInfo } from '../models/document.model';
+import { Document, DocQuery, Page, DocumentVersionInfo, CreateDocumentDto, UpdateDocumentDto } from '../models/document.model';
 import { toParams } from '../utils/api-utils';
-
-// Define interfaces for DTOs to match backend expectations (simplified)
-interface CreateDocumentDto {
-  title: string;
-  resourceTypeId: number;
-  fieldValues: Record<string, any>; // Changed from metadata
-  // Add other fields from your backend DocumentCreateDTO as needed
-}
-
-// UpdateDocumentDto is no longer strictly needed here if FormData is built in component
-// interface UpdateDocumentDto {
-//   title?: string;
-//   fieldValues?: Record<string, any>; 
-// }
 
 @Injectable({
   providedIn: 'root'
@@ -55,14 +41,16 @@ export class DocumentService {
     // Note: If backend expects progress, add { reportProgress: true, observe: 'events' }
   }
   
-  // Update method now accepts FormData directly
   update(id: number, formData: FormData): Observable<Document> {
     return this.http.put<Document>(`${this.documentsApiUrl}/${id}`, formData);
-    // Note: If backend expects progress, add { reportProgress: true, observe: 'events' }
   }
   
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.documentsApiUrl}/${id}`);
+  }
+  
+  getFileUrl(documentId: number, storageKey: string): string {
+    return `${this.documentsApiUrl}/${documentId}/files/${storageKey}`;
   }
   
   checkPermission(id: number, permission: string): Observable<boolean> {

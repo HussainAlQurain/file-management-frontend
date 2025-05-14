@@ -117,21 +117,21 @@ import { environment } from '../../../environments/environment';
                 </div>
               </mat-tab>
 
-              <mat-tab label="Metadata">
+              <mat-tab label="Field Values">
                 <div class="py-4">
-                  @if (getMetadataKeys(doc.metadata).length > 0) {
-                    <h3 class="text-xl font-medium mb-3">Metadata</h3>
+                  @if (getFieldValueKeys(doc.fieldValues).length > 0) {
+                    <h3 class="text-xl font-medium mb-3">Field Values</h3>
                     <mat-list role="list">
-                      @for (item of doc.metadata | keyvalue; track item.key) {
+                      @for (item of doc.fieldValues | keyvalue; track item.key) {
                         <mat-list-item role="listitem" class="h-auto py-2">
                           <div matListItemTitle class="font-semibold">{{ item.key }}:</div>
-                          <div matListItemLine class="whitespace-pre-wrap">{{ formatMetadataValue(item.value) }}</div>
+                          <div matListItemLine class="whitespace-pre-wrap">{{ formatFieldValue(item.value) }}</div>
                         </mat-list-item>
-                         <mat-divider></mat-divider>
+                        <mat-divider></mat-divider>
                       }
                     </mat-list>
                   } @else {
-                    <p class="text-gray-500 text-center py-6">No metadata available for this document.</p>
+                    <p class="text-gray-500 text-center py-6">No field values available for this document.</p>
                   }
                 </div>
               </mat-tab>
@@ -211,14 +211,14 @@ export class DocumentDetailPageComponent implements OnInit {
 
   getAttachmentDownloadUrl(attachment: Attachment): string {
     if (!this.documentId()) return '#';
-    return `${this.apiBaseUrl}/documents/${this.documentId()}/files/${attachment.key}`;
+    return `${this.apiBaseUrl}/documents/${this.documentId()}/files/${attachment.storageKey}`;
   }
 
-  getMetadataKeys(metadata: Record<string, any> | undefined | null): string[] {
-    return metadata ? Object.keys(metadata) : [];
+  getFieldValueKeys(fieldValues: Record<string, any> | undefined | null): string[] {
+    return fieldValues ? Object.keys(fieldValues) : [];
   }
 
-  formatMetadataValue(value: any): string {
+  formatFieldValue(value: any): string {
     if (value === null || value === undefined) return 'N/A';
     if (Array.isArray(value)) {
       return value.length > 0 ? value.join(', ') : 'N/A';

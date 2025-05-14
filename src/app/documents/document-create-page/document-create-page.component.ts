@@ -12,18 +12,20 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { HttpEvent, HttpEventType } from '@angular/common/http';
+import { MatDialogRef } from '@angular/material/dialog';
 
 import { ResourceTypeService } from '../../core/services/resource-type.service';
 import { DocumentService } from '../../core/services/document.service';
 import { SnackbarService } from '../../core/services/snackbar.service';
 import { ResourceType, FieldDefinitionDto, FieldType } from '../../core/models/resource-type.model';
-import { Document } from '../../core/models/document.model';
-import { FileUploadComponent, FileUploadProgress } from '../../shared/components/file-upload/file-upload.component'; // Import FileUploadProgress here
+import { Document, CreateDocumentDto } from '../../core/models/document.model';
+import { FileUploadComponent, FileUploadProgress } from '../../shared/components/file-upload/file-upload.component';
 import { AsyncBtnComponent } from '../../shared/components/async-btn/async-btn.component';
 
 @Component({
   selector: 'app-document-create-page',
-  standalone: true,  imports: [
+  standalone: true,  
+  imports: [
     CommonModule,
     ReactiveFormsModule,
     MatStepperModule,
@@ -34,7 +36,7 @@ import { AsyncBtnComponent } from '../../shared/components/async-btn/async-btn.c
     MatIconModule,
     MatProgressSpinnerModule,
     MatCardModule,
-    FileUploadComponent, // Ensure FileUploadComponent is imported
+    FileUploadComponent,
     AsyncBtnComponent,
     MatCheckboxModule
   ],
@@ -77,6 +79,19 @@ import { AsyncBtnComponent } from '../../shared/components/async-btn/async-btn.c
               @if (metadataForm.get('title')?.hasError('required')) {
                 <mat-error>Title is required</mat-error>
               }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full mb-3">
+              <mat-label>Resource Code</mat-label>
+              <input matInput formControlName="resourceCode" required>
+              @if (metadataForm.get('resourceCode')?.hasError('required')) {
+                <mat-error>Resource code is required</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full mb-3">
+              <mat-label>Tags</mat-label>
+              <input matInput formControlName="tags" placeholder="Enter tags separated by commas">
             </mat-form-field>
 
             @for (field of selectedResourceType()?.fields; track field.id) {
@@ -124,8 +139,8 @@ import { AsyncBtnComponent } from '../../shared/components/async-btn/async-btn.c
             (fileChanged)="onPrimaryFileChanged($event)" 
             [accept]="acceptFileTypes()" 
             [multiple]="false"
-            [maxFileSize]="maxFileSize" <!-- Call as signal -->
-            [allowedExtensions]="allowedFileExtensions" <!-- Call as signal -->
+            [maxFileSize]="maxFileSize"
+            [allowedExtensions]="allowedFileExtensions"
             (fileValidationFailed)="onFileValidationError($event, 'primary')"
             [uploadProgress]="primaryFileProgress()">
           </app-file-upload>
@@ -139,8 +154,8 @@ import { AsyncBtnComponent } from '../../shared/components/async-btn/async-btn.c
             (filesChanged)="onAttachmentFilesChanged($event)"
             [accept]="acceptFileTypes()" 
             [multiple]="true"
-            [maxFileSize]="maxFileSize" <!-- Call as signal -->
-            [allowedExtensions]="allowedFileExtensions" <!-- Call as signal -->
+            [maxFileSize]="maxFileSize"
+            [allowedExtensions]="allowedFileExtensions"
             (fileValidationFailed)="onFileValidationError($event, 'attachment')"
             [uploadProgress]="attachmentsProgress()">
           </app-file-upload>
@@ -171,6 +186,7 @@ export class DocumentCreatePageComponent implements OnInit {
   private resourceTypeService = inject(ResourceTypeService);
   private documentService = inject(DocumentService);
   private snackbar = inject(SnackbarService);
+  private dialogRef = inject(MatDialogRef<DocumentCreatePageComponent>, { optional: true });
 
   FieldType = FieldType;
 
@@ -193,7 +209,9 @@ export class DocumentCreatePageComponent implements OnInit {
   });
 
   metadataForm: FormGroup = this.fb.group({
-    title: ['', Validators.required]
+    title: ['', Validators.required],
+    resourceCode: ['', Validators.required],
+    tags: ['']
   });
 
   // Getter for the accept string for file inputs
@@ -225,15 +243,28 @@ export class DocumentCreatePageComponent implements OnInit {
   }
 
   onResourceTypeChange(resourceTypeId: number): void {
-    const rt = this.resourceTypes().find(type => type.id === resourceTypeId);
-    this.selectedResourceType.set(rt);
-    this.buildMetadataForm(rt?.fields || []);
+    // Instead of using the cached resource type, fetch the complete resource type with fields
+    this.resourceTypeService.get(resourceTypeId).subscribe({
+      next: (rt) => {
+        this.selectedResourceType.set(rt);
+        
+        // Auto-populate the resourceCode field with the selected resource type's code
+        if (rt && rt.code) {
+          this.metadataForm.get('resourceCode')?.setValue(rt.code);
+        }
+        
+        this.buildMetadataForm(rt?.fields || []);
+      },
+      error: (err) => {
+        this.snackbar.error('Failed to load resource type details: ' + (err.error?.message || err.message));
+      }
+    });
   }
 
   buildMetadataForm(fields: FieldDefinitionDto[]): void {
     const currentControls = { ...this.metadataForm.controls };
     Object.keys(currentControls).forEach(key => {
-      if (key !== 'title') {
+      if (key !== 'title' && key !== 'resourceCode' && key !== 'tags') {
         this.metadataForm.removeControl(key);
       }
     });
@@ -287,28 +318,29 @@ export class DocumentCreatePageComponent implements OnInit {
   onSubmit(): void {
     if (this.metadataForm.invalid || !this.primaryFile()) {
       this.snackbar.error('Please fill all required fields and upload a valid primary file.');
-      this.metadataForm.markAllAsTouched(); // Ensure metadata form errors are visible
-      // Potentially trigger stepper to go to the step with error if not already there
+      this.metadataForm.markAllAsTouched();
       return;
     }
     if (this.primaryFileProgress().some(p => !!p.error) || this.attachmentsProgress().some(p => !!p.error)) {
-        this.snackbar.error('Please resolve all file validation errors before submitting.');
-        return;
+      this.snackbar.error('Please resolve all file validation errors before submitting.');
+      return;
     }
 
     this.isSubmitting.set(true);
     
     const formValue = { ...this.metadataForm.value };
     const title = formValue.title;
+    const resourceCode = formValue.resourceCode;
+    const tagsString = formValue.tags;
+    
+    // Process tags - convert comma-separated string to array
+    const tagNames = tagsString ? tagsString.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag) : [];
+    
     delete formValue.title; // Remove title as it's a top-level property in CreateDocumentDto
+    delete formValue.resourceCode; // Remove resourceCode as it's a top-level property in CreateDocumentDto
+    delete formValue.tags; // Remove tags as it's processed separately
 
-    // Prepare the DTO according to the backend's DocumentCreateDTO structure
-    const documentDto = {
-      title: title,
-      resourceTypeId: this.selectedResourceType()!.id,
-      fieldValues: formValue // The rest of the metadataForm values are the fieldValues
-    };
-
+    // Get the primary file's mime type
     const pFile = this.primaryFile();
     if (!pFile) { // Should be caught by earlier checks, but good for safety
         this.snackbar.error('Primary file is missing.');
@@ -316,16 +348,52 @@ export class DocumentCreatePageComponent implements OnInit {
         return;
     }
     
+    // Prepare the DTO according to the backend's DocumentCreateDTO structure
+    const documentDto: CreateDocumentDto = {
+      title: title,
+      resourceCode: resourceCode,
+      resourceTypeId: this.selectedResourceType()!.id,
+      mimeType: pFile.type,
+      fieldValues: this.convertFieldValuesToStrings(formValue),
+      tagNames: tagNames.length > 0 ? tagNames : undefined
+    };
+
     this.documentService.create(documentDto, pFile, this.attachmentFiles()).subscribe({
       next: (newDoc: Document) => {
         this.isSubmitting.set(false);
         this.snackbar.success(`Document '${newDoc.title}' created successfully!`);
-        this.router.navigate(['/documents', newDoc.id]);
+        if (this.dialogRef) {
+          this.dialogRef.close('created');
+        } else {
+          this.router.navigate(['/documents', newDoc.id]);
+        }
       },
       error: (err) => {
         this.isSubmitting.set(false);
         this.snackbar.error('Failed to create document. ' + (err.error?.message || err.message || 'Unknown error'));
       }
     });
+  }
+
+  // Helper method to convert all field values to strings as required by the backend
+  private convertFieldValuesToStrings(fieldValues: Record<string, any>): Record<string, string> {
+    const result: Record<string, string> = {};
+    for (const key in fieldValues) {
+      if (fieldValues.hasOwnProperty(key)) {
+        // Convert dates to ISO string format
+        if (fieldValues[key] instanceof Date) {
+          result[key] = fieldValues[key].toISOString().split('T')[0]; // YYYY-MM-DD format
+        } 
+        // Convert booleans to string "true" or "false"
+        else if (typeof fieldValues[key] === 'boolean') {
+          result[key] = fieldValues[key].toString();
+        }
+        // Everything else just convert to string
+        else if (fieldValues[key] !== null && fieldValues[key] !== undefined) {
+          result[key] = String(fieldValues[key]);
+        }
+      }
+    }
+    return result;
   }
 }

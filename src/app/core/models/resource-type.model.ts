@@ -1,6 +1,7 @@
 export interface ResourceType {
   id: number;
   code: string; // Renamed from name
+  name: string; // Add name field
   description?: string;
   fields: FieldDefinitionDto[]; // Changed from ResourceTypeField[]
   createdAt: string;
@@ -29,6 +30,7 @@ export enum FieldType {
 // New DTOs based on backend
 export interface CreateResourceTypeDto {
   code: string;
+  name: string; // Add name field
   description?: string;
 }
 
