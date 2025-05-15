@@ -14,6 +14,7 @@ import { switchMap } from 'rxjs/operators';
 import { UserService } from '../../../core/services/user.service';
 import { SnackbarService } from '../../../core/services/snackbar.service';
 import { User, UserRole } from '../../../core/models/auth.model';
+import { UpdateUserDTO } from '../../../core/services/user.service';
 import { AsyncBtnComponent } from '../../../shared/components/async-btn/async-btn.component';
 
 @Component({
@@ -120,7 +121,7 @@ export class UserEditPageComponent implements OnInit {
   userId = signal<number | null>(null);
   isSubmitting = signal(false);
   isLoadingUser = signal(true);
-  userRoles = Object.values(UserRole);
+  userRoles = ['USER', 'SYS_ADMIN'];
 
   userForm: FormGroup = this.fb.group({
     id: [null], // To store the user ID, not for editing
@@ -178,11 +179,10 @@ export class UserEditPageComponent implements OnInit {
         return;
     }
 
-    const userData: Partial<User> = {
-        username: this.userForm.value.username,
+    const userData: UpdateUserDTO = {
         email: this.userForm.value.email,
         fullName: this.userForm.value.fullName,
-        roles: this.userForm.value.roles
+        roleCodes: this.userForm.value.roles
     };
 
     this.userService.update(currentUserId, userData).subscribe({

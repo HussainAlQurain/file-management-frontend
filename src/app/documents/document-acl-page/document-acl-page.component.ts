@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, WritableSignal } from '@angular/core';
+import { Component, OnInit, inject, signal, WritableSignal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -77,10 +77,16 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
               <mat-form-field appearance="outline" class="md:col-span-1">
                 <mat-label>User</mat-label>
+                <input matInput placeholder="Search user..." [(ngModel)]="userFilter" (ngModelChange)="filterUsers()" name="userFilter" autocomplete="off" />
                 <mat-select formControlName="principalId" required>
                   @if(isLoadingUsers()) { <mat-option disabled>Loading users...</mat-option> }
-                  @for (user of users(); track user.id) {
-                    <mat-option [value]="user.id">{{ user.fullName || user.username }}</mat-option>
+                  @for (user of filteredUsers(); track user.id) {
+                    <mat-option [value]="user.id">
+                      <div class="flex flex-col">
+                        <span>{{ user.fullName || user.username }}</span>
+                        <span class="text-xs text-gray-500">{{ user.email }}</span>
+                      </div>
+                    </mat-option>
                   }
                 </mat-select>
                  @if (aclForm.get('principalId')?.hasError('required')) {
@@ -174,11 +180,14 @@ export class DocumentAclPageComponent implements OnInit {
   private userService = inject(UserService);
   private snackbar = inject(SnackbarService);
   private dialog = inject(MatDialog);
+  private destroyRef = inject(DestroyRef);
 
   documentId = signal<number | null>(null);
   document: WritableSignal<Document | null> = signal(null);
   currentAcls: WritableSignal<AclEntryResponse[]> = signal([]); // Use AclEntryResponse from service
   users: WritableSignal<User[]> = signal([]);
+  userFilter: string = '';
+  filteredUsers: WritableSignal<User[]> = signal([]);
 
   isLoadingDocument = signal(true);
   isLoadingAcls = signal(false);
@@ -192,7 +201,11 @@ export class DocumentAclPageComponent implements OnInit {
     { value: PrincipalType.USER, label: 'User' },
   ];
 
-  permissions = Object.values(Permission).map(p => ({ value: p, label: p.charAt(0) + p.slice(1).toLowerCase() }));
+  permissions = [
+    { value: 'EDIT', label: 'Edit' },
+    { value: 'DELETE', label: 'Delete' },
+    { value: 'VIEW', label: 'View' }
+  ];
 
   constructor() {
     this.aclForm = this.fb.group({
@@ -203,7 +216,7 @@ export class DocumentAclPageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.route.paramMap.pipe(takeUntilDestroyed()).subscribe(params => {
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       const id = params.get('id');
       if (id) {
         this.documentId.set(+id);
@@ -250,10 +263,11 @@ export class DocumentAclPageComponent implements OnInit {
   loadUsers(): void {
     this.isLoadingUsers.set(true);
     this.userService.list({ page: 0, size: 1000, sort: 'username,asc' })
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (userPage) => {
           this.users.set(userPage.content);
+          this.filteredUsers.set(userPage.content);
           this.isLoadingUsers.set(false);
         },
         error: (err: any) => {
@@ -261,6 +275,17 @@ export class DocumentAclPageComponent implements OnInit {
           this.snackbar.error('Failed to load users: ' + (err.error?.message || err.message));
         }
       });
+  }
+
+  filterUsers(): void {
+    const filter = this.userFilter.toLowerCase();
+    this.filteredUsers.set(
+      this.users().filter(u =>
+        (u.fullName && u.fullName.toLowerCase().includes(filter)) ||
+        (u.username && u.username.toLowerCase().includes(filter)) ||
+        (u.email && u.email.toLowerCase().includes(filter))
+      )
+    );
   }
 
   grantPermission(): void {

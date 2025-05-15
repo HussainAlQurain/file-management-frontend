@@ -11,13 +11,13 @@ export interface CreateUserDTO {
   username: string;
   email: string;
   password: string;
-  roles: string[];
+  roleCodes: string[];
   fullName?: string;
 }
 
 export interface UpdateUserDTO {
   email?: string;
-  roles?: string[];
+  roleCodes?: string[];
   fullName?: string;
 }
 

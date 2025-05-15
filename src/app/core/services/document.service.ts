@@ -52,4 +52,34 @@ export class DocumentService {
   getFileUrl(documentId: number, storageKey: string): string {
     return `${this.documentsApiUrl}/${documentId}/files/${storageKey}`;
   }
+
+  downloadVersionFile(docId: number, versionNo: number): Observable<Blob> {
+    return this.http.get(
+      `${this.documentsApiUrl}/${docId}/versions/${versionNo}/file`,
+      { responseType: 'blob' }
+    );
+  }
+
+  downloadLatestPrimaryFile(documentId: number, storageKey: string): Observable<Blob> {
+    return this.http.get(
+      `${this.documentsApiUrl}/${documentId}/files/${storageKey}`,
+      { responseType: 'blob' }
+    );
+  }
+
+  downloadAttachment(attachmentId: number): Observable<Blob> {
+    return this.http.get(
+      `${this.documentsApiUrl}/attachments/${attachmentId}/download`,
+      { responseType: 'blob' }
+    );
+  }
+
+  uploadNewPrimaryVersion(documentId: number, primaryFile: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('primaryFile', primaryFile, primaryFile.name);
+    return this.http.post(
+      `${this.documentsApiUrl}/${documentId}/head`,
+      formData
+    );
+  }
 }

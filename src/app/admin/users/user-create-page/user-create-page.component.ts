@@ -100,7 +100,7 @@ export class UserCreatePageComponent {
   private router = inject(Router);
 
   isSubmitting = signal(false);
-  userRoles = Object.values(UserRole);
+  userRoles = ['USER', 'SYS_ADMIN'];
 
   userForm: FormGroup = this.fb.group({
     username: ['', Validators.required],
@@ -119,7 +119,14 @@ export class UserCreatePageComponent {
     }
 
     this.isSubmitting.set(true);
-    const userData: CreateUserDTO = this.userForm.value;
+    const formValue = this.userForm.value;
+    const userData: CreateUserDTO = {
+      username: formValue.username,
+      email: formValue.email,
+      password: formValue.password,
+      roleCodes: formValue.roles,
+      fullName: formValue.fullName
+    };
 
     this.userService.create(userData).subscribe({
       next: (newUser) => {

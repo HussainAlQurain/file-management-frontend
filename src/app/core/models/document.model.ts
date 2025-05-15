@@ -14,6 +14,21 @@ export interface Document {
   primaryFile?: Attachment;
   attachments: Attachment[];
   fieldValues: Record<string, any>;
+  storageKey?: string;
+  mimeType?: string;
+  status?: string;
+  owner?: {
+    id: number;
+    username: string;
+    email: string;
+    roles: string[];
+  };
+  resourceType?: {
+    id: number;
+    code: string;
+    name: string;
+    fields?: any;
+  };
 }
 
 export interface Attachment {

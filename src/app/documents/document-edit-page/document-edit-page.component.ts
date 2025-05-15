@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, WritableSignal } from '@angular/core';
+import { Component, OnInit, inject, signal, WritableSignal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -213,6 +213,7 @@ export class DocumentEditPageComponent implements OnInit {
   private documentService = inject(DocumentService);
   private resourceTypeService = inject(ResourceTypeService);
   private snackbar = inject(SnackbarService);
+  private destroyRef = inject(DestroyRef);
 
   isLoading = signal(true);
   isSubmitting = signal(false);
@@ -235,7 +236,7 @@ export class DocumentEditPageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.route.paramMap.pipe(takeUntilDestroyed()).subscribe(params => {
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       const id = params.get('id');
       if (id) {
         this.documentId.set(+id);

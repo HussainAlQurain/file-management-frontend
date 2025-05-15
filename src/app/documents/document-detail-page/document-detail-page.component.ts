@@ -1,5 +1,5 @@
-import { Component, OnInit, inject, signal, WritableSignal, computed } from '@angular/core';
-import { CommonModule, DatePipe, KeyValuePipe } from '@angular/common';
+import { Component, OnInit, inject, signal, WritableSignal, computed, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -11,6 +11,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTabsModule } from '@angular/material/tabs';
+import { Subscription } from 'rxjs';
 
 import { DocumentService } from '../../core/services/document.service';
 import { Document, Attachment } from '../../core/models/document.model';
@@ -24,9 +25,6 @@ import { environment } from '../../../environments/environment';
   imports: [
     CommonModule,
     RouterModule,
-    DatePipe,
-    KeyValuePipe,
-    FileSizePipe,
     MatCardModule,
     MatProgressSpinnerModule,
     MatListModule,
@@ -49,88 +47,47 @@ import { environment } from '../../../environments/environment';
           @if(doc) {
             <mat-card class="mb-6">
               <mat-card-header class="!pb-2">
-                <mat-card-title class="text-2xl font-semibold">{{ doc.title }}</mat-card-title>
+                <mat-card-title class="text-2xl font-semibold flex flex-col gap-1">
+                  {{ doc.title }}
+                  <span class="text-base font-normal text-gray-600">Resource Code: {{ doc.resourceCode }}</span>
+                </mat-card-title>
                 <mat-card-subtitle>
-                  Resource Type: {{ doc.resourceTypeName || 'N/A' }} | Version: {{ doc.version }}
+                  Resource Type: {{ doc.resourceType?.name || doc.resourceType?.code || 'N/A' }}
                 </mat-card-subtitle>
               </mat-card-header>
               <mat-card-content>
-                @if (doc.primaryFile) {
-                  <div class="mb-4 flex items-center gap-2">
-                    <mat-icon color="primary">description</mat-icon>
-                    <span class="font-semibold">Primary File:</span>
-                    <a mat-stroked-button color="primary" [href]="getPrimaryFileDownloadUrl(doc)" target="_blank">
-                      <mat-icon>download</mat-icon> Download {{ doc.primaryFile.fileName }}
-                    </a>
-                    <span class="text-xs text-gray-500 ml-2">({{ doc.primaryFile.fileSize | fileSize }})</span>
-                  </div>
-                }
+                <div class="mb-4 flex items-center gap-2">
+                  <mat-icon color="primary">description</mat-icon>
+                  <span class="font-semibold">Primary File:</span>
+                  @if (doc.storageKey) {
+                    <button mat-stroked-button color="primary" (click)="downloadLatestPrimaryFile(doc)">
+                      <mat-icon>download</mat-icon> Download Current Version
+                    </button>
+                  } @else {
+                    <span class="text-gray-500">No file uploaded yet.</span>
+                  }
+                  <label class="ml-4">
+                    <input type="file" hidden (change)="onPrimaryFileSelected($event)" #fileInput />
+                    <button mat-stroked-button color="accent" type="button" (click)="fileInput.click()">
+                      <mat-icon>upload</mat-icon> Upload Primary File
+                    </button>
+                  </label>
+                </div>
                 @if (doc.description) {
                   <p class="text-gray-700 mb-4">{{ doc.description }}</p>
                 }
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm mb-4">
                   <div><strong>ID:</strong> {{ doc.id }}</div>
-                  <div><strong>Created By:</strong> {{ doc.createdByName || 'System' }}</div>
+                  <div><strong>Resource Type:</strong> {{ doc.resourceType?.name || doc.resourceType?.code || 'N/A' }}</div>
+                  <div><strong>Resource Code:</strong> {{ doc.resourceCode }}</div>
+                  <div><strong>Status:</strong> {{ doc.status }}</div>
+                  <div><strong>Created By:</strong> {{ doc.owner?.username || doc.owner?.email || 'System' }}</div>
                   <div><strong>Created At:</strong> {{ doc.createdAt | date:'medium' }}</div>
                   <div><strong>Updated At:</strong> {{ doc.updatedAt | date:'medium' }}</div>
                 </div>
-
-                @if (doc.tags && doc.tags.length) {
+                @if (doc.fieldValues && getFieldValueKeys(doc.fieldValues).length > 0) {
                   <div class="mb-4">
-                    <strong class="mr-2">Tags:</strong>
-                    <mat-chip-listbox aria-label="Document tags">
-                      @for (tag of doc.tags; track tag) {
-                        <mat-chip disabled>{{tag}}</mat-chip>
-                      }
-                    </mat-chip-listbox>
-                  </div>
-                }
-              </mat-card-content>
-              <mat-card-actions class="!pt-0 !pb-3 !px-4">
-                <button mat-stroked-button color="primary" [routerLink]="['/documents', doc.id, 'edit']">
-                  <mat-icon>edit</mat-icon> Edit Document
-                </button>
-                <button mat-stroked-button [routerLink]="['/documents', doc.id, 'acl']">
-                  <mat-icon>security</mat-icon> Manage ACL
-                </button>
-                <button mat-stroked-button [routerLink]="['/documents', doc.id, 'versions']">
-                  <mat-icon>history</mat-icon> View Versions
-                </button>
-              </mat-card-actions>
-            </mat-card>
-
-            <mat-tab-group animationDuration="0ms">
-              <mat-tab label="Attachments">
-                <div class="py-4">
-                  @if (doc.attachments && doc.attachments.length) {
-                    <h3 class="text-xl font-medium mb-3">Attachments ({{doc.attachments.length}})</h3>
-                    <mat-list role="list">
-                      @for (attachment of doc.attachments; track attachment.id) {
-                        <mat-list-item role="listitem" class="h-auto py-2">
-                          <mat-icon matListItemIcon>attachment</mat-icon>
-                          <div matListItemTitle class="font-medium">{{ attachment.fileName }}</div>
-                          <div matListItemLine class="text-xs text-gray-500">
-                            Size: {{ attachment.fileSize | fileSize }} | Type: {{ attachment.contentType }}
-                          </div>
-                          <div matListItemMeta>
-                            <a mat-icon-button [href]="getAttachmentDownloadUrl(attachment)" target="_blank" matTooltip="Download {{attachment.fileName}}">
-                              <mat-icon>download</mat-icon>
-                            </a>
-                          </div>
-                        </mat-list-item>
-                        <mat-divider></mat-divider>
-                      }
-                    </mat-list>
-                  } @else {
-                    <p class="text-gray-500 text-center py-6">No attachments found for this document.</p>
-                  }
-                </div>
-              </mat-tab>
-
-              <mat-tab label="Field Values">
-                <div class="py-4">
-                  @if (getFieldValueKeys(doc.fieldValues).length > 0) {
-                    <h3 class="text-xl font-medium mb-3">Field Values</h3>
+                    <h3 class="text-lg font-medium mb-2">Field Values</h3>
                     <mat-list role="list">
                       @for (item of doc.fieldValues | keyvalue; track item.key) {
                         <mat-list-item role="listitem" class="h-auto py-2">
@@ -140,12 +97,40 @@ import { environment } from '../../../environments/environment';
                         <mat-divider></mat-divider>
                       }
                     </mat-list>
-                  } @else {
-                    <p class="text-gray-500 text-center py-6">No field values available for this document.</p>
-                  }
+                  </div>
+                }
+                @if (doc.attachments && doc.attachments.length) {
+                  <div class="mb-4">
+                    <h3 class="text-lg font-medium mb-2">Attachments ({{doc.attachments.length}})</h3>
+                    <mat-list role="list">
+                      @for (attachment of doc.attachments; track attachment.id) {
+                        <mat-list-item role="listitem" class="h-auto py-2">
+                          <mat-icon matListItemIcon>attachment</mat-icon>
+                          <div matListItemTitle class="font-medium">{{ attachment.fileName }}</div>
+                          <div matListItemLine class="text-xs text-gray-500">
+                            Size: {{ attachment.fileSize }} | Type: {{ attachment.contentType }}
+                          </div>
+                          <div matListItemMeta>
+                            <button mat-icon-button (click)="downloadAttachment(attachment.id, attachment.fileName)" matTooltip="Download {{attachment.fileName}}">
+                              <mat-icon>download</mat-icon>
+                            </button>
+                          </div>
+                        </mat-list-item>
+                        <mat-divider></mat-divider>
+                      }
+                    </mat-list>
+                  </div>
+                }
+                <div class="flex gap-2 mt-4">
+                  <button mat-stroked-button color="primary" [routerLink]="['/documents', doc.id, 'edit']">
+                    <mat-icon>edit</mat-icon> Edit Document
+                  </button>
+                  <button mat-stroked-button [routerLink]="['/documents', doc.id, 'acl']">
+                    <mat-icon>security</mat-icon> Manage ACL
+                  </button>
                 </div>
-              </mat-tab>
-            </mat-tab-group>
+              </mat-card-content>
+            </mat-card>
           } @else {
             <mat-card class="text-center p-8">
               <mat-icon class="text-6xl text-gray-400">error_outline</mat-icon>
@@ -156,14 +141,14 @@ import { environment } from '../../../environments/environment';
               </button>
             </mat-card>
           }
-        } @else { <!-- This case should ideally not be reached if document() is initialized to null and loading works -->
-            <mat-card class="text-center p-8">
-              <mat-icon class="text-6xl text-gray-400">error_outline</mat-icon>
-              <h2 class="text-2xl font-semibold mt-4 mb-2">Document data is unavailable</h2>
-               <button mat-stroked-button routerLink="/documents">
-                <mat-icon>arrow_back</mat-icon> Back to Documents List
-              </button>
-            </mat-card>
+        } @else {
+          <mat-card class="text-center p-8">
+            <mat-icon class="text-6xl text-gray-400">error_outline</mat-icon>
+            <h2 class="text-2xl font-semibold mt-4 mb-2">Document data is unavailable</h2>
+            <button mat-stroked-button routerLink="/documents">
+              <mat-icon>arrow_back</mat-icon> Back to Documents List
+            </button>
+          </mat-card>
         }
       }
     </div>
@@ -179,7 +164,7 @@ import { environment } from '../../../environments/environment';
     }
   `]
 })
-export class DocumentDetailPageComponent implements OnInit {
+export class DocumentDetailPageComponent implements OnInit, OnDestroy {
   private documentService = inject(DocumentService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -189,6 +174,10 @@ export class DocumentDetailPageComponent implements OnInit {
   document: WritableSignal<Document | null> = signal(null);
   documentId = signal<number | null>(null);
   apiBaseUrl = environment.apiBase;
+  versions: any[] = [];
+  versionsLoaded = false;
+  versionsLoading = false;
+  private versionsSub?: Subscription;
 
   ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
@@ -219,14 +208,62 @@ export class DocumentDetailPageComponent implements OnInit {
     });
   }
 
+  downloadLatestPrimaryFile(doc: Document): void {
+    if (!doc || !doc.id || !doc.storageKey) return;
+    this.documentService.downloadLatestPrimaryFile(doc.id, doc.storageKey).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = doc.title || `document_${doc.id}_latest`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        this.snackbar.error('Failed to download file: ' + (err.error?.message || err.message));
+      }
+    });
+  }
+
+  downloadAttachment(attachmentId: number, fileName: string): void {
+    this.documentService.downloadAttachment(attachmentId).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName || `attachment_${attachmentId}`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        this.snackbar.error('Failed to download attachment: ' + (err.error?.message || err.message));
+      }
+    });
+  }
+
+  onPrimaryFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0 && this.documentId()) {
+      const file = input.files[0];
+      this.documentService.uploadNewPrimaryVersion(this.documentId()!, file).subscribe({
+        next: () => {
+          this.snackbar.success('New version uploaded successfully.');
+          this.loadDocument(this.documentId()!); // Refresh document details
+        },
+        error: (err) => {
+          this.snackbar.error('Failed to upload new version: ' + (err.error?.message || err.message));
+        }
+      });
+    }
+  }
+
   getAttachmentDownloadUrl(attachment: Attachment): string {
     if (!this.documentId()) return '#';
     return `${this.apiBaseUrl}/documents/${this.documentId()}/files/${attachment.storageKey}`;
   }
 
-  getPrimaryFileDownloadUrl(doc: Document): string {
-    if (!doc || !doc.primaryFile) return '#';
-    return `${this.apiBaseUrl}/documents/${doc.id}/files/${doc.primaryFile.storageKey}`;
+  getVersionDownloadUrl(docId: number, versionNo: number): string {
+    return `${this.apiBaseUrl}/documents/${docId}/versions/${versionNo}/file`;
   }
 
   getFieldValueKeys(fieldValues: Record<string, any> | undefined | null): string[] {
@@ -248,5 +285,44 @@ export class DocumentDetailPageComponent implements OnInit {
         return value;
     }
     return String(value);
+  }
+
+  loadVersions(): void {
+    if (!this.documentId()) return;
+    this.versionsLoading = true;
+    this.versionsSub = this.documentService
+      .getVersions(this.documentId()!)
+      .subscribe({
+        next: (data) => {
+          this.versions = data;
+          this.versionsLoaded = true;
+          this.versionsLoading = false;
+        },
+        error: () => {
+          this.versions = [];
+          this.versionsLoaded = true;
+          this.versionsLoading = false;
+        }
+      });
+  }
+
+  downloadVersion(docId: number, versionNo: number, fileName: string): void {
+    this.documentService.downloadVersionFile(docId, versionNo).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName || `document_${docId}_v${versionNo}`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        this.snackbar.error('Failed to download file: ' + (err.error?.message || err.message));
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.versionsSub) this.versionsSub.unsubscribe();
   }
 }
