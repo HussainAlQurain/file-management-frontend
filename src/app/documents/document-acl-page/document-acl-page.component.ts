@@ -64,21 +64,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
           <mat-card-content>
             <form [formGroup]="aclForm" (ngSubmit)="grantPermission()" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
               <mat-form-field appearance="outline" class="md:col-span-1">
-                <mat-label>Principal Type</mat-label>
-                <mat-select formControlName="principalType" required>
-                  @for (type of principalTypes; track type.value) {
-                    <mat-option [value]="type.value">{{ type.label }}</mat-option>
-                  }
-                </mat-select>
-                @if (aclForm.get('principalType')?.hasError('required')) {
-                  <mat-error>Principal type is required.</mat-error>
-                }
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="md:col-span-1">
                 <mat-label>User</mat-label>
-                <input matInput placeholder="Search user..." [(ngModel)]="userFilter" (ngModelChange)="filterUsers()" name="userFilter" autocomplete="off" />
-                <mat-select formControlName="principalId" required>
+                <input matInput placeholder="Search user..." [value]="userFilter" (input)="onUserFilterInput($event)" autocomplete="off" />
+                <mat-select formControlName="userId" required>
                   @if(isLoadingUsers()) { <mat-option disabled>Loading users...</mat-option> }
                   @for (user of filteredUsers(); track user.id) {
                     <mat-option [value]="user.id">
@@ -89,7 +77,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                     </mat-option>
                   }
                 </mat-select>
-                 @if (aclForm.get('principalId')?.hasError('required')) {
+                 @if (aclForm.get('userId')?.hasError('required')) {
                   <mat-error>User is required.</mat-error>
                 }
               </mat-form-field>
@@ -127,9 +115,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
             } @else if (currentAcls().length > 0) {
               <table mat-table [dataSource]="currentAcls()" class="w-full">
                 <!-- Principal Column -->
-                <ng-container matColumnDef="principal">
-                  <th mat-header-cell *matHeaderCellDef> Principal </th>
-                  <td mat-cell *matCellDef="let acl"> {{ acl.principalName || acl.principalId }} ({{ acl.principalType }}) </td>
+                <ng-container matColumnDef="username">
+                  <th mat-header-cell *matHeaderCellDef> Username </th>
+                  <td mat-cell *matCellDef="let acl"> {{ acl.username }} </td>
                 </ng-container>
 
                 <!-- Permission Column -->
@@ -195,11 +183,7 @@ export class DocumentAclPageComponent implements OnInit {
   isGrantingPermission = signal(false);
 
   aclForm!: FormGroup;
-  displayedColumns: string[] = ['principal', 'permission', 'actions'];
-
-  principalTypes = [
-    { value: PrincipalType.USER, label: 'User' },
-  ];
+  displayedColumns: string[] = ['username', 'permission', 'actions'];
 
   permissions = [
     { value: 'EDIT', label: 'Edit' },
@@ -209,9 +193,8 @@ export class DocumentAclPageComponent implements OnInit {
 
   constructor() {
     this.aclForm = this.fb.group({
-      principalType: [PrincipalType.USER, Validators.required],
-      principalId: [null as number | null, Validators.required],
-      permission: [null as Permission | null, Validators.required]
+      userId: [null as number | null, Validators.required],
+      permission: [null as string | null, Validators.required]
     });
   }
 
@@ -288,19 +271,25 @@ export class DocumentAclPageComponent implements OnInit {
     );
   }
 
+  onUserFilterInput(event: Event) {
+    this.userFilter = (event.target as HTMLInputElement).value;
+    this.filterUsers();
+  }
+
   grantPermission(): void {
     if (this.aclForm.invalid || !this.documentId()) return;
-
     this.isGrantingPermission.set(true);
-    const aclData = this.aclForm.value as { principalId: number, permission: Permission, principalType: PrincipalType };
+    const aclData = {
+      action: 'grant' as 'grant',
+      userId: this.aclForm.value.userId,
+      permission: this.aclForm.value.permission
+    };
     const docId = this.documentId()!;
-
-    // Assuming principalType is USER for now, so principalId is userId
-    this.aclService.grant(docId, aclData.principalId, aclData.permission).subscribe({
+    this.aclService.updateAcl(docId, aclData).subscribe({
       next: () => {
         this.snackbar.success('Permission granted successfully.');
-        this.loadCurrentAcls(docId); 
-        this.aclForm.reset({ principalType: PrincipalType.USER, principalId: null, permission: null });
+        this.loadCurrentAcls(docId);
+        this.aclForm.reset({ userId: null, permission: null });
         this.isGrantingPermission.set(false);
       },
       error: (err: any) => {
@@ -314,7 +303,7 @@ export class DocumentAclPageComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
         title: 'Confirm Revoke',
-        message: `Are you sure you want to revoke ${acl.permission} permission for ${acl.principalName || acl.principalId} (${acl.principalType})?`
+        message: `Are you sure you want to revoke ${acl.permission} permission for ${acl.username}?`
       }
     });
 
@@ -325,15 +314,18 @@ export class DocumentAclPageComponent implements OnInit {
     });
   }
 
-  revokePermission(aclToRevoke: AclEntryResponse): void {
+  revokePermission(acl: any): void {
     const docId = this.documentId();
     if (!docId) {
       this.snackbar.error('Document ID is missing.');
       return;
     }
-    
-    // Assuming principalType is USER, so principalId is userId
-    this.aclService.revoke(docId, aclToRevoke.principalId, aclToRevoke.permission).subscribe({ 
+    const aclData = {
+      action: 'revoke' as 'revoke',
+      userId: acl.userId ?? acl.principalId,
+      permission: acl.permission
+    };
+    this.aclService.updateAcl(docId, aclData).subscribe({
       next: () => {
         this.snackbar.success('Permission revoked successfully.');
         this.loadCurrentAcls(docId);

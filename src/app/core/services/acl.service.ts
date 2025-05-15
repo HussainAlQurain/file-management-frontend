@@ -11,9 +11,9 @@ export interface AclRequest {
 
 export interface AclEntryResponse {
   id?: number;
-  principalType: string;
-  principalId: number;
-  principalName?: string;
+  principalType?: string;
+  principalId?: number;
+  username?: string;
   permission: string;
 }
 
