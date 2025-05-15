@@ -110,7 +110,8 @@ export class DocumentListPageComponent implements OnInit {
   query: DocQuery = {
     page: 0,
     size: 10,
-    sort: 'createdAt,desc'
+    sort: 'createdAt,desc',
+    perm: 'VIEW'
   };
   
   showFilters = signal(false);

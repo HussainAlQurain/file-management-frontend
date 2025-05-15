@@ -38,6 +38,7 @@ export interface DocQuery {
   tags?: string[];
   fromDate?: string;
   toDate?: string;
+  perm?: string; // Add permission filter (VIEW, EDIT, etc.)
 }
 
 export interface Page<T> {

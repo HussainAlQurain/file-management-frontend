@@ -55,6 +55,16 @@ import { environment } from '../../../environments/environment';
                 </mat-card-subtitle>
               </mat-card-header>
               <mat-card-content>
+                @if (doc.primaryFile) {
+                  <div class="mb-4 flex items-center gap-2">
+                    <mat-icon color="primary">description</mat-icon>
+                    <span class="font-semibold">Primary File:</span>
+                    <a mat-stroked-button color="primary" [href]="getPrimaryFileDownloadUrl(doc)" target="_blank">
+                      <mat-icon>download</mat-icon> Download {{ doc.primaryFile.fileName }}
+                    </a>
+                    <span class="text-xs text-gray-500 ml-2">({{ doc.primaryFile.fileSize | fileSize }})</span>
+                  </div>
+                }
                 @if (doc.description) {
                   <p class="text-gray-700 mb-4">{{ doc.description }}</p>
                 }
@@ -212,6 +222,11 @@ export class DocumentDetailPageComponent implements OnInit {
   getAttachmentDownloadUrl(attachment: Attachment): string {
     if (!this.documentId()) return '#';
     return `${this.apiBaseUrl}/documents/${this.documentId()}/files/${attachment.storageKey}`;
+  }
+
+  getPrimaryFileDownloadUrl(doc: Document): string {
+    if (!doc || !doc.primaryFile) return '#';
+    return `${this.apiBaseUrl}/documents/${doc.id}/files/${doc.primaryFile.storageKey}`;
   }
 
   getFieldValueKeys(fieldValues: Record<string, any> | undefined | null): string[] {

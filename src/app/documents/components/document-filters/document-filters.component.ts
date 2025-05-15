@@ -72,7 +72,14 @@ import { ResourceType } from '../../../core/models/resource-type.model';
           <mat-datepicker #toPicker></mat-datepicker>
         </mat-form-field>
         
-        <mat-form-field appearance="outline" class="w-full sm:col-span-2 md:col-span-1 lg:col-span-2">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Permission</mat-label>
+          <mat-select formControlName="perm">
+            <mat-option *ngFor="let option of permissionOptions" [value]="option.value">{{ option.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline" class="w-full sm:col-span-2 md:col-span-3 lg:col-span-4">
           <mat-label>Tags</mat-label>
           <mat-chip-grid #chipGrid aria-label="Tag selection">
             <mat-chip-row *ngFor="let tag of tags" (removed)="removeTag(tag)">
@@ -114,6 +121,11 @@ export class DocumentFiltersComponent implements OnInit {
   filterForm!: FormGroup;
   tags: string[] = [];
   separatorKeysCodes: number[] = [ENTER, COMMA];
+  permissionOptions = [
+    { value: 'VIEW', label: 'View' },
+    { value: 'EDIT', label: 'Edit' },
+    { value: 'DELETE', label: 'Delete' }
+  ];
   
   ngOnInit(): void {
     this.initFilterForm();
@@ -126,7 +138,8 @@ export class DocumentFiltersComponent implements OnInit {
       resourceTypeIdEquals: [null],
       ownerIdEquals: [null],
       fromDate: [null],
-      toDate: [null]
+      toDate: [null],
+      perm: ['VIEW'] // Default to VIEW
     });
   }
   
@@ -141,7 +154,8 @@ export class DocumentFiltersComponent implements OnInit {
       resourceCodeEquals: formValue.resourceCodeEquals || undefined,
       resourceTypeIdEquals: formValue.resourceTypeIdEquals || undefined,
       ownerIdEquals: formValue.ownerIdEquals ? Number(formValue.ownerIdEquals) : undefined,
-      tags: this.tags.length > 0 ? this.tags.join(',') as any : undefined // Backend might expect comma-separated string for tags
+      tags: this.tags.length > 0 ? this.tags.join(',') as any : undefined,
+      perm: formValue.perm || 'VIEW'
     };
     
     if (formValue.fromDate) {
@@ -169,7 +183,8 @@ export class DocumentFiltersComponent implements OnInit {
       resourceTypeIdEquals: null,
       ownerIdEquals: null,
       fromDate: null,
-      toDate: null
+      toDate: null,
+      perm: 'VIEW'
     });
     this.tags = [];
     this.filtersChanged.emit({}); // Emit empty object to signal reset

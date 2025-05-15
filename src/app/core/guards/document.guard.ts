@@ -14,7 +14,7 @@ export const canViewDocGuard: CanActivateFn = (route) => {
     return false;
   }
   
-  return documentService.checkPermission(documentId, 'VIEW').pipe(
+  return documentService.get(documentId).pipe(
     map(() => true),
     catchError(() => {
       snackbar.error('You do not have permission to view this document');
@@ -33,7 +33,8 @@ export const canEditDocGuard: CanActivateFn = (route) => {
     return false;
   }
   
-  return documentService.checkPermission(documentId, 'EDIT').pipe(
+  // Try to fetch the document. If backend returns 403, editing is not allowed.
+  return documentService.get(documentId).pipe(
     map(() => true),
     catchError(() => {
       snackbar.error('You do not have permission to edit this document');

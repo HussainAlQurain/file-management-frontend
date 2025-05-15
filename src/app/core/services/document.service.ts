@@ -52,11 +52,4 @@ export class DocumentService {
   getFileUrl(documentId: number, storageKey: string): string {
     return `${this.documentsApiUrl}/${documentId}/files/${storageKey}`;
   }
-  
-  checkPermission(id: number, permission: string): Observable<boolean> {
-    return this.http.head<any>(`${this.documentsApiUrl}/${id}?perm=${permission}`, { observe: 'response' })
-      .pipe(
-        map(() => true)
-      );
-  }
 }
