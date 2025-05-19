@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal, WritableSignal } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
@@ -11,7 +11,7 @@ import { MatDividerModule } from '@angular/material/divider';
 
 import { DocumentService } from '../../core/services/document.service';
 import { SnackbarService } from '../../core/services/snackbar.service';
-import { Document, DocumentVersionInfo } from '../../core/models/document.model';
+import { Document, DocumentVersion } from '../../core/models/document.model';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
@@ -21,6 +21,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     CommonModule,
     RouterModule,
     DatePipe,
+    DecimalPipe,
     MatCardModule,
     MatListModule,
     MatIconModule,
@@ -54,10 +55,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
           <mat-card-content>
             @if (versions().length > 0) {
               <mat-list>
-                @for (version of versions(); track version.version; let i = $index) {
+                @for (version of versions(); track version.versionNo; let i = $index) {
                   <mat-list-item class="h-auto py-3">
                     <mat-icon matListItemIcon>history</mat-icon>
-                    <div matListItemTitle class="font-semibold">Version {{ version.version }}</div>
+                    <div matListItemTitle class="font-semibold">Version {{ version.versionNo }}</div>
                     <div matListItemLine class="text-sm">
                       Created At: {{ version.createdAt | date:'medium' }}
                     </div>
@@ -66,7 +67,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                         By: {{ version.createdByName }}
                       </div>
                     }
-                     <!-- Add more version details here if available, e.g., a link to view that specific version if supported -->
+                    <div matListItemLine class="text-sm">
+                      Size: {{ version.sizeBytes | number }} bytes
+                    </div>
+                    <div matListItemMeta>
+                      <button mat-icon-button color="primary" (click)="downloadVersion(version.versionNo)">
+                        <mat-icon>download</mat-icon>
+                      </button>
+                    </div>
                   </mat-list-item>
                   @if (i < versions().length - 1) {
                     <mat-divider></mat-divider>
@@ -99,7 +107,7 @@ export class DocumentVersionsPageComponent implements OnInit {
 
   documentId = signal<number | null>(null);
   document: WritableSignal<Document | null> = signal(null);
-  versions: WritableSignal<DocumentVersionInfo[]> = signal([]);
+  versions: WritableSignal<DocumentVersion[]> = signal([]);
 
   isLoadingDocument = signal(true);
   isLoadingVersions = signal(true);
@@ -141,12 +149,31 @@ export class DocumentVersionsPageComponent implements OnInit {
     this.isLoadingVersions.set(true);
     this.documentService.getVersions(id).subscribe({
       next: (versionHistory) => {
-        this.versions.set(versionHistory.sort((a, b) => b.version - a.version)); // Sort by version descending
+        this.versions.set(versionHistory.sort((a, b) => b.versionNo - a.versionNo)); // Sort by version descending
         this.isLoadingVersions.set(false);
       },
       error: (err) => {
         this.isLoadingVersions.set(false);
         this.snackbar.error('Failed to load version history: ' + (err.error?.message || err.message));
+      }
+    });
+  }
+
+  downloadVersion(versionNo: number): void {
+    if (!this.documentId()) return;
+    
+    this.documentService.downloadVersionFile(this.documentId()!, versionNo).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const doc = this.document();
+        a.download = doc ? `${doc.title}_v${versionNo}` : `document_${this.documentId()}_v${versionNo}`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        this.snackbar.error('Failed to download version: ' + (err.error?.message || err.message));
       }
     });
   }

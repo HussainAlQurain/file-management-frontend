@@ -14,7 +14,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { Subscription } from 'rxjs';
 
 import { DocumentService } from '../../core/services/document.service';
-import { Document, Attachment } from '../../core/models/document.model';
+import { Document, Attachment, RelatedDocuments, DocumentVersion } from '../../core/models/document.model';
 import { SnackbarService } from '../../core/services/snackbar.service';
 import { FileSizePipe } from '../../shared/pipes/file-size.pipe';
 import { environment } from '../../../environments/environment';
@@ -34,7 +34,8 @@ import { environment } from '../../../environments/environment';
     MatTooltipModule,
     MatDividerModule,
     MatExpansionModule,
-    MatTabsModule
+    MatTabsModule,
+    FileSizePipe
   ],
   template: `
     <div class="p-4 md:p-8">
@@ -54,81 +55,202 @@ import { environment } from '../../../environments/environment';
                 <mat-card-subtitle>
                   Resource Type: {{ doc.resourceType?.name || doc.resourceType?.code || 'N/A' }}
                 </mat-card-subtitle>
-              </mat-card-header>
-              <mat-card-content>
-                <div class="mb-4 flex items-center gap-2">
-                  <mat-icon color="primary">description</mat-icon>
-                  <span class="font-semibold">Primary File:</span>
-                  @if (doc.storageKey) {
-                    <button mat-stroked-button color="primary" (click)="downloadLatestPrimaryFile(doc)">
-                      <mat-icon>download</mat-icon> Download Current Version
-                    </button>
-                  } @else {
-                    <span class="text-gray-500">No file uploaded yet.</span>
-                  }
-                  <label class="ml-4">
-                    <input type="file" hidden (change)="onPrimaryFileSelected($event)" #fileInput />
-                    <button mat-stroked-button color="accent" type="button" (click)="fileInput.click()">
-                      <mat-icon>upload</mat-icon> Upload Primary File
-                    </button>
-                  </label>
-                </div>
-                @if (doc.description) {
-                  <p class="text-gray-700 mb-4">{{ doc.description }}</p>
-                }
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm mb-4">
-                  <div><strong>ID:</strong> {{ doc.id }}</div>
-                  <div><strong>Resource Type:</strong> {{ doc.resourceType?.name || doc.resourceType?.code || 'N/A' }}</div>
-                  <div><strong>Resource Code:</strong> {{ doc.resourceCode }}</div>
-                  <div><strong>Status:</strong> {{ doc.status }}</div>
-                  <div><strong>Created By:</strong> {{ doc.owner?.username || doc.owner?.email || 'System' }}</div>
-                  <div><strong>Created At:</strong> {{ doc.createdAt | date:'medium' }}</div>
-                  <div><strong>Updated At:</strong> {{ doc.updatedAt | date:'medium' }}</div>
-                </div>
-                @if (doc.fieldValues && getFieldValueKeys(doc.fieldValues).length > 0) {
-                  <div class="mb-4">
-                    <h3 class="text-lg font-medium mb-2">Field Values</h3>
-                    <mat-list role="list">
-                      @for (item of doc.fieldValues | keyvalue; track item.key) {
-                        <mat-list-item role="listitem" class="h-auto py-2">
-                          <div matListItemTitle class="font-semibold">{{ item.key }}:</div>
-                          <div matListItemLine class="whitespace-pre-wrap">{{ formatFieldValue(item.value) }}</div>
-                        </mat-list-item>
-                        <mat-divider></mat-divider>
-                      }
-                    </mat-list>
-                  </div>
-                }
-                @if (doc.attachments && doc.attachments.length) {
-                  <div class="mb-4">
-                    <h3 class="text-lg font-medium mb-2">Attachments ({{doc.attachments.length}})</h3>
-                    <mat-list role="list">
-                      @for (attachment of doc.attachments; track attachment.id) {
-                        <mat-list-item role="listitem" class="h-auto py-2">
-                          <mat-icon matListItemIcon>attachment</mat-icon>
-                          <div matListItemTitle class="font-medium">{{ attachment.fileName }}</div>
-                          <div matListItemLine class="text-xs text-gray-500">
-                            Size: {{ attachment.fileSize }} | Type: {{ attachment.contentType }}
-                          </div>
-                          <div matListItemMeta>
-                            <button mat-icon-button (click)="downloadAttachment(attachment.id, attachment.fileName)" matTooltip="Download {{attachment.fileName}}">
-                              <mat-icon>download</mat-icon>
-                            </button>
-                          </div>
-                        </mat-list-item>
-                        <mat-divider></mat-divider>
-                      }
-                    </mat-list>
-                  </div>
-                }
-                <div class="flex gap-2 mt-4">
+                <div class="flex-grow"></div>
+                <div class="actions flex gap-2">
                   <button mat-stroked-button color="primary" [routerLink]="['/documents', doc.id, 'edit']">
-                    <mat-icon>edit</mat-icon> Edit Document
+                    <mat-icon>edit</mat-icon> Edit
                   </button>
                   <button mat-stroked-button [routerLink]="['/documents', doc.id, 'acl']">
                     <mat-icon>security</mat-icon> Manage ACL
                   </button>
+                  <button mat-stroked-button routerLink="/documents">
+                    <mat-icon>arrow_back</mat-icon> Back
+                  </button>
                 </div>
+              </mat-card-header>
+              <mat-card-content>
+                <mat-tab-group animationDuration="0ms" class="mt-4">
+                  <mat-tab label="Details">
+                    <div class="p-4">
+                      <div class="mb-4 flex items-center gap-2">
+                        <mat-icon color="primary">description</mat-icon>
+                        <span class="font-semibold">Primary File:</span>
+                        @if (doc.storageKey) {
+                          <button mat-stroked-button color="primary" (click)="downloadLatestPrimaryFile(doc)">
+                            <mat-icon>download</mat-icon> Download Current Version
+                          </button>
+                        } @else {
+                          <span class="text-gray-500">No file uploaded yet.</span>
+                        }
+                        <label class="ml-4">
+                          <input type="file" hidden (change)="onPrimaryFileSelected($event)" #fileInput />
+                          <button mat-stroked-button color="accent" type="button" (click)="fileInput.click()">
+                            <mat-icon>upload</mat-icon> Upload Primary File
+                          </button>
+                        </label>
+                      </div>
+                      @if (doc.description) {
+                        <p class="text-gray-700 mb-4">{{ doc.description }}</p>
+                      }
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm mb-4">
+                        <div><strong>ID:</strong> {{ doc.id }}</div>
+                        <div><strong>Resource Type:</strong> {{ doc.resourceType?.name || doc.resourceType?.code || 'N/A' }}</div>
+                        <div><strong>Resource Code:</strong> {{ doc.resourceCode }}</div>
+                        <div><strong>Status:</strong> {{ doc.status }}</div>
+                        <div><strong>Created By:</strong> {{ doc.owner?.username || doc.owner?.email || 'System' }}</div>
+                        <div><strong>Created At:</strong> {{ doc.createdAt | date:'medium' }}</div>
+                        <div><strong>Updated At:</strong> {{ doc.updatedAt | date:'medium' }}</div>
+                      </div>
+                      @if (doc.fieldValues && getFieldValueKeys(doc.fieldValues).length > 0) {
+                        <div class="mb-4">
+                          <h3 class="text-lg font-medium mb-2">Field Values</h3>
+                          <mat-list role="list">
+                            @for (item of doc.fieldValues | keyvalue; track item.key) {
+                              <mat-list-item role="listitem" class="h-auto py-2">
+                                <div matListItemTitle class="font-semibold">{{ item.key }}:</div>
+                                <div matListItemLine class="whitespace-pre-wrap">{{ formatFieldValue(item.value) }}</div>
+                              </mat-list-item>
+                              <mat-divider></mat-divider>
+                            }
+                          </mat-list>
+                        </div>
+                      }
+                    </div>
+                  </mat-tab>
+
+                  <mat-tab label="Related Documents">
+                    <div class="p-4">
+                      @if (isLoadingRelated()) {
+                        <div class="flex justify-center items-center min-h-[100px]">
+                          <mat-spinner diameter="40"></mat-spinner>
+                        </div>
+                      } @else {
+                        @if (relatedDocuments()?.parent) {
+                          <div class="mb-6">
+                            <h3 class="text-lg font-medium mb-3">Parent Document</h3>
+                            <mat-card class="mb-2 cursor-pointer hover:shadow-md transition-shadow" 
+                                    [routerLink]="['/documents', relatedDocuments()?.parent?.id]">
+                              <mat-card-header>
+                                <mat-icon mat-card-avatar>folder</mat-icon>
+                                <mat-card-title>{{ relatedDocuments()?.parent?.title }}</mat-card-title>
+                                <mat-card-subtitle>{{ relatedDocuments()?.parent?.resourceCode }} | {{ relatedDocuments()?.parent?.resourceTypeName }}</mat-card-subtitle>
+                              </mat-card-header>
+                            </mat-card>
+                          </div>
+                        }
+
+                        @if (relatedDocuments()?.children && relatedDocuments()?.children?.length > 0) {
+                          <div>
+                            <h3 class="text-lg font-medium mb-3">Child Documents</h3>
+                            @for (child of relatedDocuments()?.children; track child.id) {
+                              <mat-card class="mb-2 cursor-pointer hover:shadow-md transition-shadow" 
+                                      [routerLink]="['/documents', child.id]">
+                                <mat-card-header>
+                                  <mat-icon mat-card-avatar>description</mat-icon>
+                                  <mat-card-title>{{ child.title }}</mat-card-title>
+                                  <mat-card-subtitle>{{ child.resourceCode }} | {{ child.resourceTypeName }}</mat-card-subtitle>
+                                </mat-card-header>
+                              </mat-card>
+                            }
+                          </div>
+                        } @else if (!relatedDocuments()?.parent) {
+                          <div class="text-center p-6 text-gray-500">
+                            <mat-icon class="text-4xl mb-2">share</mat-icon>
+                            <p>No related documents found.</p>
+                          </div>
+                        }
+                      }
+                    </div>
+                  </mat-tab>
+
+                  <mat-tab label="Versions">
+                    <div class="p-4">
+                      @if (versionsLoading) {
+                        <div class="flex justify-center items-center min-h-[100px]">
+                          <mat-spinner diameter="40"></mat-spinner>
+                        </div>
+                      } @else if (!versionsLoaded) {
+                        <div class="text-center p-4">
+                          <button mat-stroked-button color="primary" (click)="loadVersions()">
+                            <mat-icon>history</mat-icon> Load Version History
+                          </button>
+                        </div>
+                      } @else if (versions.length > 0) {
+                        <div class="version-list">
+                          @for (version of versions; track version.versionNo) {
+                            <mat-card class="mb-3">
+                              <mat-card-header>
+                                <mat-icon mat-card-avatar>history</mat-icon>
+                                <mat-card-title>Version {{ version.versionNo }}</mat-card-title>
+                                <mat-card-subtitle>Created: {{ version.createdAt | date:'medium' }}</mat-card-subtitle>
+                              </mat-card-header>
+                              <mat-card-content>
+                                <div class="py-2">
+                                  <div><strong>Size:</strong> {{ version.sizeBytes | fileSize }}</div>
+                                  <div class="text-xs text-gray-500 truncate"><strong>Checksum:</strong> {{ version.checksumSha256 }}</div>
+                                </div>
+                                @if (version.attachments && version.attachments.length > 0) {
+                                  <div class="mt-2">
+                                    <h4 class="text-sm font-medium mb-1">Attachments ({{ version.attachments.length }})</h4>
+                                    <mat-list role="list">
+                                      @for (attachment of version.attachments; track attachment.id) {
+                                        <mat-list-item role="listitem" class="h-auto py-1">
+                                          <div matListItemTitle class="text-sm">{{ attachment.fileName }}</div>
+                                          <div matListItemLine class="text-xs text-gray-500">
+                                            {{ attachment.sizeBytes | fileSize }} | {{ attachment.mimeType }}
+                                          </div>
+                                        </mat-list-item>
+                                      }
+                                    </mat-list>
+                                  </div>
+                                }
+                              </mat-card-content>
+                              <mat-card-actions>
+                                <button mat-button color="primary" (click)="downloadVersionFile(version.versionNo)">
+                                  <mat-icon>download</mat-icon> Download
+                                </button>
+                              </mat-card-actions>
+                            </mat-card>
+                          }
+                        </div>
+                      } @else {
+                        <div class="text-center p-6 text-gray-500">
+                          <mat-icon class="text-4xl mb-2">history</mat-icon>
+                          <p>No version history available.</p>
+                        </div>
+                      }
+                    </div>
+                  </mat-tab>
+
+                  <mat-tab label="Attachments">
+                    <div class="p-4">
+                      @if (doc.attachments && doc.attachments.length) {
+                        <mat-list role="list">
+                          @for (attachment of doc.attachments; track attachment.id) {
+                            <mat-list-item role="listitem" class="h-auto py-2">
+                              <mat-icon matListItemIcon>attachment</mat-icon>
+                              <div matListItemTitle class="font-medium">{{ attachment.fileName }}</div>
+                              <div matListItemLine class="text-xs text-gray-500">
+                                Size: {{ attachment.fileSize | fileSize }} | Type: {{ attachment.contentType }}
+                              </div>
+                              <div matListItemMeta>
+                                <button mat-icon-button (click)="downloadAttachment(attachment.id, attachment.fileName)" matTooltip="Download {{attachment.fileName}}">
+                                  <mat-icon>download</mat-icon>
+                                </button>
+                              </div>
+                            </mat-list-item>
+                            <mat-divider></mat-divider>
+                          }
+                        </mat-list>
+                      } @else {
+                        <div class="text-center p-6 text-gray-500">
+                          <mat-icon class="text-4xl mb-2">attach_file</mat-icon>
+                          <p>No attachments for this document.</p>
+                        </div>
+                      }
+                    </div>
+                  </mat-tab>
+                </mat-tab-group>
               </mat-card-content>
             </mat-card>
           } @else {
@@ -174,10 +296,17 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
   document: WritableSignal<Document | null> = signal(null);
   documentId = signal<number | null>(null);
   apiBaseUrl = environment.apiBase;
-  versions: any[] = [];
+  
+  // Related documents
+  relatedDocuments = signal<RelatedDocuments | null>(null);
+  isLoadingRelated = signal(false);
+  
+  // Versions
+  versions: DocumentVersion[] = [];
   versionsLoaded = false;
   versionsLoading = false;
   private versionsSub?: Subscription;
+  private relatedSub?: Subscription;
 
   ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
@@ -185,6 +314,7 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
       if (id) {
         this.documentId.set(+id);
         this.loadDocument(+id);
+        this.loadRelatedDocuments(+id);
       } else {
         this.isLoading.set(false);
         this.snackbar.error('Document ID not found in URL.');
@@ -204,6 +334,20 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
         this.isLoading.set(false);
         this.document.set(null);
         this.snackbar.error('Failed to load document: ' + (err.error?.message || err.message));
+      }
+    });
+  }
+
+  loadRelatedDocuments(id: number): void {
+    this.isLoadingRelated.set(true);
+    this.relatedSub = this.documentService.getRelatedDocuments(id).subscribe({
+      next: (related) => {
+        this.relatedDocuments.set(related);
+        this.isLoadingRelated.set(false);
+      },
+      error: (err) => {
+        this.isLoadingRelated.set(false);
+        this.snackbar.error('Failed to load related documents: ' + (err.error?.message || err.message));
       }
     });
   }
@@ -231,7 +375,7 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = fileName || `attachment_${attachmentId}`;
+        a.download = fileName;
         a.click();
         window.URL.revokeObjectURL(url);
       },
@@ -249,6 +393,8 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
         next: () => {
           this.snackbar.success('New version uploaded successfully.');
           this.loadDocument(this.documentId()!); // Refresh document details
+          this.versions = []; // Reset versions
+          this.versionsLoaded = false;
         },
         error: (err) => {
           this.snackbar.error('Failed to upload new version: ' + (err.error?.message || err.message));
@@ -262,12 +408,8 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
     return `${this.apiBaseUrl}/documents/${this.documentId()}/files/${attachment.storageKey}`;
   }
 
-  getVersionDownloadUrl(docId: number, versionNo: number): string {
-    return `${this.apiBaseUrl}/documents/${docId}/versions/${versionNo}/file`;
-  }
-
-  getFieldValueKeys(fieldValues: Record<string, any> | undefined | null): string[] {
-    return fieldValues ? Object.keys(fieldValues) : [];
+  getFieldValueKeys(fieldValues: Record<string, any>): string[] {
+    return Object.keys(fieldValues || {});
   }
 
   formatFieldValue(value: any): string {
@@ -306,23 +448,28 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
       });
   }
 
-  downloadVersion(docId: number, versionNo: number, fileName: string): void {
-    this.documentService.downloadVersionFile(docId, versionNo).subscribe({
+  downloadVersionFile(versionNo: number): void {
+    if (!this.documentId()) return;
+    
+    this.documentService.downloadVersionFile(this.documentId()!, versionNo).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = fileName || `document_${docId}_v${versionNo}`;
+        // Get filename from the document title or use a default
+        const doc = this.document();
+        a.download = doc ? `${doc.title}_v${versionNo}` : `document_${this.documentId()}_v${versionNo}`;
         a.click();
         window.URL.revokeObjectURL(url);
       },
       error: (err) => {
-        this.snackbar.error('Failed to download file: ' + (err.error?.message || err.message));
+        this.snackbar.error('Failed to download version: ' + (err.error?.message || err.message));
       }
     });
   }
 
   ngOnDestroy(): void {
     if (this.versionsSub) this.versionsSub.unsubscribe();
+    if (this.relatedSub) this.relatedSub.unsubscribe();
   }
 }

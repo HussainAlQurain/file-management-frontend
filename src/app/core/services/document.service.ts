@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { Document, DocQuery, Page, DocumentVersionInfo, CreateDocumentDto, UpdateDocumentDto } from '../models/document.model';
+import { Document, DocQuery, Page, DocumentVersionInfo, CreateDocumentDto, UpdateDocumentDto, RelatedDocuments, DocumentVersion } from '../models/document.model';
 import { toParams } from '../utils/api-utils';
 
 @Injectable({
@@ -21,8 +21,8 @@ export class DocumentService {
     return this.http.get<Document>(`${this.documentsApiUrl}/${id}`);
   }
 
-  getVersions(id: number): Observable<DocumentVersionInfo[]> {
-    return this.http.get<DocumentVersionInfo[]>(`${this.documentsApiUrl}/${id}/versions`);
+  getVersions(id: number): Observable<DocumentVersion[]> {
+    return this.http.get<DocumentVersion[]>(`${this.documentsApiUrl}/${id}/versions`);
   }
   
   create(documentDto: CreateDocumentDto, primaryFile: File, attachments?: File[]): Observable<Document> {
@@ -81,5 +81,10 @@ export class DocumentService {
       `${this.documentsApiUrl}/${documentId}/head`,
       formData
     );
+  }
+
+  // New method for getting related documents
+  getRelatedDocuments(id: number): Observable<RelatedDocuments> {
+    return this.http.get<RelatedDocuments>(`${this.documentsApiUrl}/${id}/related`);
   }
 }

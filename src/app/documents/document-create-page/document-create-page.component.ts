@@ -11,8 +11,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { HttpEvent, HttpEventType } from '@angular/common/http';
 import { MatDialogRef } from '@angular/material/dialog';
+import { debounceTime, distinctUntilChanged, switchMap, tap, catchError, map } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
 
 import { ResourceTypeService } from '../../core/services/resource-type.service';
 import { DocumentService } from '../../core/services/document.service';
@@ -38,7 +41,8 @@ import { AsyncBtnComponent } from '../../shared/components/async-btn/async-btn.c
     MatCardModule,
     FileUploadComponent,
     AsyncBtnComponent,
-    MatCheckboxModule
+    MatCheckboxModule,
+    MatAutocompleteModule
   ],
   template: `
     <div class="p-4">
@@ -87,6 +91,38 @@ import { AsyncBtnComponent } from '../../shared/components/async-btn/async-btn.c
               @if (metadataForm.get('resourceCode')?.hasError('required')) {
                 <mat-error>Resource code is required</mat-error>
               }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full mb-3">
+              <mat-label>Parent Document (Optional)</mat-label>
+              <input 
+                matInput 
+                formControlName="parentSearch" 
+                placeholder="Search for parent document..." 
+                [matAutocomplete]="parentAuto">
+              <mat-autocomplete #parentAuto="matAutocomplete" [displayWith]="displayParentFn">
+                @if (isSearchingParents()) {
+                  <mat-option disabled>
+                    <mat-spinner diameter="20"></mat-spinner> Searching...
+                  </mat-option>
+                } @else if (parentSearchResults().length === 0 && parentSearchQuery().length > 0) {
+                  <mat-option disabled>No documents found</mat-option>
+                } @else {
+                  @for (doc of parentSearchResults(); track doc.id) {
+                    <mat-option [value]="doc">
+                      {{ doc.title }} ({{ doc.resourceCode }})
+                    </mat-option>
+                  }
+                }
+              </mat-autocomplete>
+              <button 
+                *ngIf="metadataForm.get('parentId')?.value" 
+                matSuffix 
+                mat-icon-button 
+                aria-label="Clear" 
+                (click)="clearParentSelection()">
+                <mat-icon>close</mat-icon>
+              </button>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="w-full mb-3">
@@ -197,6 +233,11 @@ export class DocumentCreatePageComponent implements OnInit {
   attachmentFiles = signal<File[]>([]);
   isSubmitting = signal(false);
 
+  // Parent document search
+  isSearchingParents = signal(false);
+  parentSearchQuery = signal('');
+  parentSearchResults = signal<Document[]>([]);
+
   // File upload options - revert to plain properties
   maxFileSize = 100 * 1024 * 1024; // 100MB
   allowedFileExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'jpg', 'jpeg', 'png', 'zip', 'rar'];
@@ -211,7 +252,9 @@ export class DocumentCreatePageComponent implements OnInit {
   metadataForm: FormGroup = this.fb.group({
     title: ['', Validators.required],
     resourceCode: ['', Validators.required],
-    tags: ['']
+    tags: [''],
+    parentSearch: [''],
+    parentId: [null]
   });
 
   // Getter for the accept string for file inputs
@@ -226,6 +269,64 @@ export class DocumentCreatePageComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadResourceTypes();
+    this.setupParentDocumentSearch();
+  }
+
+  setupParentDocumentSearch(): void {
+    this.metadataForm.get('parentSearch')?.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      tap(value => {
+        if (typeof value === 'string') {
+          this.parentSearchQuery.set(value);
+          this.isSearchingParents.set(value.length > 0);
+        }
+      }),
+      switchMap(value => {
+        // If the value is an object, it means an option was selected
+        if (typeof value === 'object' && value !== null) {
+          this.metadataForm.patchValue({ parentId: value.id });
+          return of([]);
+        }
+        
+        // Otherwise search for documents matching the query
+        if (typeof value === 'string' && value.length > 2) {
+          return this.searchDocuments(value).pipe(
+            catchError(() => {
+              this.snackbar.error('Failed to search for documents');
+              return of([]);
+            })
+          );
+        }
+        
+        return of([]);
+      })
+    ).subscribe(results => {
+      this.parentSearchResults.set(results);
+      this.isSearchingParents.set(false);
+    });
+  }
+
+  searchDocuments(query: string): Observable<Document[]> {
+    return this.documentService.list({
+      titleContains: query,
+      page: 0,
+      size: 10
+    }).pipe(
+      map(page => page.content)
+    );
+  }
+
+  displayParentFn(doc: Document): string {
+    return doc ? `${doc.title} (${doc.resourceCode})` : '';
+  }
+
+  clearParentSelection(): void {
+    this.metadataForm.patchValue({
+      parentSearch: '',
+      parentId: null
+    });
+    this.parentSearchResults.set([]);
   }
 
   loadResourceTypes(): void {
@@ -243,28 +344,41 @@ export class DocumentCreatePageComponent implements OnInit {
   }
 
   onResourceTypeChange(resourceTypeId: number): void {
-    // Instead of using the cached resource type, fetch the complete resource type with fields
-    this.resourceTypeService.get(resourceTypeId).subscribe({
-      next: (rt) => {
-        this.selectedResourceType.set(rt);
-        
-        // Auto-populate the resourceCode field with the selected resource type's code
-        if (rt && rt.code) {
-          this.metadataForm.get('resourceCode')?.setValue(rt.code);
+    const resourceType = this.resourceTypes().find(rt => rt.id === resourceTypeId);
+    
+    if (resourceType) {
+      // Load complete resource type with fields
+      this.resourceTypeService.get(resourceTypeId).subscribe({
+        next: (fullResourceType) => {
+          this.selectedResourceType.set(fullResourceType);
+          
+          // Generate resource code based on the resource type code
+          const baseCode = fullResourceType.code;
+          const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+          const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+          const generatedCode = `${baseCode}-${timestamp}-${randomSuffix}`;
+          
+          // Update the resource code in the form
+          this.metadataForm.patchValue({ resourceCode: generatedCode });
+          
+          // Initialize dynamic form fields
+          if (fullResourceType.fields) {
+            this.buildMetadataForm(fullResourceType.fields);
+          }
+        },
+        error: (err) => {
+          this.snackbar.error('Failed to load resource type details: ' + (err.error?.message || err.message));
         }
-        
-        this.buildMetadataForm(rt?.fields || []);
-      },
-      error: (err) => {
-        this.snackbar.error('Failed to load resource type details: ' + (err.error?.message || err.message));
-      }
-    });
+      });
+    } else {
+      this.selectedResourceType.set(undefined);
+    }
   }
 
   buildMetadataForm(fields: FieldDefinitionDto[]): void {
     const currentControls = { ...this.metadataForm.controls };
     Object.keys(currentControls).forEach(key => {
-      if (key !== 'title' && key !== 'resourceCode' && key !== 'tags') {
+      if (key !== 'title' && key !== 'resourceCode' && key !== 'tags' && key !== 'parentSearch' && key !== 'parentId') {
         this.metadataForm.removeControl(key);
       }
     });
@@ -316,47 +430,33 @@ export class DocumentCreatePageComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.metadataForm.invalid || !this.primaryFile()) {
-      this.snackbar.error('Please fill all required fields and upload a valid primary file.');
-      this.metadataForm.markAllAsTouched();
-      return;
-    }
-    if (this.primaryFileProgress().some(p => !!p.error) || this.attachmentsProgress().some(p => !!p.error)) {
-      this.snackbar.error('Please resolve all file validation errors before submitting.');
-      return;
-    }
-
-    this.isSubmitting.set(true);
+    if (this.metadataForm.invalid || !this.primaryFile()) return;
     
-    const formValue = { ...this.metadataForm.value };
-    const title = formValue.title;
-    const resourceCode = formValue.resourceCode;
-    const tagsString = formValue.tags;
-    
-    // Process tags - convert comma-separated string to array
-    const tagNames = tagsString ? tagsString.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag) : [];
-    
-    delete formValue.title; // Remove title as it's a top-level property in CreateDocumentDto
-    delete formValue.resourceCode; // Remove resourceCode as it's a top-level property in CreateDocumentDto
-    delete formValue.tags; // Remove tags as it's processed separately
-
-    // Get the primary file's mime type
+    const formValue = this.metadataForm.value;
     const pFile = this.primaryFile();
-    if (!pFile) { // Should be caught by earlier checks, but good for safety
-        this.snackbar.error('Primary file is missing.');
-        this.isSubmitting.set(false);
-        return;
+    if (!pFile) {
+      this.snackbar.error('Primary file is required');
+      return;
     }
     
-    // Prepare the DTO according to the backend's DocumentCreateDTO structure
+    // Extract specific fields from the form
+    const { title, resourceCode, tags, parentId, parentSearch, ...fieldValues } = formValue;
+    
+    // Extract tags from comma-separated string
+    const tagNames = tags ? tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag) : [];
+    
+    // Prepare document DTO
     const documentDto: CreateDocumentDto = {
-      title: title,
-      resourceCode: resourceCode,
-      resourceTypeId: this.selectedResourceType()!.id,
+      title,
+      resourceTypeId: this.resourceTypeForm.value.resourceTypeId,
+      resourceCode,
       mimeType: pFile.type,
-      fieldValues: this.convertFieldValuesToStrings(formValue),
-      tagNames: tagNames.length > 0 ? tagNames : undefined
+      parentId: parentId || undefined,
+      fieldValues: this.convertFieldValuesToStrings(fieldValues),
+      tagNames
     };
+    
+    this.isSubmitting.set(true);
 
     this.documentService.create(documentDto, pFile, this.attachmentFiles()).subscribe({
       next: (newDoc: Document) => {

@@ -29,6 +29,8 @@ export interface Document {
     name: string;
     fields?: any;
   };
+  parent?: ParentDocument;
+  children?: ChildDocument[];
 }
 
 export interface Attachment {
@@ -50,6 +52,7 @@ export interface DocQuery {
   resourceTypeIdEquals?: number; // Renamed from resourceTypeId for clarity with backend
   createdByIdEquals?: number; // Add this to match backend
   ownerIdEquals?: number; // Added from backend DTO
+  parentIdEquals?: number; // For filtering by parent document ID (0 or null means no parent)
   tags?: string[];
   fromDate?: string;
   toDate?: string;
@@ -101,5 +104,51 @@ export interface CreateDocumentDto {
 
 export interface UpdateDocumentDto {
   title?: string;
+  parentId?: number | null;
   fieldValues?: Record<string, any>;
+}
+
+export interface ParentDocument {
+  id: number;
+  title: string;
+  resourceCode?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  resourceTypeName?: string;
+}
+
+export interface ChildDocument {
+  id: number;
+  title: string;
+  resourceCode: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  resourceTypeName: string;
+}
+
+export interface RelatedDocuments {
+  parent: ParentDocument | null;
+  children: ChildDocument[];
+}
+
+export interface DocumentVersion {
+  versionNo: number;
+  version: number; // Alias for versionNo to maintain compatibility
+  storageKey: string;
+  sizeBytes: number;
+  checksumSha256: string;
+  createdAt: string;
+  createdById?: number;
+  createdByName?: string;
+  id?: number; // This may refer to a specific version record ID
+  attachments: {
+    id: number;
+    fileName: string;
+    mimeType: string;
+    storageKey: string;
+    sizeBytes: number;
+    checksumSha256: string;
+  }[];
 }

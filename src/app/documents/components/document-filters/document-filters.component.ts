@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 // No MatNativeDateModule needed if provideNativeDateAdapter is used in app.config
 import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ENTER, COMMA } from '@angular/cdk/keycodes';
 
 import { DocQuery } from '../../../core/models/document.model';
@@ -27,7 +28,8 @@ import { ResourceType } from '../../../core/models/resource-type.model';
     MatIconModule,
     MatDatepickerModule,
     // MatNativeDateModule, // Can be removed if provideNativeDateAdapter is in app.config
-    MatChipsModule
+    MatChipsModule,
+    MatCheckboxModule
   ],
   template: `
     <form [formGroup]="filterForm" (ngSubmit)="applyFilters()" class="filters-form">
@@ -44,7 +46,8 @@ import { ResourceType } from '../../../core/models/resource-type.model';
           <input matInput formControlName="resourceCodeEquals" placeholder="Exact resource code...">
           <mat-icon matSuffix>fingerprint</mat-icon>
         </mat-form-field>
-          <mat-form-field appearance="outline" class="w-full">
+
+        <mat-form-field appearance="outline" class="w-full">
           <mat-label>Resource Type</mat-label>
           <mat-select formControlName="resourceTypeIdEquals">
             <mat-option [value]="null">All Types</mat-option>
@@ -57,6 +60,19 @@ import { ResourceType } from '../../../core/models/resource-type.model';
           <input matInput type="number" formControlName="ownerIdEquals" placeholder="Enter user ID...">
           <mat-icon matSuffix>person_search</mat-icon>
         </mat-form-field>
+        
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Parent ID</mat-label>
+          <input matInput type="number" formControlName="parentIdEquals" placeholder="Enter parent document ID...">
+          <mat-icon matSuffix>folder</mat-icon>
+        </mat-form-field>
+
+        <div class="flex items-center p-2">
+          <mat-checkbox formControlName="topLevelOnly" color="primary">
+            Show only top-level documents
+          </mat-checkbox>
+          <mat-icon class="ml-2 text-gray-500" matTooltip="Documents that don't have a parent">folder</mat-icon>
+        </div>
         
         <mat-form-field appearance="outline" class="w-full">
           <mat-label>From Date</mat-label>
@@ -139,7 +155,26 @@ export class DocumentFiltersComponent implements OnInit {
       ownerIdEquals: [null],
       fromDate: [null],
       toDate: [null],
-      perm: ['VIEW'] // Default to VIEW
+      perm: ['VIEW'], // Default to VIEW
+      parentIdEquals: [null],
+      topLevelOnly: [false]
+    });
+
+    // Disable parentIdEquals when topLevelOnly is true and vice versa
+    this.filterForm.get('topLevelOnly')?.valueChanges.subscribe(value => {
+      if (value) {
+        this.filterForm.get('parentIdEquals')?.disable();
+      } else {
+        this.filterForm.get('parentIdEquals')?.enable();
+      }
+    });
+
+    this.filterForm.get('parentIdEquals')?.valueChanges.subscribe(value => {
+      if (value) {
+        this.filterForm.get('topLevelOnly')?.disable();
+      } else {
+        this.filterForm.get('topLevelOnly')?.enable();
+      }
     });
   }
   
@@ -148,7 +183,7 @@ export class DocumentFiltersComponent implements OnInit {
       return;
     }
     
-    const formValue = this.filterForm.value;
+    const formValue = this.filterForm.getRawValue(); // Get all values including disabled controls
     const filters: Partial<DocQuery> = {
       titleContains: formValue.titleContains || undefined,
       resourceCodeEquals: formValue.resourceCodeEquals || undefined,
@@ -157,6 +192,13 @@ export class DocumentFiltersComponent implements OnInit {
       tags: this.tags.length > 0 ? this.tags.join(',') as any : undefined,
       perm: formValue.perm || 'VIEW'
     };
+    
+    // Handle parent document filtering
+    if (formValue.topLevelOnly) {
+      filters.parentIdEquals = 0; // Backend uses 0 or null to indicate no parent
+    } else if (formValue.parentIdEquals) {
+      filters.parentIdEquals = Number(formValue.parentIdEquals);
+    }
     
     if (formValue.fromDate) {
       filters.fromDate = this.formatDate(formValue.fromDate);
@@ -184,7 +226,9 @@ export class DocumentFiltersComponent implements OnInit {
       ownerIdEquals: null,
       fromDate: null,
       toDate: null,
-      perm: 'VIEW'
+      perm: 'VIEW',
+      parentIdEquals: null,
+      topLevelOnly: false
     });
     this.tags = [];
     this.filtersChanged.emit({}); // Emit empty object to signal reset
@@ -192,9 +236,11 @@ export class DocumentFiltersComponent implements OnInit {
   
   addTag(event: MatChipInputEvent): void {
     const value = (event.value || '').trim();
-    if (value && !this.tags.includes(value)) {
+    
+    if (value) {
       this.tags.push(value);
     }
+    
     event.chipInput!.clear();
   }
   

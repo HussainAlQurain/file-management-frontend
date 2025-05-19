@@ -13,6 +13,9 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatListModule } from '@angular/material/list';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { debounceTime, distinctUntilChanged, switchMap, tap, catchError, map } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
 
 import { DocumentService } from '../../core/services/document.service';
 import { ResourceTypeService } from '../../core/services/resource-type.service';
@@ -40,8 +43,9 @@ import { environment } from '../../../environments/environment';
     MatSelectModule,
     MatDatepickerModule,
     MatCheckboxModule,
+    MatAutocompleteModule,
     FileUploadComponent,
-    MatListModule // Added for mat-list used for existing attachments
+    MatListModule
   ],
   template: `
     <div class="p-4 md:p-8">
@@ -68,6 +72,38 @@ import { environment } from '../../../environments/environment';
               <mat-form-field appearance="outline" class="w-full">
                 <mat-label>Description</mat-label>
                 <textarea matInput formControlName="description" rows="3"></textarea>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Parent Document (Optional)</mat-label>
+                <input 
+                  matInput 
+                  formControlName="parentSearch" 
+                  placeholder="Search for parent document..." 
+                  [matAutocomplete]="parentAuto">
+                <mat-autocomplete #parentAuto="matAutocomplete" [displayWith]="displayParentFn">
+                  @if (isSearchingParents()) {
+                    <mat-option disabled>
+                      <mat-spinner diameter="20"></mat-spinner> Searching...
+                    </mat-option>
+                  } @else if (parentSearchResults().length === 0 && parentSearchQuery().length > 0) {
+                    <mat-option disabled>No documents found</mat-option>
+                  } @else {
+                    @for (doc of parentSearchResults(); track doc.id) {
+                      <mat-option [value]="doc">
+                        {{ doc.title }} ({{ doc.resourceCode }})
+                      </mat-option>
+                    }
+                  }
+                </mat-autocomplete>
+                <button 
+                  *ngIf="editForm.get('parentId')?.value" 
+                  matSuffix 
+                  mat-icon-button 
+                  aria-label="Clear" 
+                  (click)="clearParentSelection()">
+                  <mat-icon>close</mat-icon>
+                </button>
               </mat-form-field>
 
               <mat-form-field appearance="outline" class="w-full">
@@ -223,6 +259,11 @@ export class DocumentEditPageComponent implements OnInit {
   newAttachments: WritableSignal<File[]> = signal([]);
   removedAttachmentIds: WritableSignal<number[]> = signal([]);
 
+  // Parent document search
+  isSearchingParents = signal(false);
+  parentSearchQuery = signal('');
+  parentSearchResults = signal<Document[]>([]);
+
   editForm!: FormGroup;
   FieldType = FieldType; 
 
@@ -230,7 +271,9 @@ export class DocumentEditPageComponent implements OnInit {
     this.editForm = this.fb.group({
       title: ['', Validators.required],
       description: [''],
-      tags: [''], 
+      tags: [''],
+      parentSearch: [''],
+      parentId: [null], 
       metadata: this.fb.group({}) 
     });
   }
@@ -241,12 +284,72 @@ export class DocumentEditPageComponent implements OnInit {
       if (id) {
         this.documentId.set(+id);
         this.loadDocumentAndResourceType(+id);
+        this.setupParentDocumentSearch();
       } else {
         this.isLoading.set(false);
         this.snackbar.error('Document ID not found in URL.');
         this.router.navigate(['/documents']);
       }
     });
+  }
+
+  setupParentDocumentSearch(): void {
+    this.editForm.get('parentSearch')?.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      tap(value => {
+        if (typeof value === 'string') {
+          this.parentSearchQuery.set(value);
+          this.isSearchingParents.set(value.length > 0);
+        }
+      }),
+      switchMap(value => {
+        // If the value is an object, it means an option was selected
+        if (typeof value === 'object' && value !== null) {
+          this.editForm.patchValue({ parentId: value.id });
+          return of([]);
+        }
+        
+        // Otherwise search for documents matching the query
+        if (typeof value === 'string' && value.length > 2) {
+          return this.searchDocuments(value).pipe(
+            catchError(() => {
+              this.snackbar.error('Failed to search for documents');
+              return of([]);
+            })
+          );
+        }
+        
+        return of([]);
+      })
+    ).subscribe(results => {
+      this.parentSearchResults.set(results);
+      this.isSearchingParents.set(false);
+    });
+  }
+
+  searchDocuments(query: string): Observable<Document[]> {
+    // Exclude the current document from search results
+    const docId = this.documentId();
+    return this.documentService.list({
+      titleContains: query,
+      page: 0,
+      size: 10
+    }).pipe(
+      map(page => page.content.filter(doc => doc.id !== docId))
+    );
+  }
+
+  displayParentFn(doc: Document): string {
+    return doc ? `${doc.title} (${doc.resourceCode})` : '';
+  }
+
+  clearParentSelection(): void {
+    this.editForm.patchValue({
+      parentSearch: '',
+      parentId: null
+    });
+    this.parentSearchResults.set([]);
   }
 
   loadDocumentAndResourceType(id: number): void {
@@ -287,7 +390,9 @@ export class DocumentEditPageComponent implements OnInit {
     this.editForm.patchValue({
       title: doc.title,
       description: doc.description,
-      tags: doc.tags ? doc.tags.join(', ') : ''
+      tags: doc.tags ? doc.tags.join(', ') : '',
+      parentId: doc.parent?.id || null,
+      parentSearch: doc.parent ? `${doc.parent.title} (${doc.parent.resourceCode || ''})` : ''
     });
     if (doc.fieldValues) {
       this.metadataFormGroup.patchValue(this.prepareMetadataForForm(doc.fieldValues));
@@ -376,6 +481,7 @@ export class DocumentEditPageComponent implements OnInit {
     const dtoForBackend: UpdateDocumentDto = {
         title: formValue.title,
         // description and tags are not in the backend UpdateDocumentDTO based on user prompt
+        parentId: formValue.parentId,
         fieldValues: this.prepareMetadataForSubmit(formValue.metadata)
     };
 
