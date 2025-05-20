@@ -79,6 +79,9 @@ import { environment } from '../../../environments/environment';
                           <button mat-stroked-button color="primary" (click)="downloadLatestPrimaryFile(doc)">
                             <mat-icon>download</mat-icon> Download Current Version
                           </button>
+                          <a mat-stroked-button color="accent" [routerLink]="['/documents', doc.id, 'view']">
+                            <mat-icon>visibility</mat-icon> View Document
+                          </a>
                         } @else {
                           <span class="text-gray-500">No file uploaded yet.</span>
                         }
@@ -139,10 +142,10 @@ import { environment } from '../../../environments/environment';
                           </div>
                         }
 
-                        @if (relatedDocuments()?.children && relatedDocuments()?.children?.length > 0) {
+                        @if (relatedDocuments()?.children && (relatedDocuments()?.children?.length ?? 0) > 0) {
                           <div>
                             <h3 class="text-lg font-medium mb-3">Child Documents</h3>
-                            @for (child of relatedDocuments()?.children; track child.id) {
+                            @for (child of relatedDocuments()?.children || []; track child.id) {
                               <mat-card class="mb-2 cursor-pointer hover:shadow-md transition-shadow" 
                                       [routerLink]="['/documents', child.id]">
                                 <mat-card-header>
@@ -209,6 +212,9 @@ import { environment } from '../../../environments/environment';
                                 <button mat-button color="primary" (click)="downloadVersionFile(version.versionNo)">
                                   <mat-icon>download</mat-icon> Download
                                 </button>
+                                <a mat-button color="accent" [routerLink]="['/documents', documentId(), 'versions', version.versionNo, 'view']">
+                                  <mat-icon>visibility</mat-icon> View
+                                </a>
                               </mat-card-actions>
                             </mat-card>
                           }
@@ -236,6 +242,9 @@ import { environment } from '../../../environments/environment';
                               <div matListItemMeta>
                                 <button mat-icon-button (click)="downloadAttachment(attachment.id, attachment.fileName)" matTooltip="Download {{attachment.fileName}}">
                                   <mat-icon>download</mat-icon>
+                                </button>
+                                <button mat-icon-button (click)="viewAttachment(attachment.id)" matTooltip="View {{attachment.fileName}}">
+                                  <mat-icon>visibility</mat-icon>
                                 </button>
                               </div>
                             </mat-list-item>
@@ -383,6 +392,11 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
         this.snackbar.error('Failed to download attachment: ' + (err.error?.message || err.message));
       }
     });
+  }
+
+  viewAttachment(attachmentId: number): void {
+    // Open the attachment view endpoint in a new tab
+    window.open(this.documentService.getAttachmentViewUrl(attachmentId), '_blank');
   }
 
   onPrimaryFileSelected(event: Event): void {

@@ -5,12 +5,14 @@ import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Document, DocQuery, Page, DocumentVersionInfo, CreateDocumentDto, UpdateDocumentDto, RelatedDocuments, DocumentVersion } from '../models/document.model';
 import { toParams } from '../utils/api-utils';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DocumentService {
   private http = inject(HttpClient);
+  private auth = inject(AuthService);
   private readonly documentsApiUrl = `${environment.apiBase}/documents`; // Renamed from baseUrl
 
   list(query: DocQuery): Observable<Page<Document>> {
@@ -51,6 +53,30 @@ export class DocumentService {
   
   getFileUrl(documentId: number, storageKey: string): string {
     return `${this.documentsApiUrl}/${documentId}/files/${storageKey}`;
+  }
+
+  /**
+   * Build a URL that an <iframe>, <a>, or window.open can load directly.
+   * Because these requests do NOT pass through Angular's HttpClient, we need
+   * to include the JWT as a query-parameter so the backend can still
+   * authenticate the user. The backend already supports ?token=<jwt>.
+   */
+  private buildViewUrl(path: string): string {
+    const token = this.auth.getToken();
+    // If there is no token (e.g. unauthenticated), just return the plain URL.
+    return token ? `${path}?token=${encodeURIComponent(token)}` : path;
+  }
+
+  getDocumentViewUrl(documentId: number): string {
+    return this.buildViewUrl(`${this.documentsApiUrl}/${documentId}/view`);
+  }
+
+  getVersionViewUrl(documentId: number, versionNo: number): string {
+    return this.buildViewUrl(`${this.documentsApiUrl}/${documentId}/versions/${versionNo}/view`);
+  }
+
+  getAttachmentViewUrl(attachmentId: number): string {
+    return this.buildViewUrl(`${this.documentsApiUrl}/attachments/${attachmentId}/view`);
   }
 
   downloadVersionFile(docId: number, versionNo: number): Observable<Blob> {

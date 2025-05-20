@@ -37,7 +37,9 @@ export const routes: Routes = [
           { path: ':id', loadComponent: () => import('./documents/document-detail-page/document-detail-page.component').then(c => c.DocumentDetailPageComponent), canActivate: [canViewDocGuard] },
           { path: ':id/edit', loadComponent: () => import('./documents/document-edit-page/document-edit-page.component').then(c => c.DocumentEditPageComponent), canActivate: [canEditDocGuard] },
           { path: ':id/acl', loadComponent: () => import('./documents/document-acl-page/document-acl-page.component').then(c => c.DocumentAclPageComponent), canActivate: [canEditDocGuard] },
-          { path: ':id/history', loadComponent: () => import('./documents/document-versions-page/document-versions-page.component').then(c => c.DocumentVersionsPageComponent), canActivate: [canViewDocGuard] }
+          { path: ':id/history', loadComponent: () => import('./documents/document-versions-page/document-versions-page.component').then(c => c.DocumentVersionsPageComponent), canActivate: [canViewDocGuard] },
+          { path: ':id/view', loadComponent: () => import('./documents/document-viewer-page/document-viewer-page.component').then(c => c.DocumentViewerPageComponent), canActivate: [canViewDocGuard] },
+          { path: ':id/versions/:version/view', loadComponent: () => import('./documents/document-viewer-page/document-viewer-page.component').then(c => c.DocumentViewerPageComponent), canActivate: [canViewDocGuard] }
         ]
       },
       
