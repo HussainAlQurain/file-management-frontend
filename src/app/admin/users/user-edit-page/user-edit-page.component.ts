@@ -16,6 +16,7 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
 import { User, UserRole } from '../../../core/models/auth.model';
 import { UpdateUserDTO } from '../../../core/services/user.service';
 import { AsyncBtnComponent } from '../../../shared/components/async-btn/async-btn.component';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-user-edit-page',
@@ -77,11 +78,6 @@ import { AsyncBtnComponent } from '../../../shared/components/async-btn/async-bt
                   }
                 </mat-form-field>
 
-                <mat-form-field appearance="outline">
-                  <mat-label>Full Name (Optional)</mat-label>
-                  <input matInput formControlName="fullName">
-                </mat-form-field>
-
                 <mat-form-field appearance="outline" class="md:col-span-2">
                   <mat-label>Roles</mat-label>
                   <mat-select formControlName="roles" multiple required>
@@ -117,6 +113,7 @@ export class UserEditPageComponent implements OnInit {
   private snackbar = inject(SnackbarService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
 
   userId = signal<number | null>(null);
   isSubmitting = signal(false);
@@ -125,9 +122,8 @@ export class UserEditPageComponent implements OnInit {
 
   userForm: FormGroup = this.fb.group({
     id: [null], // To store the user ID, not for editing
-    username: ['', Validators.required],
+    username: ['', [Validators.required, Validators.minLength(3)]],
     email: ['', [Validators.required, Validators.email]],
-    fullName: [''],
     roles: [[] as string[], Validators.required]
   });
 
@@ -180,22 +176,37 @@ export class UserEditPageComponent implements OnInit {
     }
 
     const userData: UpdateUserDTO = {
-        email: this.userForm.value.email,
-        fullName: this.userForm.value.fullName,
-        roleCodes: this.userForm.value.roles
+      email: this.userForm.value.email,
+      roleCodes: this.userForm.value.roles,
+      username: this.userForm.value.username
     };
 
-    this.userService.update(currentUserId, userData).subscribe({
+    this.userService.patch(currentUserId, userData).subscribe({
       next: (updatedUser) => {
         this.isSubmitting.set(false);
         this.snackbar.success(`User ${updatedUser.username} updated successfully!`);
         this.userForm.markAsPristine(); // Reset dirty state after successful save
+
+        // If the updated user is the current user and the username changed, force logout
+        const currentUser = this.authService.currentUserSignal();
+        if (currentUser && currentUser.id === updatedUser.id && currentUser.username !== updatedUser.username) {
+          this.snackbar.info('Your username has changed. Please log in again.');
+          setTimeout(() => this.authService.logout(), 1500);
+        }
         // Optionally navigate away or refresh data if needed
         // this.router.navigate(['/users']); 
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        this.snackbar.error('Failed to update user: ' + (err.error?.message || err.message));
+        // Handle duplicate username/email error from backend
+        const msg = err?.error?.message || err?.message || '';
+        if (msg.includes('Username already exists')) {
+          this.snackbar.error('This username is already taken. Please choose another.');
+        } else if (msg.includes('Email already exists')) {
+          this.snackbar.error('This email is already in use. Please use a different email.');
+        } else {
+          this.snackbar.error('Failed to update user: ' + msg);
+        }
       }
     });
   }

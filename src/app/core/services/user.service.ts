@@ -19,7 +19,7 @@ export interface CreateUserDTO {
 export interface UpdateUserDTO {
   email?: string;
   roleCodes?: string[];
-  fullName?: string;
+  username?: string;
 }
 
 export interface ChangePasswordDTO {
@@ -99,5 +99,9 @@ export class UserService {
       // Map to content array
       map(page => page.content as UserDTO[])
     );
+  }
+
+  patch(id: number, user: UpdateUserDTO): Observable<User> {
+    return this.http.patch<User>(`${this.usersApiUrl}/${id}`, user);
   }
 }
