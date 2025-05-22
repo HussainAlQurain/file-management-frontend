@@ -12,12 +12,17 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTabsModule } from '@angular/material/tabs';
 import { Subscription } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
 
 import { DocumentService } from '../../core/services/document.service';
 import { Document, Attachment, RelatedDocuments, DocumentVersion } from '../../core/models/document.model';
 import { SnackbarService } from '../../core/services/snackbar.service';
 import { FileSizePipe } from '../../shared/pipes/file-size.pipe';
 import { environment } from '../../../environments/environment';
+import { ReminderService, ReminderDTO } from '../../core/services/reminder.service';
+import { ReminderDialogComponent } from '../components/reminder-dialog/reminder-dialog.component';
+import { AuthService } from '../../core/services/auth.service';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 
 @Component({
   selector: 'app-document-detail-page',
@@ -35,7 +40,8 @@ import { environment } from '../../../environments/environment';
     MatDividerModule,
     MatExpansionModule,
     MatTabsModule,
-    FileSizePipe
+    FileSizePipe,
+    MatDatepickerModule
   ],
   template: `
     <div class="p-4 md:p-8">
@@ -163,6 +169,44 @@ import { environment } from '../../../environments/environment';
                           </div>
                         }
                       }
+                    </div>
+                  </mat-tab>
+
+                  <mat-tab label="Reminders">
+                    <div class="p-4">
+                      <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium">Reminders</h3>
+                        <button mat-raised-button color="primary" (click)="openReminderDialog()">
+                          <mat-icon>add</mat-icon> Add Reminder
+                        </button>
+                      </div>
+                      <mat-list *ngIf="reminders.length > 0; else noReminders">
+                        <mat-list-item *ngFor="let r of reminders">
+                          <div matListItemTitle>
+                            {{ r.message }}
+                          </div>
+                          <div matListItemLine>
+                            Remind At: {{ r.remindAt | date:'short' }}
+                            <ng-container *ngIf="isAdmin">
+                              &nbsp;|&nbsp; User: {{ getUsername(r.userId) }}
+                            </ng-container>
+                            &nbsp;|&nbsp;
+                            <mat-chip [color]="r.sent ? 'primary' : 'warn'" selected>
+                              {{ r.sent ? 'Sent' : 'Pending' }}
+                            </mat-chip>
+                          </div>
+                          <div matListItemMeta *ngIf="canEditOrDelete(r)">
+                            <button mat-icon-button (click)="openReminderDialog(r)"><mat-icon>edit</mat-icon></button>
+                            <button mat-icon-button color="warn" (click)="deleteReminder(r)"><mat-icon>delete</mat-icon></button>
+                          </div>
+                        </mat-list-item>
+                      </mat-list>
+                      <ng-template #noReminders>
+                        <div class="text-gray-500 text-center p-6">
+                          <mat-icon class="text-4xl mb-2">event_busy</mat-icon>
+                          <p>No reminders for this document.</p>
+                        </div>
+                      </ng-template>
                     </div>
                   </mat-tab>
 
@@ -297,6 +341,9 @@ import { environment } from '../../../environments/environment';
 })
 export class DocumentDetailPageComponent implements OnInit, OnDestroy {
   private documentService = inject(DocumentService);
+  private reminderService = inject(ReminderService);
+  private authService = inject(AuthService);
+  private dialog = inject(MatDialog);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private snackbar = inject(SnackbarService);
@@ -317,13 +364,23 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
   private versionsSub?: Subscription;
   private relatedSub?: Subscription;
 
+  reminders: ReminderDTO[] = [];
+  isAdmin = false;
+  currentUserId: number | null = null;
+  userMap: { [id: number]: string } = {};
+
   ngOnInit(): void {
+    const user = this.authService.currentUserSignal();
+    this.isAdmin = !!user?.roles?.includes('SYS_ADMIN');
+    this.currentUserId = user?.id ?? null;
+
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
         this.documentId.set(+id);
         this.loadDocument(+id);
         this.loadRelatedDocuments(+id);
+        this.loadReminders(+id);
       } else {
         this.isLoading.set(false);
         this.snackbar.error('Document ID not found in URL.');
@@ -357,6 +414,29 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.isLoadingRelated.set(false);
         this.snackbar.error('Failed to load related documents: ' + (err.error?.message || err.message));
+      }
+    });
+  }
+
+  loadReminders(documentId: number): void {
+    this.reminderService.getForDocument(documentId).subscribe({
+      next: reminders => {
+        this.reminders = reminders;
+        if (this.isAdmin) {
+          // For admin, fetch user names for display
+          this.reminders.forEach(r => {
+            if (r.userId && !this.userMap[r.userId]) {
+              // Fetch user info (ideally batch, but for now per user)
+              // You may want to optimize this in production
+              this.documentService['http'].get<any>(`${environment.apiBase}/users/${r.userId}`).subscribe(u => {
+                this.userMap[r.userId!] = u.username;
+              });
+            }
+          });
+        }
+      },
+      error: err => {
+        this.reminders = [];
       }
     });
   }
@@ -480,6 +560,67 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
         this.snackbar.error('Failed to download version: ' + (err.error?.message || err.message));
       }
     });
+  }
+
+  openReminderDialog(reminder?: ReminderDTO) {
+    const dialogRef = this.dialog.open(ReminderDialogComponent, {
+      data: {
+        reminder,
+        documentId: this.documentId(),
+        isAdmin: this.isAdmin
+      },
+      width: '400px'
+    });
+    dialogRef.afterClosed().subscribe((result: ReminderDTO | undefined) => {
+      if (result) {
+        if (reminder && reminder.id) {
+          // Edit
+          this.reminderService.update(reminder.id, result).subscribe({
+            next: () => {
+              this.snackbar.success('Reminder updated.');
+              this.loadReminders(this.documentId()!);
+            },
+            error: err => {
+              this.snackbar.error('Failed to update reminder.');
+            }
+          });
+        } else {
+          // Add
+          this.reminderService.create(result).subscribe({
+            next: () => {
+              this.snackbar.success('Reminder created.');
+              this.loadReminders(this.documentId()!);
+            },
+            error: err => {
+              this.snackbar.error('Failed to create reminder.');
+            }
+          });
+        }
+      }
+    });
+  }
+
+  deleteReminder(reminder: ReminderDTO) {
+    if (!reminder.id) return;
+    if (!confirm('Delete this reminder?')) return;
+    this.reminderService.delete(reminder.id).subscribe({
+      next: () => {
+        this.snackbar.success('Reminder deleted.');
+        this.loadReminders(this.documentId()!);
+      },
+      error: err => {
+        this.snackbar.error('Failed to delete reminder.');
+      }
+    });
+  }
+
+  canEditOrDelete(reminder: ReminderDTO): boolean {
+    return this.isAdmin || (reminder.userId === this.currentUserId);
+  }
+
+  getUsername(userId: number | undefined): string {
+    if (!userId) return '';
+    return this.userMap[userId] || ('User #' + userId);
   }
 
   ngOnDestroy(): void {

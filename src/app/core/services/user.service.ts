@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { User } from '../models/auth.model';
 import { Page } from '../models/document.model';
 import { toParams } from '../utils/api-utils';
+import { map } from 'rxjs/operators';
 
 // Add these interfaces to match backend expectations
 export interface CreateUserDTO {
@@ -25,6 +26,13 @@ export interface ChangePasswordDTO {
   oldPassword: string;
   newPassword: string;
   confirmPassword: string;
+}
+
+export interface UserDTO {
+  id: number;
+  username: string;
+  email: string;
+  roles: string[];
 }
 
 @Injectable({
@@ -82,5 +90,14 @@ export class UserService {
     } else {
       return this.http.post<void>(`${this.profileApiUrl}/password`, oldPasswordOrDto);
     }
+  }
+
+  // For SYS_ADMIN: fetch all users (paged, but for dropdown we can fetch first 100)
+  getAllUsers(): Observable<UserDTO[]> {
+    // Backend returns Page<UserDTO>, but for dropdown we just want content
+    return this.http.get<any>(`${this.usersApiUrl}?size=100`).pipe(
+      // Map to content array
+      map(page => page.content as UserDTO[])
+    );
   }
 }
