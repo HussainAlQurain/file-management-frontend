@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { ResourceType, CreateResourceTypeDto, UpdateResourceTypeDto, FieldDefinitionDto, CreateFieldDto, UpdateFieldDto } from '../models/resource-type.model';
 import { Page } from '../models/document.model';
 import { toParams } from '../utils/api-utils';
+import { tap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -26,7 +27,13 @@ export class ResourceTypeService {
   }
   
   get(id: number): Observable<ResourceType> {
-    return this.http.get<ResourceType>(`${this.baseUrl}/${id}`);
+    console.log(`Fetching resource type with ID: ${id}`);
+    return this.http.get<ResourceType>(`${this.baseUrl}/${id}`).pipe(
+      tap(response => {
+        console.log(`Raw resource type response:`, response);
+        console.log(`Fields property in response:`, response.fields);
+      })
+    );
   }
   
   create(resourceTypeDto: CreateResourceTypeDto): Observable<ResourceType> {

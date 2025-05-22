@@ -145,7 +145,7 @@ import { environment } from '../../../environments/environment';
                           }
                         </mat-form-field>
 
-                        <div class="py-2" *ngSwitchCase="FieldType.CHECKBOX"> 
+                        <div class="py-2" *ngSwitchCase="FieldType.BOOLEAN"> 
                            <mat-checkbox [formControlName]="field.name" [required]="field.required">
                             {{ field.name }}
                           </mat-checkbox>
@@ -417,8 +417,8 @@ export class DocumentEditPageComponent implements OnInit {
       if (field.kind === FieldType.DATE && value) {
         value = new Date(value as string); 
       }
-      if (field.kind === FieldType.CHECKBOX && (value === null || value === undefined)) {
-        value = false; // Default to false for checkboxes if not present in metadata
+      if (field.kind === FieldType.BOOLEAN && (value === null || value === undefined)) {
+        value = false; // Default to false for boolean fields if not present in metadata
       }
       // For SELECT fields, if the existing value is not in options, it might be better to set it to null or default.
       // However, Angular's mat-select handles this by not selecting anything if value is not in options.
@@ -537,8 +537,8 @@ export class DocumentEditPageComponent implements OnInit {
           } else if (value === '' && (field.kind === FieldType.TEXT || field.kind === FieldType.TEXTAREA)) {
             // Allow empty strings for text and textarea fields
             preparedMetadata[field.name] = '';
-          } else if (value === null && field.kind === FieldType.CHECKBOX) {
-            // Ensure checkbox has a boolean value
+          } else if (value === null && field.kind === FieldType.BOOLEAN) {
+            // Ensure boolean field has a boolean value
              preparedMetadata[field.name] = false;
           } else if (value === null) {
             // For other types, if value is null, send null
@@ -547,8 +547,8 @@ export class DocumentEditPageComponent implements OnInit {
           // If a field is not in metadataFormValue (e.g. disabled), it won't be included.
           // If it's optional and not provided, it's fine.
           // If it's required, form validation should catch it.
-        } else if (field.kind === FieldType.CHECKBOX) {
-          // If a checkbox is not in the form value (e.g. if it was never touched and not in original metadata),
+        } else if (field.kind === FieldType.BOOLEAN) {
+          // If a boolean field is not in the form value (e.g. if it was never touched and not in original metadata),
           // it defaults to false.
           preparedMetadata[field.name] = false;
         }

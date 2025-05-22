@@ -23,7 +23,7 @@ export enum FieldType {
   NUMBER = 'NUMBER',
   DATE = 'DATE',
   SELECT = 'SELECT',
-  CHECKBOX = 'CHECKBOX',
+  BOOLEAN = 'BOOLEAN',
   TEXTAREA = 'TEXTAREA'
 }
 

@@ -221,66 +221,44 @@ export class ResourceTypeCreatePageComponent implements OnInit {
   }
   onSubmit(): void {
     if (this.resourceTypeForm.invalid) {
-      this.snackbar.error('Please fill all required fields correctly.');
-      this.resourceTypeForm.markAllAsTouched(); // Mark all fields as touched to show errors
+      this.snackbar.error('Please correct the errors in the form.');
+      this.resourceTypeForm.markAllAsTouched();
       return;
     }
-    
-    // Check for duplicate field names
     if (!this.validateFieldNames()) {
       return;
     }
-    
     this.isSubmitting.set(true);
-
-    // Step 1: Create the resource type first with just code and description
     const formValue = this.resourceTypeForm.value;
-    const createResourceTypeDto = {
+    const fields = formValue.fields.map((f: any) => {
+      // Map 'Checkbox' type to 'BOOLEAN' for backend
+      let kind = f.type;
+      if (kind === 'CHECKBOX') kind = 'BOOLEAN';
+      // For SELECT, split options by comma and trim
+      let options: string[] | undefined = undefined;
+      if (kind === 'SELECT' && f.options) {
+        options = f.options.split(',').map((opt: string) => opt.trim()).filter((opt: string) => !!opt);
+      }
+      return {
+        name: f.name,
+        label: f.label,
+        kind,
+        required: f.required,
+        uniqueWithinType: false, // or add to form if needed
+        options
+      };
+    });
+    const resourceTypeDto = {
       code: formValue.code,
       name: formValue.name,
-      description: formValue.description
+      description: formValue.description,
+      fields
     };
-
-    // Step 2: Create the resource type first
-    this.resourceTypeService.create(createResourceTypeDto).subscribe({
-      next: (createdResourceType) => {
-        // Step 3: Then add fields one by one
-        const fieldsToAdd = formValue.fields;
-        
-        if (fieldsToAdd && fieldsToAdd.length > 0) {
-          // Add fields sequentially using recursive function
-          const addFieldsSequentially = (fields: any[], index = 0) => {
-            if (index >= fields.length) {
-              this.isSubmitting.set(false);
-              this.snackbar.success(`Resource type "${createdResourceType.code}" created successfully with ${fields.length} fields.`);
-              this.router.navigate(['/resource-types']);
-              return;
-            }
-
-            const field = fields[index];
-            const fieldDto = {
-              name: field.name,
-              kind: field.type,
-              required: field.required,
-              uniqueWithinType: false
-            };
-            
-            this.resourceTypeService.addField(createdResourceType.id, fieldDto).subscribe({
-              next: () => addFieldsSequentially(fields, index + 1),
-              error: (err) => {
-                this.snackbar.error(`Added ${index} fields but failed to add field "${field.name}": ${err.error?.message || err.message}`);
-                // Continue with next field despite error
-                addFieldsSequentially(fields, index + 1);
-              }
-            });
-          };
-          
-          addFieldsSequentially(fieldsToAdd);
-        } else {
-          this.isSubmitting.set(false);
-          this.snackbar.success(`Resource type "${createdResourceType.code}" created successfully.`);
-          this.router.navigate(['/resource-types']);
-        }
+    this.resourceTypeService.create(resourceTypeDto).subscribe({
+      next: (res) => {
+        this.isSubmitting.set(false);
+        this.snackbar.success('Resource type created successfully!');
+        this.router.navigate(['../']);
       },
       error: (err) => {
         this.isSubmitting.set(false);
