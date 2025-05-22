@@ -254,14 +254,27 @@ export class ResourceTypeCreatePageComponent implements OnInit {
       description: formValue.description,
       fields
     };
+
+    // Show initial notification
+    const fieldsCount = fields.length;
+    const notification = this.snackbar.info(
+      `Creating resource type "${formValue.code}" with ${fieldsCount} field${fieldsCount !== 1 ? 's' : ''}...`,
+      'Please wait',
+      { duration: 0 }
+    );
+
     this.resourceTypeService.create(resourceTypeDto).subscribe({
       next: (res) => {
         this.isSubmitting.set(false);
-        this.snackbar.success('Resource type created successfully!');
+        notification.dismiss();
+        this.snackbar.success(
+          `Resource type "${res.code}" created successfully with ${fields.length} field${fields.length !== 1 ? 's' : ''}!`
+        );
         this.router.navigate(['../']);
       },
       error: (err) => {
         this.isSubmitting.set(false);
+        notification.dismiss();
         this.snackbar.error('Failed to create resource type: ' + (err.error?.message || err.message));
       }
     });

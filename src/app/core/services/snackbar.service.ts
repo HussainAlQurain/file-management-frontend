@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarConfig, MatSnackBarRef, TextOnlySnackBar } from '@angular/material/snack-bar';
 
 @Injectable({
   providedIn: 'root'
@@ -7,30 +7,33 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 export class SnackbarService {
   private snackBar = inject(MatSnackBar);
   
-  success(message: string): void {
-    this.snackBar.open(message, 'Close', {
+  success(message: string, action: string = 'Close', config?: MatSnackBarConfig): MatSnackBarRef<TextOnlySnackBar> {
+    return this.snackBar.open(message, action, {
       duration: 5000,
       horizontalPosition: 'right',
       verticalPosition: 'top',
       panelClass: ['snackbar-success'],
+      ...config
     });
   }
   
-  error(message: string): void {
-    this.snackBar.open(message, 'Close', {
+  error(message: string, action: string = 'Close', config?: MatSnackBarConfig): MatSnackBarRef<TextOnlySnackBar> {
+    return this.snackBar.open(message, action, {
       duration: 10000, // Longer duration for errors
       horizontalPosition: 'right',
       verticalPosition: 'top',
       panelClass: ['snackbar-error'],
+      ...config
     });
   }
   
-  info(message: string): void {
-    this.snackBar.open(message, 'Close', {
+  info(message: string, action: string = 'Close', config?: MatSnackBarConfig): MatSnackBarRef<TextOnlySnackBar> {
+    return this.snackBar.open(message, action, {
       duration: 3000,
       horizontalPosition: 'right',
       verticalPosition: 'top',
       panelClass: ['snackbar-info'],
+      ...config
     });
   }
 }

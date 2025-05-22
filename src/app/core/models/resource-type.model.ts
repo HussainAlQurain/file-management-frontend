@@ -32,6 +32,7 @@ export interface CreateResourceTypeDto {
   code: string;
   name: string; // Add name field
   description?: string;
+  fields?: CreateFieldDto[]; // Optional fields to be created with the resource type
 }
 
 export interface UpdateResourceTypeDto {

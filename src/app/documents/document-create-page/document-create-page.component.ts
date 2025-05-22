@@ -134,66 +134,73 @@ import { AsyncBtnComponent } from '../../shared/components/async-btn/async-btn.c
               <input matInput formControlName="tags" placeholder="Enter tags separated by commas">
             </mat-form-field>
 
-            @for (field of selectedResourceType()?.fields; track field.id) {
-              @if (field.kind === FieldType.BOOLEAN) {
-                <div class="mb-3">
-                  <mat-checkbox [formControlName]="field.name">
-                    {{ field.label || field.name }}
-                  </mat-checkbox>
-                  @if (metadataForm.get(field.name)?.hasError('required') && field.required) {
-                    <mat-error>{{ field.label || field.name }} is required</mat-error>
-                  }
-                </div>
-              } @else if (field.kind === FieldType.DATE) {
-                <mat-form-field appearance="outline" class="w-full mb-3">
-                  <mat-label>{{ field.label || field.name }}</mat-label>
-                  <input matInput [matDatepicker]="picker" [formControlName]="field.name">
-                  <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                  <mat-datepicker #picker></mat-datepicker>
-                  @if (metadataForm.get(field.name)?.hasError('required') && field.required) {
-                    <mat-error>{{ field.label || field.name }} is required</mat-error>
-                  }
-                </mat-form-field>
-              } @else if (field.kind === FieldType.SELECT) {
-                <mat-form-field appearance="outline" class="w-full mb-3">
-                  <mat-label>{{ field.label || field.name }}</mat-label>
-                  <mat-select [formControlName]="field.name">
-                    @if(field.options && field.options.length > 0) {
-                      @for (option of field.options; track option) {
-                        <mat-option [value]="option">{{ option }}</mat-option>
-                      }
-                    } @else {
-                      <mat-option disabled>No options available</mat-option>
+            @if (selectedResourceType()?.fields && selectedResourceType()?.fields.length === 0) {
+              <div class="alert alert-info bg-blue-100 border-blue-500 border-l-4 p-4 mb-4">
+                <div class="font-semibold">No custom fields</div>
+                <p>This document type doesn't have any custom fields defined. Contact an administrator to add fields to this document type.</p>
+              </div>
+            } @else {
+              @for (field of selectedResourceType()?.fields; track field.id) {
+                @if (field.kind === FieldType.BOOLEAN) {
+                  <div class="mb-3">
+                    <mat-checkbox [formControlName]="field.name">
+                      {{ field.label || field.name }}
+                    </mat-checkbox>
+                    @if (metadataForm.get(field.name)?.hasError('required') && field.required) {
+                      <mat-error>{{ field.label || field.name }} is required</mat-error>
                     }
-                  </mat-select>
-                  @if (metadataForm.get(field.name)?.hasError('required') && field.required) {
-                    <mat-error>{{ field.label || field.name }} is required</mat-error>
-                  }
-                </mat-form-field>
-              } @else if (field.kind === FieldType.TEXTAREA) {
-                <mat-form-field appearance="outline" class="w-full mb-3">
-                  <mat-label>{{ field.label || field.name }}</mat-label>
-                  <textarea matInput [formControlName]="field.name" rows="3" cdkTextareaAutosize cdkAutosizeMinRows="3" cdkAutosizeMaxRows="10"></textarea>
-                  @if (metadataForm.get(field.name)?.hasError('required') && field.required) {
-                    <mat-error>{{ field.label || field.name }} is required</mat-error>
-                  }
-                </mat-form-field>
-              } @else if (field.kind === FieldType.NUMBER) {
-                <mat-form-field appearance="outline" class="w-full mb-3">
-                  <mat-label>{{ field.label || field.name }}</mat-label>
-                  <input matInput type="number" [formControlName]="field.name">
-                  @if (metadataForm.get(field.name)?.hasError('required') && field.required) {
-                    <mat-error>{{ field.label || field.name }} is required</mat-error>
-                  }
-                </mat-form-field>
-              } @else {
-                <mat-form-field appearance="outline" class="w-full mb-3">
-                  <mat-label>{{ field.label || field.name }}</mat-label>
-                  <input matInput [formControlName]="field.name">
-                  @if (metadataForm.get(field.name)?.hasError('required') && field.required) {
-                    <mat-error>{{ field.label || field.name }} is required</mat-error>
-                  }
-                </mat-form-field>
+                  </div>
+                } @else if (field.kind === FieldType.DATE) {
+                  <mat-form-field appearance="outline" class="w-full mb-3">
+                    <mat-label>{{ field.label || field.name }}</mat-label>
+                    <input matInput [matDatepicker]="picker" [formControlName]="field.name">
+                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker #picker></mat-datepicker>
+                    @if (metadataForm.get(field.name)?.hasError('required') && field.required) {
+                      <mat-error>{{ field.label || field.name }} is required</mat-error>
+                    }
+                  </mat-form-field>
+                } @else if (field.kind === FieldType.SELECT) {
+                  <mat-form-field appearance="outline" class="w-full mb-3">
+                    <mat-label>{{ field.label || field.name }}</mat-label>
+                    <mat-select [formControlName]="field.name">
+                      @if(field.options && field.options.length > 0) {
+                        @for (option of field.options; track option) {
+                          <mat-option [value]="option">{{ option }}</mat-option>
+                        }
+                      } @else {
+                        <mat-option disabled>No options available</mat-option>
+                      }
+                    </mat-select>
+                    @if (metadataForm.get(field.name)?.hasError('required') && field.required) {
+                      <mat-error>{{ field.label || field.name }} is required</mat-error>
+                    }
+                  </mat-form-field>
+                } @else if (field.kind === FieldType.TEXTAREA) {
+                  <mat-form-field appearance="outline" class="w-full mb-3">
+                    <mat-label>{{ field.label || field.name }}</mat-label>
+                    <textarea matInput [formControlName]="field.name" rows="3" cdkTextareaAutosize cdkAutosizeMinRows="3" cdkAutosizeMaxRows="10"></textarea>
+                    @if (metadataForm.get(field.name)?.hasError('required') && field.required) {
+                      <mat-error>{{ field.label || field.name }} is required</mat-error>
+                    }
+                  </mat-form-field>
+                } @else if (field.kind === FieldType.NUMBER) {
+                  <mat-form-field appearance="outline" class="w-full mb-3">
+                    <mat-label>{{ field.label || field.name }}</mat-label>
+                    <input matInput type="number" [formControlName]="field.name">
+                    @if (metadataForm.get(field.name)?.hasError('required') && field.required) {
+                      <mat-error>{{ field.label || field.name }} is required</mat-error>
+                    }
+                  </mat-form-field>
+                } @else {
+                  <mat-form-field appearance="outline" class="w-full mb-3">
+                    <mat-label>{{ field.label || field.name }}</mat-label>
+                    <input matInput [formControlName]="field.name">
+                    @if (metadataForm.get(field.name)?.hasError('required') && field.required) {
+                      <mat-error>{{ field.label || field.name }} is required</mat-error>
+                    }
+                  </mat-form-field>
+                }
               }
             }
             
@@ -382,69 +389,86 @@ export class DocumentCreatePageComponent implements OnInit {
   }
 
   onResourceTypeChange(resourceTypeId: number): void {
-    console.log('Resource type selected:', resourceTypeId);
     const resourceType = this.resourceTypes().find(rt => rt.id === resourceTypeId);
     
     if (resourceType) {
-      console.log('Found basic resource type:', resourceType);
-      // Load complete resource type with fields
-      this.resourceTypeService.get(resourceTypeId).subscribe({
-        next: (fullResourceType) => {
-          console.log('Fetched resource type with fields:', JSON.stringify(fullResourceType));
-          console.log('Fields property exists:', fullResourceType.hasOwnProperty('fields'));
-          console.log('Fields from backend:', fullResourceType.fields);
-          
-          // If fields is undefined or null, check the response structure
-          if (!fullResourceType.fields) {
-            console.error('Fields property is missing or null in the response');
-            this.snackbar.info('Resource type loaded, but no fields were found.');
+      // Debug the initial resource type
+      console.log('Selected resource type from dropdown:', resourceType);
+      console.log('Fields available from dropdown selection:', resourceType.fields);
+      
+      // Check if the fields are already available from the list
+      if (resourceType.fields && resourceType.fields.length > 0) {
+        console.log('Using fields already available from dropdown selection');
+        this.selectedResourceType.set(resourceType);
+        
+        // Generate resource code
+        const baseCode = resourceType.code;
+        const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+        const generatedCode = `${baseCode}-${timestamp}-${randomSuffix}`;
+        
+        this.metadataForm.patchValue({ resourceCode: generatedCode });
+        
+        // Build the form with the fields we already have
+        this.buildMetadataForm(resourceType.fields);
+      } else {
+        // If fields aren't available in the dropdown selection, fetch the complete resource type
+        console.log('Fields not available from dropdown, fetching complete resource type');
+        this.resourceTypeService.getWithFields(resourceTypeId).subscribe({
+          next: (fullResourceType) => {
+            console.log('Fetched resource type with fields:', fullResourceType);
+            console.log('Fields from backend:', fullResourceType.fields);
+            
+            this.selectedResourceType.set(fullResourceType);
+            
+            // Generate resource code based on the resource type code
+            const baseCode = fullResourceType.code;
+            const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+            const generatedCode = `${baseCode}-${timestamp}-${randomSuffix}`;
+            
+            // Update the resource code in the form
+            this.metadataForm.patchValue({ resourceCode: generatedCode });
+            
+            // Initialize dynamic form fields
+            if (fullResourceType.fields && fullResourceType.fields.length > 0) {
+              this.buildMetadataForm(fullResourceType.fields);
+            } else {
+              // Reset any previously added dynamic fields
+              const currentControls = { ...this.metadataForm.controls };
+              Object.keys(currentControls).forEach(key => {
+                if (key !== 'title' && key !== 'resourceCode' && key !== 'tags' && key !== 'parentSearch' && key !== 'parentId') {
+                  this.metadataForm.removeControl(key);
+                }
+              });
+              
+              // If fields is empty array (not null/undefined), inform user that the resource type has no fields
+              if (Array.isArray(fullResourceType.fields) && fullResourceType.fields.length === 0) {
+                this.snackbar.info(`Resource type '${fullResourceType.code}' has no custom fields defined.`);
+              }
+            }
+          },
+          error: (err) => {
+            this.snackbar.error('Failed to load resource type details: ' + (err.error?.message || err.message));
           }
-          
-          this.selectedResourceType.set(fullResourceType);
-          
-          // Generate resource code based on the resource type code
-          const baseCode = fullResourceType.code;
-          const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-          const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-          const generatedCode = `${baseCode}-${timestamp}-${randomSuffix}`;
-          
-          // Update the resource code in the form
-          this.metadataForm.patchValue({ resourceCode: generatedCode });
-          
-          // Initialize dynamic form fields
-          if (fullResourceType.fields && fullResourceType.fields.length > 0) {
-            console.log('Building form with fields:', fullResourceType.fields);
-            this.buildMetadataForm(fullResourceType.fields);
-          } else {
-            console.warn('No fields found in resource type:', fullResourceType);
-          }
-        },
-        error: (err) => {
-          console.error('Error loading resource type:', err);
-          this.snackbar.error('Failed to load resource type details: ' + (err.error?.message || err.message));
-        }
-      });
+        });
+      }
     } else {
-      console.warn('Resource type not found in loaded types');
       this.selectedResourceType.set(undefined);
     }
   }
 
   buildMetadataForm(fields: FieldDefinitionDto[]): void {
-    console.log('Building metadata form with fields:', fields);
-    
     // Remove existing dynamic field controls
     const currentControls = { ...this.metadataForm.controls };
     Object.keys(currentControls).forEach(key => {
       if (key !== 'title' && key !== 'resourceCode' && key !== 'tags' && key !== 'parentSearch' && key !== 'parentId') {
-        console.log('Removing control:', key);
         this.metadataForm.removeControl(key);
       }
     });
     
     // Add new field controls
     fields.forEach(field => {
-      console.log('Processing field:', field);
       const validators = field.required ? [Validators.required] : [];
       let defaultValue: any;
       
@@ -461,15 +485,17 @@ export class DocumentCreatePageComponent implements OnInit {
         case FieldType.SELECT:
           defaultValue = field.options && field.options.length > 0 ? field.options[0] : '';
           break;
+        case FieldType.TEXTAREA:
+          defaultValue = '';
+          break;
+        case FieldType.TEXT:
         default:
           defaultValue = '';
+          break;
       }
       
-      console.log(`Adding control for field: ${field.name}, type: ${field.kind}, defaultValue:`, defaultValue);
       this.metadataForm.addControl(field.name, this.fb.control(defaultValue, validators));
     });
-    
-    console.log('Final form controls:', Object.keys(this.metadataForm.controls));
   }
 
   onPrimaryFileChanged(file: File | null): void {
@@ -560,16 +586,56 @@ export class DocumentCreatePageComponent implements OnInit {
   // Helper method to convert all field values to strings as required by the backend
   private convertFieldValuesToStrings(fieldValues: Record<string, any>): Record<string, string> {
     const result: Record<string, string> = {};
+    
+    // Get resource type to check field types
+    const resourceType = this.selectedResourceType();
+    
     for (const key in fieldValues) {
       if (fieldValues.hasOwnProperty(key)) {
         let value = fieldValues[key];
+        
+        // Handle null/undefined values
         if (value === null || value === undefined) {
           result[key] = '';
-        } else if (value instanceof Date) {
-          result[key] = value.toISOString();
+          continue;
+        }
+        
+        // Check if this is a date field
+        const isDateField = resourceType?.fields?.some(
+          field => field.name === key && field.kind === FieldType.DATE
+        );
+        
+        if (isDateField) {
+          // For date fields, ensure we have a proper YYYY-MM-DD format without time
+          if (value instanceof Date) {
+            // Format as YYYY-MM-DD
+            const year = value.getFullYear();
+            const month = String(value.getMonth() + 1).padStart(2, '0');
+            const day = String(value.getDate()).padStart(2, '0');
+            result[key] = `${year}-${month}-${day}`;
+          } else if (typeof value === 'string') {
+            // Handle string date input - try to parse and format
+            try {
+              const date = new Date(value);
+              if (!isNaN(date.getTime())) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                result[key] = `${year}-${month}-${day}`;
+              } else {
+                result[key] = value; // Keep original if parsing fails
+              }
+            } catch (e) {
+              result[key] = value; // Keep original if parsing fails
+            }
+          } else {
+            result[key] = String(value); // Fallback
+          }
         } else if (typeof value === 'boolean') {
+          // Handle boolean values
           result[key] = value ? 'true' : 'false';
         } else {
+          // Handle all other types
           result[key] = String(value);
         }
       }
