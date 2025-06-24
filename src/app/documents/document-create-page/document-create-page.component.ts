@@ -134,7 +134,7 @@ import { AsyncBtnComponent } from '../../shared/components/async-btn/async-btn.c
               <input matInput formControlName="tags" placeholder="Enter tags separated by commas">
             </mat-form-field>
 
-            @if (selectedResourceType()?.fields && selectedResourceType()?.fields.length === 0) {
+            @if (selectedResourceType()?.fields && selectedResourceType()?.fields?.length === 0) {
               <div class="alert alert-info bg-blue-100 border-blue-500 border-l-4 p-4 mb-4">
                 <div class="font-semibold">No custom fields</div>
                 <p>This document type doesn't have any custom fields defined. Contact an administrator to add fields to this document type.</p>
