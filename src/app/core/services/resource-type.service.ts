@@ -20,7 +20,7 @@ export class ResourceTypeService {
   
   listAllNonPaged(): Observable<ResourceType[]> {
     console.log('Fetching all resource types');
-    return this.http.get<ResourceType[]>(this.baseUrl).pipe(
+    return this.http.get<ResourceType[]>(`${this.baseUrl}/all`).pipe(
       tap(types => {
         console.log(`Received ${types.length} resource types`);
         // Since the list call might not include fields, we can check

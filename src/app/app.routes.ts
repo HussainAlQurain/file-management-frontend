@@ -27,12 +27,12 @@ export const routes: Routes = [
         path: 'dashboard',
         loadComponent: () => import('./dashboard/dashboard-page/dashboard-page.component').then(c => c.DashboardPageComponent)
       },
-      
-      // Documents
+        // Documents
       {
         path: 'documents',
         children: [
           { path: '', loadComponent: () => import('./documents/document-list-page/document-list-page.component').then(c => c.DocumentListPageComponent) },
+          { path: 'browse', loadComponent: () => import('./documents/company-hierarchy-page/company-hierarchy-page.component').then(c => c.CompanyHierarchyPageComponent) },
           { path: 'new', loadComponent: () => import('./documents/document-create-page/document-create-page.component').then(c => c.DocumentCreatePageComponent) },
           { path: ':id', loadComponent: () => import('./documents/document-detail-page/document-detail-page.component').then(c => c.DocumentDetailPageComponent), canActivate: [canViewDocGuard] },
           { path: ':id/edit', loadComponent: () => import('./documents/document-edit-page/document-edit-page.component').then(c => c.DocumentEditPageComponent), canActivate: [canEditDocGuard] },
@@ -42,14 +42,24 @@ export const routes: Routes = [
           { path: ':id/versions/:version/view', loadComponent: () => import('./documents/document-viewer-page/document-viewer-page.component').then(c => c.DocumentViewerPageComponent), canActivate: [canViewDocGuard] }
         ]
       },
-      
-      // Resource Types (Admin only)
+        // Resource Types (Admin only)
       {
         path: 'resource-types',
         children: [
           { path: '', loadComponent: () => import('./admin/resource-types/resource-type-list-page/resource-type-list-page.component').then(c => c.ResourceTypeListPageComponent), canActivate: [roleGuard('SYS_ADMIN')] },
           { path: 'new', loadComponent: () => import('./admin/resource-types/resource-type-create-page/resource-type-create-page.component').then(c => c.ResourceTypeCreatePageComponent), canActivate: [roleGuard('SYS_ADMIN')] },
           { path: ':id', loadComponent: () => import('./admin/resource-types/resource-type-edit-page/resource-type-edit-page.component').then(c => c.ResourceTypeEditPageComponent), canActivate: [roleGuard('SYS_ADMIN')] }
+        ]
+      },
+
+      // Companies (Admin only)
+      {
+        path: 'companies',
+        children: [
+          { path: '', loadComponent: () => import('./admin/companies/company-list-page/company-list-page.component').then(c => c.CompanyListPageComponent), canActivate: [roleGuard('SYS_ADMIN')] },
+          { path: 'new', loadComponent: () => import('./admin/companies/company-create-page/company-create-page.component').then(c => c.CompanyCreatePageComponent), canActivate: [roleGuard('SYS_ADMIN')] },
+          { path: ':id', loadComponent: () => import('./admin/companies/company-edit-page/company-edit-page.component').then(c => c.CompanyEditPageComponent), canActivate: [roleGuard('SYS_ADMIN')] },
+          { path: ':id/acl', loadComponent: () => import('./admin/companies/company-acl-page/company-acl-page.component').then(c => c.CompanyAclPageComponent), canActivate: [roleGuard('SYS_ADMIN')] }
         ]
       },
       

@@ -50,6 +50,7 @@ export interface DocQuery {
   titleContains?: string; // Specific to title
   resourceCodeEquals?: string;
   resourceTypeIdEquals?: number; // Renamed from resourceTypeId for clarity with backend
+  companyIdEquals?: number; // Added for company-based filtering
   createdByIdEquals?: number; // Add this to match backend
   ownerIdEquals?: number; // Added from backend DTO
   parentIdEquals?: number; // For filtering by parent document ID (0 or null means no parent)

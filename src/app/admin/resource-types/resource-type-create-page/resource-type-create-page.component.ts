@@ -12,7 +12,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { ResourceTypeService } from '../../../core/services/resource-type.service';
+import { CompanyService } from '../../../core/services/company.service';
 import { FieldType, ResourceTypeField } from '../../../core/models/resource-type.model';
+import { Company } from '../../../core/models/company.model';
 import { SnackbarService } from '../../../core/services/snackbar.service';
 
 @Component({
@@ -36,9 +38,26 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
       <mat-card>
         <mat-card-header>
           <mat-card-title class="text-2xl font-semibold">Create New Resource Type</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <form [formGroup]="resourceTypeForm" (ngSubmit)="onSubmit()" class="space-y-6">            <mat-form-field appearance="outline" class="w-full">
+        </mat-card-header>        <mat-card-content>
+          <form [formGroup]="resourceTypeForm" (ngSubmit)="onSubmit()" class="space-y-6">
+            
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Company</mat-label>
+              <mat-select formControlName="companyId" required>
+                @if (isLoadingCompanies()) {
+                  <mat-option disabled>Loading companies...</mat-option>
+                } @else {
+                  @for (company of companies(); track company.id) {
+                    <mat-option [value]="company.id">{{ company.name }}</mat-option>
+                  }
+                }
+              </mat-select>
+              @if (resourceTypeForm.get('companyId')?.hasError('required')) {
+                <mat-error>Company is required.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
               <mat-label>Code</mat-label>
               <input matInput formControlName="code" required>
               @if (resourceTypeForm.get('code')?.hasError('required')) {
@@ -143,6 +162,7 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
 export class ResourceTypeCreatePageComponent implements OnInit {
   private fb = inject(FormBuilder);
   private resourceTypeService = inject(ResourceTypeService);
+  private companyService = inject(CompanyService);
   private router = inject(Router);
   private snackbar = inject(SnackbarService);
 
@@ -150,14 +170,32 @@ export class ResourceTypeCreatePageComponent implements OnInit {
   fieldTypes = Object.values(FieldType);
   FieldType = FieldType; // Make enum available in template
   isSubmitting = signal(false);
-  ngOnInit(): void {
+  companies = signal<Company[]>([]);
+  isLoadingCompanies = signal(false);  ngOnInit(): void {
+    this.loadCompanies();
     this.resourceTypeForm = this.fb.group({
+      companyId: [null, Validators.required],
       code: ['', [Validators.required, Validators.pattern(/^[A-Z0-9_]+$/)]],
       name: ['', Validators.required],
       description: [''],
       fields: this.fb.array([])
     });
     this.addField(); // Add one field by default
+  }
+
+  loadCompanies(): void {
+    this.isLoadingCompanies.set(true);
+    this.companyService.listAll().subscribe({
+      next: (companies) => {
+        this.companies.set(companies);
+        this.isLoadingCompanies.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading companies:', error);
+        this.snackbar.error('Failed to load companies');
+        this.isLoadingCompanies.set(false);
+      }
+    });
   }
 
   get fields(): FormArray {
@@ -247,11 +285,11 @@ export class ResourceTypeCreatePageComponent implements OnInit {
         uniqueWithinType: false, // or add to form if needed
         options
       };
-    });
-    const resourceTypeDto = {
+    });    const resourceTypeDto = {
       code: formValue.code,
       name: formValue.name,
       description: formValue.description,
+      companyId: formValue.companyId,
       fields
     };
 

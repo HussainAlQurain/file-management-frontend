@@ -20,9 +20,11 @@ import { debounceTime, distinctUntilChanged, switchMap, tap, catchError, map } f
 import { Observable, of } from 'rxjs';
 
 import { ResourceTypeService } from '../../core/services/resource-type.service';
+import { CompanyService } from '../../core/services/company.service';
 import { DocumentService } from '../../core/services/document.service';
 import { SnackbarService } from '../../core/services/snackbar.service';
 import { ResourceType, FieldDefinitionDto, FieldType } from '../../core/models/resource-type.model';
+import { Company } from '../../core/models/company.model';
 import { Document, CreateDocumentDto } from '../../core/models/document.model';
 import { FileUploadComponent, FileUploadProgress } from '../../shared/components/file-upload/file-upload.component';
 import { AsyncBtnComponent } from '../../shared/components/async-btn/async-btn.component';
@@ -50,10 +52,31 @@ import { AsyncBtnComponent } from '../../shared/components/async-btn/async-btn.c
   ],
   template: `
     <div class="p-4">
-      <h2 class="text-2xl font-bold mb-6">Create New Document</h2>
+      <h2 class="text-2xl font-bold mb-6">Create New Document</h2>      <mat-stepper linear #stepper="matStepper">
+        <!-- Step 1: Select Company -->
+        <mat-step [stepControl]="companyForm">
+          <form [formGroup]="companyForm">
+            <ng-template matStepLabel>Select Company</ng-template>
+            <mat-form-field appearance="outline" class="w-full md:w-1/2">
+              <mat-label>Company</mat-label>
+              <mat-select formControlName="companyId" required (selectionChange)="onCompanyChange($event.value)">
+                @for (company of companies(); track company.id) {
+                  <mat-option [value]="company.id">{{ company.name }}</mat-option>
+                }
+              </mat-select>
+              @if (companyForm.get('companyId')?.hasError('required')) {
+                <mat-error>Company is required</mat-error>
+              }
+            </mat-form-field>
+            <div class="mt-4">
+              <button mat-button matStepperNext color="primary" [disabled]="!selectedCompany()">
+                Next
+              </button>
+            </div>
+          </form>
+        </mat-step>
 
-      <mat-stepper linear #stepper="matStepper">
-        <!-- Step 1: Select Resource Type -->
+        <!-- Step 2: Select Resource Type -->
         <mat-step [stepControl]="resourceTypeForm">
           <form [formGroup]="resourceTypeForm">
             <ng-template matStepLabel>Select Document Type</ng-template>
@@ -61,7 +84,7 @@ import { AsyncBtnComponent } from '../../shared/components/async-btn/async-btn.c
               <mat-label>Document Type</mat-label>
               <mat-select formControlName="resourceTypeId" required (selectionChange)="onResourceTypeChange($event.value)">
                 @for (rt of resourceTypes(); track rt.id) {
-                  <mat-option [value]="rt.id">{{ rt.code }}</mat-option>
+                  <mat-option [value]="rt.id">{{ rt.name }} ({{ rt.code }})</mat-option>
                 }
               </mat-select>
               @if (resourceTypeForm.get('resourceTypeId')?.hasError('required')) {
@@ -69,14 +92,15 @@ import { AsyncBtnComponent } from '../../shared/components/async-btn/async-btn.c
               }
             </mat-form-field>
             <div class="mt-4">
-              <button mat-button matStepperNext color="primary" [disabled]="!selectedResourceType()">
+              <button mat-button matStepperPrevious>Previous</button>
+              <button mat-button matStepperNext color="primary" [disabled]="!selectedResourceType()" class="ml-2">
                 Next
               </button>
             </div>
           </form>
         </mat-step>
 
-        <!-- Step 2: Fill Metadata (Dynamic Form) -->
+        <!-- Step 3: Fill Metadata (Dynamic Form) -->
         <mat-step [stepControl]="metadataForm" label="Enter Document Details">
           <form [formGroup]="metadataForm" class="mt-4">
             <h3 class="text-lg font-semibold mb-2">{{ selectedResourceType()?.code }} Details</h3>
@@ -265,13 +289,16 @@ export class DocumentCreatePageComponent implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private resourceTypeService = inject(ResourceTypeService);
+  private companyService = inject(CompanyService);
   private documentService = inject(DocumentService);
   private snackbar = inject(SnackbarService);
   private dialogRef = inject(MatDialogRef<DocumentCreatePageComponent>, { optional: true });
 
   FieldType = FieldType;
 
+  companies = signal<Company[]>([]);
   resourceTypes = signal<ResourceType[]>([]);
+  selectedCompany = signal<Company | undefined>(undefined);
   selectedResourceType = signal<ResourceType | undefined>(undefined);
   
   primaryFile = signal<File | null>(null);
@@ -287,9 +314,12 @@ export class DocumentCreatePageComponent implements OnInit {
   maxFileSize = 100 * 1024 * 1024; // 100MB
   allowedFileExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'jpg', 'jpeg', 'png', 'zip', 'rar'];
 
-  primaryFileProgress = signal<FileUploadProgress[]>([]);
-  attachmentsProgress = signal<FileUploadProgress[]>([]);
+  primaryFileProgress = signal<FileUploadProgress[]>([]);  attachmentsProgress = signal<FileUploadProgress[]>([]);
   
+  companyForm: FormGroup = this.fb.group({
+    companyId: ['', Validators.required]
+  });
+
   resourceTypeForm: FormGroup = this.fb.group({
     resourceTypeId: ['', Validators.required]
   });
@@ -311,9 +341,8 @@ export class DocumentCreatePageComponent implements OnInit {
     const attachmentsInvalid = this.attachmentsProgress().some(att => !!att.error);
     return this.metadataForm.invalid || primaryFileInvalid || attachmentsInvalid;
   });
-
   ngOnInit(): void {
-    this.loadResourceTypes();
+    this.loadCompanies();
     this.setupParentDocumentSearch();
   }
 
@@ -372,6 +401,61 @@ export class DocumentCreatePageComponent implements OnInit {
       parentId: null
     });
     this.parentSearchResults.set([]);
+  }
+
+  loadCompanies(): void {
+    this.companyService.getAccessibleCompanies().subscribe({
+      next: companies => {
+        this.companies.set(companies);
+        if (companies.length === 0) {
+          this.snackbar.info('No companies are accessible to you. Please contact your administrator for access.');
+        }
+      },
+      error: err => {
+        this.snackbar.error('Failed to load companies: ' + (err.error?.message || err.message));
+      }
+    });
+  }
+
+  onCompanyChange(companyId: number): void {
+    const company = this.companies().find(c => c.id === companyId);
+    this.selectedCompany.set(company);
+    this.selectedResourceType.set(undefined);
+    this.resourceTypeForm.patchValue({ resourceTypeId: '' });
+    
+    if (company) {
+      this.loadResourceTypesForCompany(companyId);
+    }
+  }
+  loadResourceTypesForCompany(companyId: number): void {
+    console.log('Loading resource types for company ID:', companyId);
+    this.resourceTypeService.listAllNonPaged().subscribe({
+      next: types => {
+        console.log('All resource types received:', types);
+        console.log('Filtering by companyId:', companyId);
+          // Debug each resource type
+        types.forEach((type, index) => {
+          console.log(`Resource type ${index + 1}:`, {
+            id: type.id,
+            name: type.name,
+            companyId: type.companyId,
+            companyName: type.companyName
+          });
+        });
+        
+        const companyTypes = types.filter(t => t.companyId === companyId);
+        console.log('Filtered resource types for company:', companyTypes);
+        
+        this.resourceTypes.set(companyTypes);
+        if (companyTypes.length === 0) {
+          this.snackbar.info('No document types are defined for this company. Please create one first.');
+        }
+      },
+      error: err => {
+        console.error('Error loading resource types:', err);
+        this.snackbar.error('Failed to load document types: ' + (err.error?.message || err.message));
+      }
+    });
   }
 
   loadResourceTypes(): void {

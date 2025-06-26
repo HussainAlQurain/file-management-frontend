@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormGroup, FormBuilder } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -89,6 +89,7 @@ export class DocumentListPageComponent implements OnInit {
   private resourceTypeService = inject(ResourceTypeService);
   private fb = inject(FormBuilder);
   private destroyRef = inject(DestroyRef);
+  private route = inject(ActivatedRoute);
   
   documents = signal<Page<Document>>({
     content: [],
@@ -116,10 +117,36 @@ export class DocumentListPageComponent implements OnInit {
   
   showFilters = signal(false);
   toggleFilters() { this.showFilters.set(!this.showFilters()); }
-  
-  ngOnInit(): void {
+    ngOnInit(): void {
     this.loadResourceTypes();
-    this.loadDocuments();
+    this.initializeFromQueryParams();
+  }
+    initializeFromQueryParams(): void {
+    // Read query parameters and apply them as filters
+    this.route.queryParams
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        console.log('URL query parameters:', params);
+        
+        // Apply filters from URL
+        if (params['companyId']) {
+          this.query.companyIdEquals = +params['companyId'];
+          console.log('Filtering by companyIdEquals:', this.query.companyIdEquals);
+        }
+        
+        if (params['resourceTypeId']) {
+          this.query.resourceTypeIdEquals = +params['resourceTypeId'];
+          console.log('Filtering by resourceTypeIdEquals:', this.query.resourceTypeIdEquals);
+        }
+        
+        if (params['resourceCode']) {
+          this.query.resourceCodeEquals = params['resourceCode'];
+          console.log('Filtering by resourceCodeEquals:', this.query.resourceCodeEquals);
+        }
+        
+        console.log('Final query:', this.query);
+        this.loadDocuments();
+      });
   }
   
   loadDocuments(): void {

@@ -3,6 +3,8 @@ export interface ResourceType {
   code: string; // Renamed from name
   name: string; // Add name field
   description?: string;
+  companyId: number;
+  companyName?: string;
   fields: FieldDefinitionDto[]; // Changed from ResourceTypeField[]
   createdAt: string;
   updatedAt: string;
@@ -32,6 +34,7 @@ export interface CreateResourceTypeDto {
   code: string;
   name: string; // Add name field
   description?: string;
+  companyId: number;
   fields?: CreateFieldDto[]; // Optional fields to be created with the resource type
 }
 

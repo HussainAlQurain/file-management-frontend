@@ -94,11 +94,8 @@ export class UserService {
 
   // For SYS_ADMIN: fetch all users (paged, but for dropdown we can fetch first 100)
   getAllUsers(): Observable<UserDTO[]> {
-    // Backend returns Page<UserDTO>, but for dropdown we just want content
-    return this.http.get<any>(`${this.usersApiUrl}?size=100`).pipe(
-      // Map to content array
-      map(page => page.content as UserDTO[])
-    );
+    // Use the new /users/all endpoint that returns a simple array
+    return this.http.get<UserDTO[]>(`${this.usersApiUrl}/all`);
   }
 
   patch(id: number, user: UpdateUserDTO): Observable<User> {

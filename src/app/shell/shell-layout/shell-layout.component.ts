@@ -83,14 +83,20 @@ import { HasRoleDirective } from '../../shared/directives/has-role.directive';
               <a mat-button class="text-left" routerLink="/dashboard" routerLinkActive="bg-gray-200">
                 <mat-icon class="mr-2">dashboard</mat-icon>
                 <span>Dashboard</span>
-              </a>
-              <a mat-button class="text-left" routerLink="/documents" routerLinkActive="bg-gray-200">
+              </a>              <a mat-button class="text-left" routerLink="/documents" routerLinkActive="bg-gray-200">
                 <mat-icon class="mr-2">description</mat-icon>
                 <span>Documents</span>
               </a>
-                <!-- Admin section -->
+              <a mat-button class="text-left" routerLink="/documents/browse" routerLinkActive="bg-gray-200">
+                <mat-icon class="mr-2">account_tree</mat-icon>
+                <span>Browse by Company</span>
+              </a><!-- Admin section -->
               <div *appHasRole="'SYS_ADMIN'" class="mt-4 flex flex-col">
                 <div class="text-xs text-gray-500 mb-2 pl-4">Admin</div>
+                <a mat-button class="text-left mb-1" routerLink="/companies" routerLinkActive="bg-gray-200">
+                  <mat-icon class="mr-2">business</mat-icon>
+                  <span>Companies</span>
+                </a>
                 <a mat-button class="text-left mb-1" routerLink="/resource-types" routerLinkActive="bg-gray-200">
                   <mat-icon class="mr-2">category</mat-icon>
                   <span>Resource Types</span>

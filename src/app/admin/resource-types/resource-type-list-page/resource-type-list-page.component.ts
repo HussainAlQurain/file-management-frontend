@@ -60,12 +60,22 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
                   <ng-container matColumnDef="id">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
                     <td mat-cell *matCellDef="let rt">{{rt.id}}</td>
-                  </ng-container>
-
-                  <!-- Code Column -->
+                  </ng-container>                  <!-- Code Column -->
                   <ng-container matColumnDef="code">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>Code</th>
                     <td mat-cell *matCellDef="let rt">{{rt.code}}</td>
+                  </ng-container>
+
+                  <!-- Name Column -->
+                  <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+                    <td mat-cell *matCellDef="let rt">{{rt.name}}</td>
+                  </ng-container>
+
+                  <!-- Company Column -->
+                  <ng-container matColumnDef="company">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Company</th>
+                    <td mat-cell *matCellDef="let rt">{{rt.companyName || 'N/A'}}</td>
                   </ng-container>
 
                   <!-- Description Column -->
@@ -124,7 +134,7 @@ export class ResourceTypeListPageComponent implements OnInit, AfterViewInit {
   isLoading = signal(true);
   
   dataSource = new MatTableDataSource<ResourceType>([]);
-  displayedColumns: string[] = ['id', 'code', 'description', 'fieldsCount', 'createdAt', 'actions'];
+  displayedColumns: string[] = ['id', 'code', 'name', 'company', 'description', 'fieldsCount', 'createdAt', 'actions'];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;

@@ -15,7 +15,9 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CdkDragDrop, moveItemInArray, DragDropModule } from '@angular/cdk/drag-drop';
 
 import { ResourceTypeService } from '../../../core/services/resource-type.service';
+import { CompanyService } from '../../../core/services/company.service';
 import { ResourceType, FieldType, FieldDefinitionDto, CreateFieldDto, UpdateFieldDto, UpdateResourceTypeDto } from '../../../core/models/resource-type.model';
+import { Company } from '../../../core/models/company.model';
 import { SnackbarService } from '../../../core/services/snackbar.service';
 import { switchMap, tap, catchError, finalize } from 'rxjs/operators';
 import { of, forkJoin, Observable } from 'rxjs';
@@ -61,8 +63,13 @@ import { FieldDialogComponent, FieldDialogData } from '../components/field-dialo
             <div class="flex justify-center items-center py-12">
               <mat-spinner diameter="60"></mat-spinner>
             </div>
-          } @else if (resourceTypeForm && resourceType()) {
-            <form [formGroup]="resourceTypeForm" (ngSubmit)="onUpdateResourceTypeDetails()" class="space-y-6">
+          } @else if (resourceTypeForm && resourceType()) {            <form [formGroup]="resourceTypeForm" (ngSubmit)="onUpdateResourceTypeDetails()" class="space-y-6">
+              <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Company</mat-label>
+                <input matInput [value]="resourceType()?.companyName || 'N/A'" readonly 
+                       [matTooltip]="'Company cannot be changed after creation.'">
+              </mat-form-field>
+
               <mat-form-field appearance="outline" class="w-full">
                 <mat-label>Code</mat-label>
                 <input matInput formControlName="code" required readonly [matTooltip]="'Code cannot be changed after creation.'">
