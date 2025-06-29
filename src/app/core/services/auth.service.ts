@@ -53,7 +53,17 @@ export class AuthService {
     localStorage.removeItem(this.tokenKey);
     this.authSignal.set(null);
     this.currentUserSignal.set(null);
-    // Don't automatically navigate here - let the caller decide
+    // Navigate to login page after logout
+    this.router.navigate(['/login']);
+  }
+  
+  /**
+   * Logout without automatic navigation (for use in interceptors, etc.)
+   */
+  logoutWithoutRedirect(): void {
+    localStorage.removeItem(this.tokenKey);
+    this.authSignal.set(null);
+    this.currentUserSignal.set(null);
   }
   
   isAuthenticated(): boolean {
@@ -68,7 +78,7 @@ export class AuthService {
     // Check if token is expired
     if (this.isTokenExpired(auth.token)) {
       console.warn('Token is expired, logging out...');
-      this.logout();
+      this.logoutWithoutRedirect();
       return null;
     }
     
