@@ -428,31 +428,18 @@ export class DocumentCreatePageComponent implements OnInit {
     }
   }
   loadResourceTypesForCompany(companyId: number): void {
-    console.log('Loading resource types for company ID:', companyId);
-    this.resourceTypeService.listAllNonPaged().subscribe({
+    console.log('Loading accessible resource types for company ID:', companyId);
+    this.resourceTypeService.getAccessibleForCompany(companyId).subscribe({
       next: types => {
-        console.log('All resource types received:', types);
-        console.log('Filtering by companyId:', companyId);
-          // Debug each resource type
-        types.forEach((type, index) => {
-          console.log(`Resource type ${index + 1}:`, {
-            id: type.id,
-            name: type.name,
-            companyId: type.companyId,
-            companyName: type.companyName
-          });
-        });
+        console.log('Accessible resource types received:', types);
         
-        const companyTypes = types.filter(t => t.companyId === companyId);
-        console.log('Filtered resource types for company:', companyTypes);
-        
-        this.resourceTypes.set(companyTypes);
-        if (companyTypes.length === 0) {
-          this.snackbar.info('No document types are defined for this company. Please create one first.');
+        this.resourceTypes.set(types);
+        if (types.length === 0) {
+          this.snackbar.info('No document types are accessible to you in this company. Please contact your administrator for access.');
         }
       },
       error: err => {
-        console.error('Error loading resource types:', err);
+        console.error('Error loading accessible resource types:', err);
         this.snackbar.error('Failed to load document types: ' + (err.error?.message || err.message));
       }
     });

@@ -35,6 +35,13 @@ export class ResourceTypeService {
     return this.http.get<ResourceType[]>(`${this.baseUrl}`);
   }
   
+  /**
+   * Get resource types accessible to current user for a specific company
+   */
+  getAccessibleForCompany(companyId: number): Observable<ResourceType[]> {
+    return this.http.get<ResourceType[]>(`${this.baseUrl}/company/${companyId}/accessible`);
+  }
+  
   get(id: number): Observable<ResourceType> {
     console.log(`Fetching resource type with ID: ${id}`);
     return this.http.get<ResourceType>(`${this.baseUrl}/${id}`).pipe(
