@@ -29,6 +29,10 @@ export interface Document {
     name: string;
     fields?: any;
   };
+  company?: {
+    id: number;
+    name: string;
+  };
   parent?: ParentDocument;
   children?: ChildDocument[];
 }
@@ -58,6 +62,9 @@ export interface DocQuery {
   fromDate?: string;
   toDate?: string;
   perm?: string; // Add permission filter (VIEW, EDIT, etc.)
+  statusEquals?: string; // Add status filter
+  createdAfter?: string; // Add date range filters
+  createdBefore?: string;
 }
 
 export interface Page<T> {

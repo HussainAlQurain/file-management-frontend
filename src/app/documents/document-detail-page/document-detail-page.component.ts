@@ -1,28 +1,43 @@
 import { Component, OnInit, inject, signal, WritableSignal, computed, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatListModule } from '@angular/material/list';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatTabsModule } from '@angular/material/tabs';
 import { Subscription } from 'rxjs';
-import { MatDialog } from '@angular/material/dialog';
+
+// NG-ZORRO imports
+import { NzCardModule } from 'ng-zorro-antd/card';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzTagModule } from 'ng-zorro-antd/tag';
+import { NzDividerModule } from 'ng-zorro-antd/divider';
+import { NzTabsModule } from 'ng-zorro-antd/tabs';
+import { NzDescriptionsModule } from 'ng-zorro-antd/descriptions';
+import { NzEmptyModule } from 'ng-zorro-antd/empty';
+import { NzListModule } from 'ng-zorro-antd/list';
+import { NzAvatarModule } from 'ng-zorro-antd/avatar';
+import { NzSpaceModule } from 'ng-zorro-antd/space';
+import { NzTypographyModule } from 'ng-zorro-antd/typography';
+import { NzAlertModule } from 'ng-zorro-antd/alert';
+import { NzUploadModule } from 'ng-zorro-antd/upload';
+import { NzMessageService } from 'ng-zorro-antd/message';
+import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzTimelineModule } from 'ng-zorro-antd/timeline';
+import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
+import { NzBadgeModule } from 'ng-zorro-antd/badge';
+import { NzPageHeaderModule } from 'ng-zorro-antd/page-header';
+import { NzBreadCrumbModule } from 'ng-zorro-antd/breadcrumb';
+import { NzGridModule } from 'ng-zorro-antd/grid';
+import { NzStatisticModule } from 'ng-zorro-antd/statistic';
 
 import { DocumentService } from '../../core/services/document.service';
-import { Document, Attachment, RelatedDocuments, DocumentVersion } from '../../core/models/document.model';
+import { Document, RelatedDocuments, DocumentVersion } from '../../core/models/document.model';
 import { SnackbarService } from '../../core/services/snackbar.service';
 import { FileSizePipe } from '../../shared/pipes/file-size.pipe';
 import { environment } from '../../../environments/environment';
 import { ReminderService, ReminderDTO } from '../../core/services/reminder.service';
 import { ReminderDialogComponent } from '../components/reminder-dialog/reminder-dialog.component';
 import { AuthService } from '../../core/services/auth.service';
-import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-document-detail-page',
@@ -30,314 +45,473 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
   imports: [
     CommonModule,
     RouterModule,
-    MatCardModule,
-    MatProgressSpinnerModule,
-    MatListModule,
-    MatIconModule,
-    MatButtonModule,
-    MatChipsModule,
-    MatTooltipModule,
-    MatDividerModule,
-    MatExpansionModule,
-    MatTabsModule,
-    FileSizePipe,
-    MatDatepickerModule
+    NzCardModule,
+    NzSpinModule,
+    NzButtonModule,
+    NzIconModule,
+    NzTagModule,
+    NzDividerModule,
+    NzTabsModule,
+    NzDescriptionsModule,
+    NzEmptyModule,
+    NzListModule,
+    NzAvatarModule,
+    NzSpaceModule,
+    NzTypographyModule,
+    NzAlertModule,
+    NzUploadModule,
+    NzModalModule,
+    NzTimelineModule,
+    NzToolTipModule,
+    NzBadgeModule,
+    NzPageHeaderModule,
+    NzBreadCrumbModule,
+    NzGridModule,
+    NzStatisticModule,
+    FileSizePipe
   ],
   template: `
-    <div class="p-4 md:p-8">
-      @if (isLoading()) {
-        <div class="flex justify-center items-center min-h-[300px]">
-          <mat-spinner diameter="60"></mat-spinner>
-        </div>
-      } @else {
-        @if (document(); as doc) {
-          @if(doc) {
-            <mat-card class="mb-6">
-              <mat-card-header class="!pb-2">
-                <mat-card-title class="text-2xl font-semibold flex flex-col gap-1">
-                  {{ doc.title }}
-                  <span class="text-base font-normal text-gray-600">Resource Code: {{ doc.resourceCode }}</span>
-                </mat-card-title>
-                <mat-card-subtitle>
-                  Resource Type: {{ doc.resourceType?.name || doc.resourceType?.code || 'N/A' }}
-                </mat-card-subtitle>
-                <div class="flex-grow"></div>
-                <div class="actions flex gap-2">
-                  <button mat-stroked-button color="primary" [routerLink]="['/documents', doc.id, 'edit']">
-                    <mat-icon>edit</mat-icon> Edit
-                  </button>
-                  <button mat-stroked-button [routerLink]="['/documents', doc.id, 'acl']">
-                    <mat-icon>security</mat-icon> Manage ACL
-                  </button>
-                  <button mat-stroked-button routerLink="/documents">
-                    <mat-icon>arrow_back</mat-icon> Back
-                  </button>
-                </div>
-              </mat-card-header>
-              <mat-card-content>
-                <mat-tab-group animationDuration="0ms" class="mt-4">
-                  <mat-tab label="Details">
-                    <div class="p-4">
-                      <div class="mb-4 flex items-center gap-2">
-                        <mat-icon color="primary">description</mat-icon>
-                        <span class="font-semibold">Primary File:</span>
-                        @if (doc.storageKey) {
-                          <button mat-stroked-button color="primary" (click)="downloadLatestPrimaryFile(doc)">
-                            <mat-icon>download</mat-icon> Download Current Version
-                          </button>
-                          <a mat-stroked-button color="accent" [routerLink]="['/documents', doc.id, 'view']">
-                            <mat-icon>visibility</mat-icon> View Document
-                          </a>
-                        } @else {
-                          <span class="text-gray-500">No file uploaded yet.</span>
-                        }
-                        <label class="ml-4">
-                          <input type="file" hidden (change)="onPrimaryFileSelected($event)" #fileInput />
-                          <button mat-stroked-button color="accent" type="button" (click)="fileInput.click()">
-                            <mat-icon>upload</mat-icon> Upload Primary File
-                          </button>
-                        </label>
-                      </div>
-                      @if (doc.description) {
-                        <p class="text-gray-700 mb-4">{{ doc.description }}</p>
-                      }
-                      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm mb-4">
-                        <div><strong>ID:</strong> {{ doc.id }}</div>
-                        <div><strong>Resource Type:</strong> {{ doc.resourceType?.name || doc.resourceType?.code || 'N/A' }}</div>
-                        <div><strong>Resource Code:</strong> {{ doc.resourceCode }}</div>
-                        <div><strong>Status:</strong> {{ doc.status }}</div>
-                        <div><strong>Created By:</strong> {{ doc.owner?.username || doc.owner?.email || 'System' }}</div>
-                        <div><strong>Created At:</strong> {{ doc.createdAt | date:'medium' }}</div>
-                        <div><strong>Updated At:</strong> {{ doc.updatedAt | date:'medium' }}</div>
-                      </div>
-                      @if (doc.fieldValues && getFieldValueKeys(doc.fieldValues).length > 0) {
-                        <div class="mb-4">
-                          <h3 class="text-lg font-medium mb-2">Field Values</h3>
-                          <mat-list role="list">
-                            @for (item of doc.fieldValues | keyvalue; track item.key) {
-                              <mat-list-item role="listitem" class="h-auto py-2">
-                                <div matListItemTitle class="font-semibold">{{ item.key }}:</div>
-                                <div matListItemLine class="whitespace-pre-wrap">{{ formatFieldValue(item.value) }}</div>
-                              </mat-list-item>
-                              <mat-divider></mat-divider>
-                            }
-                          </mat-list>
-                        </div>
-                      }
-                    </div>
-                  </mat-tab>
+    <div class="document-detail-container">
+      <!-- Loading State -->
+      <div *ngIf="isLoading()" class="loading-container">
+        <nz-spin nzSimple [nzSize]="'large'" nzTip="Loading document..."></nz-spin>
+      </div>
 
-                  <mat-tab label="Related Documents">
-                    <div class="p-4">
-                      @if (isLoadingRelated()) {
-                        <div class="flex justify-center items-center min-h-[100px]">
-                          <mat-spinner diameter="40"></mat-spinner>
-                        </div>
-                      } @else {
-                        @if (relatedDocuments()?.parent) {
-                          <div class="mb-6">
-                            <h3 class="text-lg font-medium mb-3">Parent Document</h3>
-                            <mat-card class="mb-2 cursor-pointer hover:shadow-md transition-shadow" 
-                                    [routerLink]="['/documents', relatedDocuments()?.parent?.id]">
-                              <mat-card-header>
-                                <mat-icon mat-card-avatar>folder</mat-icon>
-                                <mat-card-title>{{ relatedDocuments()?.parent?.title }}</mat-card-title>
-                                <mat-card-subtitle>{{ relatedDocuments()?.parent?.resourceCode }} | {{ relatedDocuments()?.parent?.resourceTypeName }}</mat-card-subtitle>
-                              </mat-card-header>
-                            </mat-card>
-                          </div>
-                        }
+      <!-- Document Content -->
+      <div *ngIf="!isLoading() && document()">
+        <!-- Page Header with Breadcrumb -->
+        <nz-page-header 
+          nzBackIcon
+          (nzBack)="navigateBack()"
+          [nzTitle]="document()!.title"
+          [nzSubtitle]="'Resource Code: ' + document()!.resourceCode">
+          
+          <nz-breadcrumb nz-page-header-breadcrumb>
+            <nz-breadcrumb-item>
+              <a routerLink="/documents">Documents</a>
+            </nz-breadcrumb-item>
+            <nz-breadcrumb-item>{{ document()!.resourceType?.name || 'Unknown Type' }}</nz-breadcrumb-item>
+            <nz-breadcrumb-item>{{ document()!.title }}</nz-breadcrumb-item>
+          </nz-breadcrumb>
 
-                        @if (relatedDocuments()?.children && (relatedDocuments()?.children?.length ?? 0) > 0) {
-                          <div>
-                            <h3 class="text-lg font-medium mb-3">Child Documents</h3>
-                            @for (child of relatedDocuments()?.children || []; track child.id) {
-                              <mat-card class="mb-2 cursor-pointer hover:shadow-md transition-shadow" 
-                                      [routerLink]="['/documents', child.id]">
-                                <mat-card-header>
-                                  <mat-icon mat-card-avatar>description</mat-icon>
-                                  <mat-card-title>{{ child.title }}</mat-card-title>
-                                  <mat-card-subtitle>{{ child.resourceCode }} | {{ child.resourceTypeName }}</mat-card-subtitle>
-                                </mat-card-header>
-                              </mat-card>
-                            }
-                          </div>
-                        } @else if (!relatedDocuments()?.parent) {
-                          <div class="text-center p-6 text-gray-500">
-                            <mat-icon class="text-4xl mb-2">share</mat-icon>
-                            <p>No related documents found.</p>
-                          </div>
-                        }
-                      }
-                    </div>
-                  </mat-tab>
-
-                  <mat-tab label="Reminders">
-                    <div class="p-4">
-                      <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium">Reminders</h3>
-                        <button mat-raised-button color="primary" (click)="openReminderDialog()">
-                          <mat-icon>add</mat-icon> Add Reminder
-                        </button>
-                      </div>
-                      <mat-list *ngIf="reminders.length > 0; else noReminders">
-                        <mat-list-item *ngFor="let r of reminders">
-                          <div matListItemTitle>
-                            {{ r.message }}
-                          </div>
-                          <div matListItemLine>
-                            Remind At: {{ r.remindAt | date:'short' }}
-                            <ng-container *ngIf="isAdmin">
-                              &nbsp;|&nbsp; User: {{ getUsername(r.userId) }}
-                            </ng-container>
-                            &nbsp;|&nbsp;
-                            <mat-chip [color]="r.sent ? 'primary' : 'warn'" selected>
-                              {{ r.sent ? 'Sent' : 'Pending' }}
-                            </mat-chip>
-                          </div>
-                          <div matListItemMeta *ngIf="canEditOrDelete(r)">
-                            <button mat-icon-button (click)="openReminderDialog(r)"><mat-icon>edit</mat-icon></button>
-                            <button mat-icon-button color="warn" (click)="deleteReminder(r)"><mat-icon>delete</mat-icon></button>
-                          </div>
-                        </mat-list-item>
-                      </mat-list>
-                      <ng-template #noReminders>
-                        <div class="text-gray-500 text-center p-6">
-                          <mat-icon class="text-4xl mb-2">event_busy</mat-icon>
-                          <p>No reminders for this document.</p>
-                        </div>
-                      </ng-template>
-                    </div>
-                  </mat-tab>
-
-                  <mat-tab label="Versions">
-                    <div class="p-4">
-                      @if (versionsLoading) {
-                        <div class="flex justify-center items-center min-h-[100px]">
-                          <mat-spinner diameter="40"></mat-spinner>
-                        </div>
-                      } @else if (!versionsLoaded) {
-                        <div class="text-center p-4">
-                          <button mat-stroked-button color="primary" (click)="loadVersions()">
-                            <mat-icon>history</mat-icon> Load Version History
-                          </button>
-                        </div>
-                      } @else if (versions.length > 0) {
-                        <div class="version-list">
-                          @for (version of versions; track version.versionNo) {
-                            <mat-card class="mb-3">
-                              <mat-card-header>
-                                <mat-icon mat-card-avatar>history</mat-icon>
-                                <mat-card-title>Version {{ version.versionNo }}</mat-card-title>
-                                <mat-card-subtitle>Created: {{ version.createdAt | date:'medium' }}</mat-card-subtitle>
-                              </mat-card-header>
-                              <mat-card-content>
-                                <div class="py-2">
-                                  <div><strong>Size:</strong> {{ version.sizeBytes | fileSize }}</div>
-                                  <div class="text-xs text-gray-500 truncate"><strong>Checksum:</strong> {{ version.checksumSha256 }}</div>
-                                </div>
-                                @if (version.attachments && version.attachments.length > 0) {
-                                  <div class="mt-2">
-                                    <h4 class="text-sm font-medium mb-1">Attachments ({{ version.attachments.length }})</h4>
-                                    <mat-list role="list">
-                                      @for (attachment of version.attachments; track attachment.id) {
-                                        <mat-list-item role="listitem" class="h-auto py-1">
-                                          <div matListItemTitle class="text-sm">{{ attachment.fileName }}</div>
-                                          <div matListItemLine class="text-xs text-gray-500">
-                                            {{ attachment.sizeBytes | fileSize }} | {{ attachment.mimeType }}
-                                          </div>
-                                        </mat-list-item>
-                                      }
-                                    </mat-list>
-                                  </div>
-                                }
-                              </mat-card-content>
-                              <mat-card-actions>
-                                <button mat-button color="primary" (click)="downloadVersionFile(version.versionNo)">
-                                  <mat-icon>download</mat-icon> Download
-                                </button>
-                                <a mat-button color="accent" [routerLink]="['/documents', documentId(), 'versions', version.versionNo, 'view']">
-                                  <mat-icon>visibility</mat-icon> View
-                                </a>
-                              </mat-card-actions>
-                            </mat-card>
-                          }
-                        </div>
-                      } @else {
-                        <div class="text-center p-6 text-gray-500">
-                          <mat-icon class="text-4xl mb-2">history</mat-icon>
-                          <p>No version history available.</p>
-                        </div>
-                      }
-                    </div>
-                  </mat-tab>
-
-                  <mat-tab label="Attachments">
-                    <div class="p-4">
-                      @if (doc.attachments && doc.attachments.length) {
-                        <mat-list role="list">
-                          @for (attachment of doc.attachments; track attachment.id) {
-                            <mat-list-item role="listitem" class="h-auto py-2">
-                              <mat-icon matListItemIcon>attachment</mat-icon>
-                              <div matListItemTitle class="font-medium">{{ attachment.fileName }}</div>
-                              <div matListItemLine class="text-xs text-gray-500">
-                                Size: {{ attachment.fileSize | fileSize }} | Type: {{ attachment.contentType }}
-                              </div>
-                              <div matListItemMeta>
-                                <button mat-icon-button (click)="downloadAttachment(attachment.id, attachment.fileName)" matTooltip="Download {{attachment.fileName}}">
-                                  <mat-icon>download</mat-icon>
-                                </button>
-                                <button mat-icon-button (click)="viewAttachment(attachment.id)" matTooltip="View {{attachment.fileName}}">
-                                  <mat-icon>visibility</mat-icon>
-                                </button>
-                              </div>
-                            </mat-list-item>
-                            <mat-divider></mat-divider>
-                          }
-                        </mat-list>
-                      } @else {
-                        <div class="text-center p-6 text-gray-500">
-                          <mat-icon class="text-4xl mb-2">attach_file</mat-icon>
-                          <p>No attachments for this document.</p>
-                        </div>
-                      }
-                    </div>
-                  </mat-tab>
-                </mat-tab-group>
-              </mat-card-content>
-            </mat-card>
-          } @else {
-            <mat-card class="text-center p-8">
-              <mat-icon class="text-6xl text-gray-400">error_outline</mat-icon>
-              <h2 class="text-2xl font-semibold mt-4 mb-2">Document Not Found</h2>
-              <p class="text-gray-600 mb-6">The document you are looking for does not exist or could not be loaded.</p>
-              <button mat-stroked-button routerLink="/documents">
-                <mat-icon>arrow_back</mat-icon> Back to Documents List
+          <nz-page-header-content>
+            <div nz-row [nzGutter]="[16, 16]">
+              <nz-statistic nz-col [nzSpan]="6" nzTitle="Status" [nzValue]="document()!.status">
+                <ng-template #nzValueTemplate>
+                  <nz-tag [nzColor]="getStatusColor(document()!.status)">
+                    {{ document()!.status }}
+                  </nz-tag>
+                </ng-template>
+              </nz-statistic>
+              <nz-statistic nz-col [nzSpan]="6" nzTitle="Created By" [nzValue]="document()!.owner?.username || 'System'"></nz-statistic>
+              <nz-statistic nz-col [nzSpan]="6" nzTitle="Created">
+                <ng-template #nzValueTemplate>
+                  {{ document()!.createdAt | date:'mediumDate' }}
+                </ng-template>
+              </nz-statistic>
+              <nz-statistic nz-col [nzSpan]="6" nzTitle="Last Updated">
+                <ng-template #nzValueTemplate>
+                  {{ document()!.updatedAt | date:'mediumDate' }}
+                </ng-template>
+              </nz-statistic>
+            </div>
+          </nz-page-header-content>
+          
+          <nz-page-header-extra>
+            <nz-space>
+              <button *nzSpaceItem nz-button nzType="primary" [routerLink]="['/documents', document()!.id, 'edit']">
+                <span nz-icon nzType="edit" nzTheme="outline"></span>
+                Edit
               </button>
-            </mat-card>
-          }
-        } @else {
-          <mat-card class="text-center p-8">
-            <mat-icon class="text-6xl text-gray-400">error_outline</mat-icon>
-            <h2 class="text-2xl font-semibold mt-4 mb-2">Document data is unavailable</h2>
-            <button mat-stroked-button routerLink="/documents">
-              <mat-icon>arrow_back</mat-icon> Back to Documents List
-            </button>
-          </mat-card>
-        }
-      }
+              <button *nzSpaceItem nz-button [routerLink]="['/documents', document()!.id, 'acl']">
+                <span nz-icon nzType="safety" nzTheme="outline"></span>
+                Manage ACL
+              </button>
+              <ng-container *ngIf="document()!.storageKey">
+                <a *nzSpaceItem 
+                   nz-button nzType="default" 
+                   [routerLink]="['/documents', document()!.id, 'view']">
+                  <span nz-icon nzType="eye" nzTheme="outline"></span>
+                  View File
+                </a>
+              </ng-container>
+            </nz-space>
+          </nz-page-header-extra>
+        </nz-page-header>
+
+        <!-- Main Content Tabs -->
+        <nz-card class="content-card">
+          <nz-tabset>
+            <!-- Details Tab -->
+            <nz-tab nzTitle="Details">
+              <div class="tab-content">
+                <!-- Primary File Section -->
+                <div class="detail-section">
+                  <h3 nz-typography nzType="secondary">Primary File</h3>
+                  <div class="primary-file-actions">
+                    <div *ngIf="document()!.storageKey; else noFileTemplate" class="file-info">
+                      <span nz-icon nzType="file-pdf" nzTheme="twotone" [nzTwotoneColor]="'#ff4d4f'" style="font-size: 24px; margin-right: 8px;"></span>
+                      <span>{{ document()!.title }}</span>
+                      <nz-space style="margin-left: 16px;">
+                        <button *nzSpaceItem nz-button nzType="primary" nzSize="small" (click)="downloadLatestPrimaryFile(document()!)">
+                          <span nz-icon nzType="download" nzTheme="outline"></span>
+                          Download
+                        </button>
+                        <nz-upload *nzSpaceItem
+                          [nzBeforeUpload]="beforeUpload"
+                          [nzShowUploadList]="false">
+                          <button nz-button nzType="default" nzSize="small">
+                            <span nz-icon nzType="upload" nzTheme="outline"></span>
+                            Upload New Version
+                          </button>
+                        </nz-upload>
+                      </nz-space>
+                    </div>
+                    <ng-template #noFileTemplate>
+                      <nz-alert 
+                        nzType="warning" 
+                        nzMessage="No file uploaded"
+                        nzDescription="Upload a primary file to complete this document"
+                        [nzShowIcon]="true"
+                        style="margin-bottom: 16px;">
+                      </nz-alert>
+                      <nz-upload
+                        [nzBeforeUpload]="beforeUpload"
+                        [nzShowUploadList]="false">
+                        <button nz-button nzType="primary">
+                          <span nz-icon nzType="upload" nzTheme="outline"></span>
+                          Upload Primary File
+                        </button>
+                      </nz-upload>
+                    </ng-template>
+                  </div>
+                </div>
+
+                <!-- Description -->
+                <div *ngIf="document()!.description" class="detail-section">
+                  <h3 nz-typography nzType="secondary">Description</h3>
+                  <p nz-typography>{{ document()!.description }}</p>
+                </div>
+
+                <!-- Metadata -->
+                <div class="detail-section">
+                  <h3 nz-typography nzType="secondary">Document Information</h3>
+                  <nz-descriptions nzBordered [nzColumn]="{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }">
+                    <nz-descriptions-item nzTitle="ID">{{ document()!.id }}</nz-descriptions-item>
+                    <nz-descriptions-item nzTitle="Resource Type">
+                      <nz-tag nzColor="blue">{{ document()!.resourceType?.name || 'N/A' }}</nz-tag>
+                    </nz-descriptions-item>
+                    <nz-descriptions-item nzTitle="Resource Code">{{ document()!.resourceCode }}</nz-descriptions-item>
+                    <nz-descriptions-item nzTitle="Status">
+                      <nz-tag [nzColor]="getStatusColor(document()!.status)">{{ document()!.status }}</nz-tag>
+                    </nz-descriptions-item>
+                    <nz-descriptions-item nzTitle="Created By">{{ document()!.owner?.username || document()!.owner?.email || 'System' }}</nz-descriptions-item>
+                    <nz-descriptions-item nzTitle="Created At">{{ document()!.createdAt | date:'medium' }}</nz-descriptions-item>
+                    <nz-descriptions-item nzTitle="Updated At">{{ document()!.updatedAt | date:'medium' }}</nz-descriptions-item>
+                  </nz-descriptions>
+                </div>
+
+                <!-- Field Values -->
+                <div *ngIf="document()!.fieldValues && getFieldValueKeys(document()!.fieldValues).length > 0" class="detail-section">
+                  <h3 nz-typography nzType="secondary">Custom Fields</h3>
+                  <div class="field-values-grid">
+                    <div *ngFor="let item of document()!.fieldValues | keyvalue" class="field-value-item">
+                      <div class="field-value-label">{{ item.key }}</div>
+                      <div class="field-value-content">{{ formatFieldValue(item.value) }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </nz-tab>
+
+            <!-- Related Documents Tab -->
+            <nz-tab nzTitle="Related Documents">
+              <div class="tab-content">
+                <nz-spin *ngIf="isLoadingRelated()" nzSimple></nz-spin>
+                
+                <div *ngIf="!isLoadingRelated()">
+                  <!-- Parent Document -->
+                  <div *ngIf="relatedDocuments()?.parent" class="detail-section">
+                    <h3 nz-typography nzType="secondary">Parent Document</h3>
+                    <nz-card nzHoverable [routerLink]="['/documents', relatedDocuments()!.parent!.id]" class="related-doc-card">
+                      <div class="flex items-center">
+                        <nz-avatar nzIcon="folder" [nzSize]="48" style="background-color: #1890ff;"></nz-avatar>
+                        <div class="ml-4">
+                          <h4 nz-typography style="margin: 0;">{{ relatedDocuments()!.parent!.title }}</h4>
+                          <p nz-typography nzType="secondary" style="margin: 0;">
+                            {{ relatedDocuments()!.parent!.resourceCode }} | {{ relatedDocuments()!.parent!.resourceTypeName }}
+                          </p>
+                        </div>
+                      </div>
+                    </nz-card>
+                  </div>
+
+                  <!-- Child Documents -->
+                  <div *ngIf="relatedDocuments()?.children && relatedDocuments()!.children!.length > 0" class="detail-section">
+                    <h3 nz-typography nzType="secondary">Child Documents ({{ relatedDocuments()!.children!.length }})</h3>
+                    <div class="children-grid">
+                      <nz-card *ngFor="let child of relatedDocuments()!.children" 
+                               nzHoverable 
+                               [routerLink]="['/documents', child.id]" 
+                               class="related-doc-card">
+                        <div class="flex items-center">
+                          <nz-avatar nzIcon="file" [nzSize]="40" style="background-color: #52c41a;"></nz-avatar>
+                          <div class="ml-3">
+                            <h5 nz-typography style="margin: 0; font-size: 14px;">{{ child.title }}</h5>
+                            <p nz-typography nzType="secondary" style="margin: 0; font-size: 12px;">
+                              {{ child.resourceCode }} | {{ child.resourceTypeName }}
+                            </p>
+                          </div>
+                        </div>
+                      </nz-card>
+                    </div>
+                  </div>
+
+                  <!-- Empty State -->
+                  <nz-empty *ngIf="!relatedDocuments()?.parent && (!relatedDocuments()?.children || relatedDocuments()!.children!.length === 0)"
+                            nzNotFoundImage="simple"
+                            [nzNotFoundContent]="'No related documents found'">
+                  </nz-empty>
+                </div>
+              </div>
+            </nz-tab>
+
+            <!-- Reminders Tab -->
+            <nz-tab nzTitle="Reminders">
+              <div class="tab-content">
+                <div class="detail-section">
+                  <div class="flex justify-between items-center mb-4">
+                    <h3 nz-typography nzType="secondary" style="margin: 0;">Document Reminders</h3>
+                    <button nz-button nzType="primary" (click)="openReminderDialog()">
+                      <span nz-icon nzType="plus" nzTheme="outline"></span>
+                      Add Reminder
+                    </button>
+                  </div>
+
+                  <nz-list *ngIf="reminders.length > 0; else noReminders" [nzDataSource]="reminders" [nzRenderItem]="reminderItem">
+                    <ng-template #reminderItem let-reminder>
+                      <nz-list-item [nzActions]="[editAction, deleteAction]">
+                        <ng-template #editAction>
+                          <button *ngIf="canEditOrDelete(reminder)" nz-button nzType="link" (click)="openReminderDialog(reminder)">
+                            <span nz-icon nzType="edit" nzTheme="outline"></span>
+                          </button>
+                        </ng-template>
+                        <ng-template #deleteAction>
+                          <button *ngIf="canEditOrDelete(reminder)" nz-button nzType="link" nzDanger (click)="deleteReminder(reminder)">
+                            <span nz-icon nzType="delete" nzTheme="outline"></span>
+                          </button>
+                        </ng-template>
+                        <nz-list-item-meta>
+                          <nz-list-item-meta-title>
+                            {{ reminder.message }}
+                          </nz-list-item-meta-title>
+                          <nz-list-item-meta-description>
+                            <span nz-icon nzType="clock-circle" nzTheme="outline"></span>
+                            {{ reminder.remindAt | date:'short' }}
+                            <span *ngIf="isAdmin"> | User: {{ getUsername(reminder.userId) }}</span>
+                            <nz-tag [nzColor]="reminder.sent ? 'success' : 'warning'" style="margin-left: 8px;">
+                              {{ reminder.sent ? 'Sent' : 'Pending' }}
+                            </nz-tag>
+                          </nz-list-item-meta-description>
+                        </nz-list-item-meta>
+                      </nz-list-item>
+                    </ng-template>
+                  </nz-list>
+
+                  <ng-template #noReminders>
+                    <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="'No reminders set for this document'"></nz-empty>
+                  </ng-template>
+                </div>
+              </div>
+            </nz-tab>
+
+            <!-- Versions Tab -->
+            <nz-tab nzTitle="Version History">
+              <div class="tab-content">
+                <div class="detail-section">
+                  <div *ngIf="!versionsLoaded && !versionsLoading" class="text-center">
+                    <button nz-button nzType="primary" (click)="loadVersions()">
+                      <span nz-icon nzType="history" nzTheme="outline"></span>
+                      Load Version History
+                    </button>
+                  </div>
+
+                  <nz-spin *ngIf="versionsLoading" nzSimple nzTip="Loading versions..."></nz-spin>
+
+                  <nz-timeline *ngIf="versionsLoaded && versions.length > 0">
+                    <nz-timeline-item *ngFor="let version of versions" [nzColor]="version.versionNo === versions[0].versionNo ? 'green' : 'gray'">
+                      <nz-card>
+                        <h4 nz-typography>
+                          Version {{ version.versionNo }}
+                          <nz-tag *ngIf="version.versionNo === versions[0].versionNo" nzColor="success" style="margin-left: 8px;">Current</nz-tag>
+                        </h4>
+                        <nz-descriptions [nzColumn]="1" nzSize="small">
+                          <nz-descriptions-item nzTitle="Created">{{ version.createdAt | date:'medium' }}</nz-descriptions-item>
+                          <nz-descriptions-item nzTitle="Size">{{ version.sizeBytes | fileSize }}</nz-descriptions-item>
+                          <nz-descriptions-item nzTitle="Checksum">
+                            <span class="text-xs font-mono">{{ version.checksumSha256.substring(0, 16) }}...</span>
+                          </nz-descriptions-item>
+                        </nz-descriptions>
+                        <nz-space style="margin-top: 12px;">
+                          <button *nzSpaceItem nz-button nzType="primary" nzSize="small" (click)="downloadVersionFile(version.versionNo)">
+                            <span nz-icon nzType="download" nzTheme="outline"></span>
+                            Download
+                          </button>
+                          <a *nzSpaceItem nz-button nzType="default" nzSize="small" 
+                             [routerLink]="['/documents', documentId(), 'versions', version.versionNo, 'view']">
+                            <span nz-icon nzType="eye" nzTheme="outline"></span>
+                            View
+                          </a>
+                        </nz-space>
+                      </nz-card>
+                    </nz-timeline-item>
+                  </nz-timeline>
+
+                  <nz-empty *ngIf="versionsLoaded && versions.length === 0" 
+                            nzNotFoundImage="simple" 
+                            [nzNotFoundContent]="'No version history available'">
+                  </nz-empty>
+                </div>
+              </div>
+            </nz-tab>
+          </nz-tabset>
+        </nz-card>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="!isLoading() && !document()" class="error-container">
+        <nz-card>
+          <nz-empty
+            nzNotFoundImage="simple"
+            [nzNotFoundContent]="errorContent">
+            <ng-template #errorContent>
+              <h2>Document Not Found</h2>
+              <p>The document you are looking for does not exist or could not be loaded.</p>
+              <button nz-button nzType="primary" routerLink="/documents">
+                <span nz-icon nzType="arrow-left" nzTheme="outline"></span>
+                Back to Documents
+              </button>
+            </ng-template>
+          </nz-empty>
+        </nz-card>
+      </div>
     </div>
   `,
   styles: [`
-    mat-list-item {
-      height: auto !important; /* Override default fixed height */
-      padding-top: 8px !important;
-      padding-bottom: 8px !important;
+    .document-detail-container {
+      padding: 0;
+      background: transparent;
     }
-    .mat-mdc-list-item-unscoped-content {
-      width: 100%;
+
+    .loading-container, .error-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 400px;
     }
-  `]
+
+    .content-card {
+      margin-top: 24px;
+    }
+
+    .tab-content {
+      padding: 24px 0;
+    }
+
+    .detail-section {
+      background: #fafafa;
+      padding: 24px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+
+    .detail-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .primary-file-actions {
+      margin-top: 16px;
+    }
+
+    .file-info {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .field-values-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .field-value-item {
+      background: #fff;
+      padding: 16px;
+      border-radius: 6px;
+      border: 1px solid #f0f0f0;
+    }
+
+    .field-value-label {
+      color: rgba(0, 0, 0, 0.45);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .field-value-content {
+      color: rgba(0, 0, 0, 0.85);
+      font-size: 14px;
+      line-height: 1.6;
+      word-break: break-word;
+    }
+
+    .related-doc-card {
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 12px;
+    }
+
+    .related-doc-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .children-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+
+    ::ng-deep .ant-page-header {
+      background: #fff;
+      padding: 16px 24px;
+      margin: -24px -24px 0;
+    }
+
+    ::ng-deep .ant-page-header-heading-extra {
+      margin: 0;
+    }
+
+    ::ng-deep .ant-tabs-nav {
+      margin-bottom: 0;
+    }
+
+    ::ng-deep .ant-timeline-item-content {
+      min-height: auto;
+    }
+
+    ::ng-deep .ant-descriptions-item-label {
+      font-weight: 500;
+    }
+  `],
+  providers: [NzMessageService]
 })
 export class DocumentDetailPageComponent implements OnInit, OnDestroy {
   private documentService = inject(DocumentService);
@@ -347,6 +521,7 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private snackbar = inject(SnackbarService);
+  private message = inject(NzMessageService);
 
   isLoading = signal(true);
   document: WritableSignal<Document | null> = signal(null);
@@ -368,6 +543,27 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
   isAdmin = false;
   currentUserId: number | null = null;
   userMap: { [id: number]: string } = {};
+
+  // File upload handler
+  beforeUpload = (file: any): boolean => {
+    if (this.documentId()) {
+      const loading = this.message.loading('Uploading new version...', { nzDuration: 0 });
+      this.documentService.uploadNewPrimaryVersion(this.documentId()!, file).subscribe({
+        next: () => {
+          this.message.remove(loading.messageId);
+          this.message.success('New version uploaded successfully');
+          this.loadDocument(this.documentId()!);
+          this.versions = [];
+          this.versionsLoaded = false;
+        },
+        error: (err) => {
+          this.message.remove(loading.messageId);
+          this.message.error('Failed to upload new version: ' + (err.error?.message || err.message));
+        }
+      });
+    }
+    return false;
+  };
 
   ngOnInit(): void {
     const user = this.authService.currentUserSignal();
@@ -427,7 +623,6 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
           this.reminders.forEach(r => {
             if (r.userId && !this.userMap[r.userId]) {
               // Fetch user info (ideally batch, but for now per user)
-              // You may want to optimize this in production
               this.documentService['http'].get<any>(`${environment.apiBase}/users/${r.userId}`).subscribe(u => {
                 this.userMap[r.userId!] = u.username;
               });
@@ -458,105 +653,56 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  downloadAttachment(attachmentId: number, fileName: string): void {
-    this.documentService.downloadAttachment(attachmentId).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        a.click();
-        window.URL.revokeObjectURL(url);
-      },
-      error: (err) => {
-        this.snackbar.error('Failed to download attachment: ' + (err.error?.message || err.message));
-      }
-    });
-  }
-
-  viewAttachment(attachmentId: number): void {
-    // Open the attachment view endpoint in a new tab
-    window.open(this.documentService.getAttachmentViewUrl(attachmentId), '_blank');
-  }
-
-  onPrimaryFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0 && this.documentId()) {
-      const file = input.files[0];
-      this.documentService.uploadNewPrimaryVersion(this.documentId()!, file).subscribe({
-        next: () => {
-          this.snackbar.success('New version uploaded successfully.');
-          this.loadDocument(this.documentId()!); // Refresh document details
-          this.versions = []; // Reset versions
-          this.versionsLoaded = false;
-        },
-        error: (err) => {
-          this.snackbar.error('Failed to upload new version: ' + (err.error?.message || err.message));
-        }
-      });
-    }
-  }
-
-  getAttachmentDownloadUrl(attachment: Attachment): string {
-    if (!this.documentId()) return '#';
-    return `${this.apiBaseUrl}/documents/${this.documentId()}/files/${attachment.storageKey}`;
-  }
-
   getFieldValueKeys(fieldValues: Record<string, any>): string[] {
     return Object.keys(fieldValues || {});
   }
 
   formatFieldValue(value: any): string {
-    if (value === null || value === undefined) return 'N/A';
-    if (Array.isArray(value)) {
-      return value.length > 0 ? value.join(', ') : 'N/A';
+    if (value === null || value === undefined) {
+      return 'N/A';
+    }
+    if (typeof value === 'boolean') {
+      return value ? 'Yes' : 'No';
+    }
+    if (value instanceof Date) {
+      return new Date(value).toLocaleDateString();
     }
     if (typeof value === 'object') {
       return JSON.stringify(value, null, 2);
-    }
-    if (typeof value === 'boolean') { 
-      return value ? 'Yes' : 'No';
-    }
-    if (typeof value === 'string' && value.startsWith('http')) {
-        return value;
     }
     return String(value);
   }
 
   loadVersions(): void {
-    if (!this.documentId()) return;
+    if (!this.documentId() || this.versionsLoading) return;
+    
     this.versionsLoading = true;
-    this.versionsSub = this.documentService
-      .getVersions(this.documentId()!)
-      .subscribe({
-        next: (data) => {
-          this.versions = data;
-          this.versionsLoaded = true;
-          this.versionsLoading = false;
-        },
-        error: () => {
-          this.versions = [];
-          this.versionsLoaded = true;
-          this.versionsLoading = false;
-        }
-      });
+    this.versionsSub = this.documentService.getVersions(this.documentId()!).subscribe({
+      next: (versions) => {
+        this.versions = versions;
+        this.versionsLoaded = true;
+        this.versionsLoading = false;
+      },
+      error: (err) => {
+        this.versionsLoading = false;
+        this.snackbar.error('Failed to load versions: ' + (err.error?.message || err.message));
+      }
+    });
   }
 
   downloadVersionFile(versionNo: number): void {
     if (!this.documentId()) return;
     
     this.documentService.downloadVersionFile(this.documentId()!, versionNo).subscribe({
-      next: (blob) => {
+      next: (blob: Blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        // Get filename from the document title or use a default
-        const doc = this.document();
-        a.download = doc ? `${doc.title}_v${versionNo}` : `document_${this.documentId()}_v${versionNo}`;
+        a.download = `${this.document()?.title || 'document'}_v${versionNo}`;
         a.click();
         window.URL.revokeObjectURL(url);
       },
-      error: (err) => {
+      error: (err: any) => {
         this.snackbar.error('Failed to download version: ' + (err.error?.message || err.message));
       }
     });
@@ -564,67 +710,63 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
 
   openReminderDialog(reminder?: ReminderDTO) {
     const dialogRef = this.dialog.open(ReminderDialogComponent, {
+      width: '500px',
       data: {
-        reminder,
         documentId: this.documentId(),
+        reminder: reminder,
         isAdmin: this.isAdmin
-      },
-      width: '400px'
+      }
     });
-    dialogRef.afterClosed().subscribe((result: ReminderDTO | undefined) => {
+
+    dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        if (reminder && reminder.id) {
-          // Edit
-          this.reminderService.update(reminder.id, result).subscribe({
-            next: () => {
-              this.snackbar.success('Reminder updated.');
-              this.loadReminders(this.documentId()!);
-            },
-            error: err => {
-              this.snackbar.error('Failed to update reminder.');
-            }
-          });
-        } else {
-          // Add
-          this.reminderService.create(result).subscribe({
-            next: () => {
-              this.snackbar.success('Reminder created.');
-              this.loadReminders(this.documentId()!);
-            },
-            error: err => {
-              this.snackbar.error('Failed to create reminder.');
-            }
-          });
-        }
+        this.loadReminders(this.documentId()!);
       }
     });
   }
 
   deleteReminder(reminder: ReminderDTO) {
     if (!reminder.id) return;
-    if (!confirm('Delete this reminder?')) return;
-    this.reminderService.delete(reminder.id).subscribe({
-      next: () => {
-        this.snackbar.success('Reminder deleted.');
-        this.loadReminders(this.documentId()!);
-      },
-      error: err => {
-        this.snackbar.error('Failed to delete reminder.');
-      }
-    });
+    
+    if (confirm('Are you sure you want to delete this reminder?')) {
+      this.reminderService.delete(reminder.id).subscribe({
+        next: () => {
+          this.message.success('Reminder deleted successfully');
+          this.loadReminders(this.documentId()!);
+        },
+        error: (err) => {
+          this.message.error('Failed to delete reminder: ' + (err.error?.message || err.message));
+        }
+      });
+    }
   }
 
   canEditOrDelete(reminder: ReminderDTO): boolean {
-    return this.isAdmin || (reminder.userId === this.currentUserId);
+    return this.isAdmin || reminder.userId === this.currentUserId;
   }
 
   getUsername(userId: number | undefined): string {
-    if (!userId) return '';
-    return this.userMap[userId] || ('User #' + userId);
+    if (!userId) return 'Unknown';
+    return this.userMap[userId] || `User ${userId}`;
+  }
+
+  getStatusColor(status: string | undefined): string {
+    if (!status) return 'default';
+    const statusColors: { [key: string]: string } = {
+      'ACTIVE': 'success',
+      'INACTIVE': 'default',
+      'ARCHIVED': 'warning',
+      'DELETED': 'error'
+    };
+    return statusColors[status] || 'default';
+  }
+
+  navigateBack(): void {
+    this.router.navigate(['/documents']);
   }
 
   ngOnDestroy(): void {
-    if (this.versionsSub) this.versionsSub.unsubscribe();
-    if (this.relatedSub) this.relatedSub.unsubscribe();
+    this.versionsSub?.unsubscribe();
+    this.relatedSub?.unsubscribe();
   }
 }

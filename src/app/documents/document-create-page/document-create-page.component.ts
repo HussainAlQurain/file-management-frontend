@@ -2,22 +2,32 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatStepperModule } from '@angular/material/stepper';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { HttpEvent, HttpEventType } from '@angular/common/http';
-import { MatDialogRef } from '@angular/material/dialog';
 import { debounceTime, distinctUntilChanged, switchMap, tap, catchError, map } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
+
+// NG-ZORRO imports
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzStepsModule } from 'ng-zorro-antd/steps';
+import { NzCardModule } from 'ng-zorro-antd/card';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzUploadModule } from 'ng-zorro-antd/upload';
+import { NzAlertModule } from 'ng-zorro-antd/alert';
+import { NzDividerModule } from 'ng-zorro-antd/divider';
+import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
+import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
+import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
+import { NzAutocompleteModule } from 'ng-zorro-antd/auto-complete';
+import { NzMessageService } from 'ng-zorro-antd/message';
+import { NzTagModule } from 'ng-zorro-antd/tag';
+import { NzSpaceModule } from 'ng-zorro-antd/space';
+import { NzTypographyModule } from 'ng-zorro-antd/typography';
+import { NzEmptyModule } from 'ng-zorro-antd/empty';
+import { NzPageHeaderModule } from 'ng-zorro-antd/page-header';
 
 import { ResourceTypeService } from '../../core/services/resource-type.service';
 import { CompanyService } from '../../core/services/company.service';
@@ -26,8 +36,6 @@ import { SnackbarService } from '../../core/services/snackbar.service';
 import { ResourceType, FieldDefinitionDto, FieldType } from '../../core/models/resource-type.model';
 import { Company } from '../../core/models/company.model';
 import { Document, CreateDocumentDto } from '../../core/models/document.model';
-import { FileUploadComponent, FileUploadProgress } from '../../shared/components/file-upload/file-upload.component';
-import { AsyncBtnComponent } from '../../shared/components/async-btn/async-btn.component';
 
 @Component({
   selector: 'app-document-create-page',
@@ -35,255 +43,477 @@ import { AsyncBtnComponent } from '../../shared/components/async-btn/async-btn.c
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatStepperModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatCardModule,
-    FileUploadComponent,
-    AsyncBtnComponent,
-    MatCheckboxModule,
-    MatAutocompleteModule,
-    MatDatepickerModule,
-    MatNativeDateModule
+    NzFormModule,
+    NzInputModule,
+    NzSelectModule,
+    NzButtonModule,
+    NzStepsModule,
+    NzCardModule,
+    NzSpinModule,
+    NzIconModule,
+    NzUploadModule,
+    NzAlertModule,
+    NzDividerModule,
+    NzCheckboxModule,
+    NzDatePickerModule,
+    NzInputNumberModule,
+    NzAutocompleteModule,
+    NzTagModule,
+    NzSpaceModule,
+    NzTypographyModule,
+    NzEmptyModule,
+    NzPageHeaderModule
   ],
   template: `
-    <div class="p-4">
-      <h2 class="text-2xl font-bold mb-6">Create New Document</h2>      <mat-stepper linear #stepper="matStepper">
-        <!-- Step 1: Select Company -->
-        <mat-step [stepControl]="companyForm">
-          <form [formGroup]="companyForm">
-            <ng-template matStepLabel>Select Company</ng-template>
-            <mat-form-field appearance="outline" class="w-full md:w-1/2">
-              <mat-label>Company</mat-label>
-              <mat-select formControlName="companyId" required (selectionChange)="onCompanyChange($event.value)">
-                @for (company of companies(); track company.id) {
-                  <mat-option [value]="company.id">{{ company.name }}</mat-option>
-                }
-              </mat-select>
-              @if (companyForm.get('companyId')?.hasError('required')) {
-                <mat-error>Company is required</mat-error>
-              }
-            </mat-form-field>
-            <div class="mt-4">
-              <button mat-button matStepperNext color="primary" [disabled]="!selectedCompany()">
-                Next
-              </button>
-            </div>
-          </form>
-        </mat-step>
+    <div class="create-document-container">
+      <!-- Page Header -->
+      <nz-page-header 
+        nzBackIcon
+        (nzBack)="navigateBack()"
+        nzTitle="Create New Document"
+        nzSubtitle="Follow the steps to create a new document">
+      </nz-page-header>
 
-        <!-- Step 2: Select Resource Type -->
-        <mat-step [stepControl]="resourceTypeForm">
-          <form [formGroup]="resourceTypeForm">
-            <ng-template matStepLabel>Select Document Type</ng-template>
-            <mat-form-field appearance="outline" class="w-full md:w-1/2">
-              <mat-label>Document Type</mat-label>
-              <mat-select formControlName="resourceTypeId" required (selectionChange)="onResourceTypeChange($event.value)">
-                @for (rt of resourceTypes(); track rt.id) {
-                  <mat-option [value]="rt.id">{{ rt.name }} ({{ rt.code }})</mat-option>
-                }
-              </mat-select>
-              @if (resourceTypeForm.get('resourceTypeId')?.hasError('required')) {
-                <mat-error>Document type is required</mat-error>
-              }
-            </mat-form-field>
-            <div class="mt-4">
-              <button mat-button matStepperPrevious>Previous</button>
-              <button mat-button matStepperNext color="primary" [disabled]="!selectedResourceType()" class="ml-2">
-                Next
-              </button>
-            </div>
-          </form>
-        </mat-step>
-
-        <!-- Step 3: Fill Metadata (Dynamic Form) -->
-        <mat-step [stepControl]="metadataForm" label="Enter Document Details">
-          <form [formGroup]="metadataForm" class="mt-4">
-            <h3 class="text-lg font-semibold mb-2">{{ selectedResourceType()?.code }} Details</h3>
-            
-            <mat-form-field appearance="outline" class="w-full mb-3">
-              <mat-label>Title</mat-label>
-              <input matInput formControlName="title" required>
-              @if (metadataForm.get('title')?.hasError('required')) {
-                <mat-error>Title is required</mat-error>
-              }
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-full mb-3">
-              <mat-label>Resource Code</mat-label>
-              <input matInput formControlName="resourceCode" required>
-              @if (metadataForm.get('resourceCode')?.hasError('required')) {
-                <mat-error>Resource code is required</mat-error>
-              }
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-full mb-3">
-              <mat-label>Parent Document (Optional)</mat-label>
-              <input 
-                matInput 
-                formControlName="parentSearch" 
-                placeholder="Search for parent document..." 
-                [matAutocomplete]="parentAuto">
-              <mat-autocomplete #parentAuto="matAutocomplete" [displayWith]="displayParentFn">
-                @if (isSearchingParents()) {
-                  <mat-option disabled>
-                    <mat-spinner diameter="20"></mat-spinner> Searching...
-                  </mat-option>
-                } @else if (parentSearchResults().length === 0 && parentSearchQuery().length > 0) {
-                  <mat-option disabled>No documents found</mat-option>
-                } @else {
-                  @for (doc of parentSearchResults(); track doc.id) {
-                    <mat-option [value]="doc">
-                      {{ doc.title }} ({{ doc.resourceCode }})
-                    </mat-option>
-                  }
-                }
-              </mat-autocomplete>
-              <button 
-                *ngIf="metadataForm.get('parentId')?.value" 
-                matSuffix 
-                mat-icon-button 
-                aria-label="Clear" 
-                (click)="clearParentSelection()">
-                <mat-icon>close</mat-icon>
-              </button>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-full mb-3">
-              <mat-label>Tags</mat-label>
-              <input matInput formControlName="tags" placeholder="Enter tags separated by commas">
-            </mat-form-field>
-
-            @if (selectedResourceType()?.fields && selectedResourceType()?.fields?.length === 0) {
-              <div class="alert alert-info bg-blue-100 border-blue-500 border-l-4 p-4 mb-4">
-                <div class="font-semibold">No custom fields</div>
-                <p>This document type doesn't have any custom fields defined. Contact an administrator to add fields to this document type.</p>
-              </div>
-            } @else {
-              @for (field of selectedResourceType()?.fields; track field.id) {
-                @if (field.kind === FieldType.BOOLEAN) {
-                  <div class="mb-3">
-                    <mat-checkbox [formControlName]="field.name">
-                      {{ field.label || field.name }}
-                    </mat-checkbox>
-                    @if (metadataForm.get(field.name)?.hasError('required') && field.required) {
-                      <mat-error>{{ field.label || field.name }} is required</mat-error>
-                    }
-                  </div>
-                } @else if (field.kind === FieldType.DATE) {
-                  <mat-form-field appearance="outline" class="w-full mb-3">
-                    <mat-label>{{ field.label || field.name }}</mat-label>
-                    <input matInput [matDatepicker]="picker" [formControlName]="field.name">
-                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                    <mat-datepicker #picker></mat-datepicker>
-                    @if (metadataForm.get(field.name)?.hasError('required') && field.required) {
-                      <mat-error>{{ field.label || field.name }} is required</mat-error>
-                    }
-                  </mat-form-field>
-                } @else if (field.kind === FieldType.SELECT) {
-                  <mat-form-field appearance="outline" class="w-full mb-3">
-                    <mat-label>{{ field.label || field.name }}</mat-label>
-                    <mat-select [formControlName]="field.name">
-                      @if(field.options && field.options.length > 0) {
-                        @for (option of field.options; track option) {
-                          <mat-option [value]="option">{{ option }}</mat-option>
-                        }
-                      } @else {
-                        <mat-option disabled>No options available</mat-option>
-                      }
-                    </mat-select>
-                    @if (metadataForm.get(field.name)?.hasError('required') && field.required) {
-                      <mat-error>{{ field.label || field.name }} is required</mat-error>
-                    }
-                  </mat-form-field>
-                } @else if (field.kind === FieldType.TEXTAREA) {
-                  <mat-form-field appearance="outline" class="w-full mb-3">
-                    <mat-label>{{ field.label || field.name }}</mat-label>
-                    <textarea matInput [formControlName]="field.name" rows="3" cdkTextareaAutosize cdkAutosizeMinRows="3" cdkAutosizeMaxRows="10"></textarea>
-                    @if (metadataForm.get(field.name)?.hasError('required') && field.required) {
-                      <mat-error>{{ field.label || field.name }} is required</mat-error>
-                    }
-                  </mat-form-field>
-                } @else if (field.kind === FieldType.NUMBER) {
-                  <mat-form-field appearance="outline" class="w-full mb-3">
-                    <mat-label>{{ field.label || field.name }}</mat-label>
-                    <input matInput type="number" [formControlName]="field.name">
-                    @if (metadataForm.get(field.name)?.hasError('required') && field.required) {
-                      <mat-error>{{ field.label || field.name }} is required</mat-error>
-                    }
-                  </mat-form-field>
-                } @else {
-                  <mat-form-field appearance="outline" class="w-full mb-3">
-                    <mat-label>{{ field.label || field.name }}</mat-label>
-                    <input matInput [formControlName]="field.name">
-                    @if (metadataForm.get(field.name)?.hasError('required') && field.required) {
-                      <mat-error>{{ field.label || field.name }} is required</mat-error>
-                    }
-                  </mat-form-field>
-                }
-              }
-            }
-            
-            <div class="mt-4 flex justify-between">
-              <button mat-button matStepperPrevious>Back</button>
-              <button mat-button matStepperNext color="primary" [disabled]="metadataForm.invalid">
-                Next
-              </button>
-            </div>
-          </form>
-        </mat-step>
-
-        <!-- Step 3: Upload Files -->
-        <mat-step label="Upload Files">
-          <h3 class="text-lg font-semibold mb-2 mt-4">Upload Primary File</h3>
-          <app-file-upload 
-            (fileChanged)="onPrimaryFileChanged($event)" 
-            [accept]="acceptFileTypes()" 
-            [multiple]="false"
-            [maxFileSize]="maxFileSize"
-            [allowedExtensions]="allowedFileExtensions"
-            (fileValidationFailed)="onFileValidationError($event, 'primary')"
-            [uploadProgress]="primaryFileProgress()">
-          </app-file-upload>
-          <small class="text-gray-500">Max file size: {{ maxFileSize / (1024*1024) }}MB. Allowed types: {{ allowedFileExtensions.join(', ') }}.</small> 
-          @if(primaryFileProgress().length > 0 && primaryFileProgress()[0].error) {
-            <mat-error class="mt-1 block">{{ primaryFileProgress()[0].error }}</mat-error>
-          }
-
-          <h3 class="text-lg font-semibold mb-2 mt-6">Upload Attachments (Optional)</h3>
-          <app-file-upload 
-            (filesChanged)="onAttachmentFilesChanged($event)"
-            [accept]="acceptFileTypes()" 
-            [multiple]="true"
-            [maxFileSize]="maxFileSize"
-            [allowedExtensions]="allowedFileExtensions"
-            (fileValidationFailed)="onFileValidationError($event, 'attachment')"
-            [uploadProgress]="attachmentsProgress()">
-          </app-file-upload>
-          <small class="text-gray-500">Max file size per file: {{ maxFileSize / (1024*1024) }}MB. Allowed types: {{ allowedFileExtensions.join(', ') }}.</small>
-            @for(item of attachmentsProgress(); track $index) {
-              @if(item.error) {
-                <mat-error class="mt-1 block">Attachment '{{ item.file.name }}': {{ item.error }}</mat-error>
-              }
-            }
-          
-          <div class="mt-6 flex justify-between">
-            <button mat-button matStepperPrevious>Back</button>
-            <app-async-btn 
-              (click)="onSubmit()" 
-              [isLoading]="isSubmitting()"
-              [disabled]="isSubmitDisabled()">
-              Create Document
-            </app-async-btn>
+      <nz-card>
+        <nz-steps [nzCurrent]="currentStep" nzSize="small">
+          <nz-step nzTitle="Select Company"></nz-step>
+          <nz-step nzTitle="Document Type"></nz-step>
+          <nz-step nzTitle="Document Details"></nz-step>
+          <nz-step nzTitle="Upload File"></nz-step>
+        </nz-steps>
+        
+        <div class="steps-content">
+          <!-- Step 1: Select Company -->
+          <div *ngIf="currentStep === 0" class="step-container">
+            <form nz-form [formGroup]="companyForm" nzLayout="vertical">
+              <h3 nz-typography>Select Company</h3>
+              <p nz-typography nzType="secondary">Choose the company this document belongs to</p>
+              
+              <nz-form-item>
+                <nz-form-label nzRequired>Company</nz-form-label>
+                <nz-form-control nzErrorTip="Please select a company">
+                  <nz-select 
+                    formControlName="companyId" 
+                    nzShowSearch
+                    nzPlaceHolder="Select a company"
+                    nzSize="large"
+                    (ngModelChange)="onCompanyChange($event)">
+                    <nz-option 
+                      *ngFor="let company of companies()" 
+                      [nzValue]="company.id" 
+                      [nzLabel]="company.name">
+                      <span>{{ company.name }}</span>
+                      <span *ngIf="company.description" class="option-desc">{{ company.description }}</span>
+                    </nz-option>
+                  </nz-select>
+                </nz-form-control>
+              </nz-form-item>
+            </form>
           </div>
-        </mat-step>
-      </mat-stepper>
+
+          <!-- Step 2: Select Resource Type -->
+          <div *ngIf="currentStep === 1" class="step-container">
+            <form nz-form [formGroup]="resourceTypeForm" nzLayout="vertical">
+              <h3 nz-typography>Select Document Type</h3>
+              <p nz-typography nzType="secondary">Choose the type of document you want to create</p>
+              
+              <nz-spin *ngIf="loadingResourceTypes" nzTip="Loading document types...">
+                <div style="height: 200px;"></div>
+              </nz-spin>
+              
+              <div *ngIf="!loadingResourceTypes">
+                <nz-form-item>
+                  <nz-form-label nzRequired>Document Type</nz-form-label>
+                  <nz-form-control nzErrorTip="Please select a document type">
+                    <nz-select 
+                      formControlName="resourceTypeId" 
+                      nzShowSearch
+                      nzPlaceHolder="Select a document type"
+                      nzSize="large"
+                      (ngModelChange)="onResourceTypeChange($event)">
+                      <nz-option 
+                        *ngFor="let rt of resourceTypes()" 
+                        [nzValue]="rt.id" 
+                        [nzLabel]="rt.name">
+                        <div class="resource-type-option">
+                          <div class="option-title">{{ rt.name }}</div>
+                          <div class="option-meta">
+                            <nz-tag nzColor="blue">{{ rt.code }}</nz-tag>
+                            <span *ngIf="rt.description" class="option-desc">{{ rt.description }}</span>
+                          </div>
+                        </div>
+                      </nz-option>
+                    </nz-select>
+                  </nz-form-control>
+                </nz-form-item>
+                
+                <nz-empty 
+                  *ngIf="resourceTypes().length === 0" 
+                  nzNotFoundContent="No document types available for this company">
+                </nz-empty>
+              </div>
+            </form>
+          </div>
+
+          <!-- Step 3: Fill Metadata -->
+          <div *ngIf="currentStep === 2" class="step-container">
+            <form nz-form [formGroup]="metadataForm" nzLayout="vertical">
+              <h3 nz-typography>Document Details</h3>
+              <p nz-typography nzType="secondary">Fill in the document information</p>
+              
+              <nz-divider></nz-divider>
+              
+              <!-- Basic Information -->
+              <div class="form-section">
+                <h4 nz-typography>Basic Information</h4>
+                
+                <nz-form-item>
+                  <nz-form-label nzRequired>Title</nz-form-label>
+                  <nz-form-control nzErrorTip="Title is required">
+                    <input nz-input formControlName="title" placeholder="Enter document title" />
+                  </nz-form-control>
+                </nz-form-item>
+
+                <nz-form-item>
+                  <nz-form-label nzRequired>Resource Code</nz-form-label>
+                  <nz-form-control nzErrorTip="Resource code is required" nzExtra="Auto-generated based on document type">
+                    <input nz-input formControlName="resourceCode" placeholder="Resource code" />
+                  </nz-form-control>
+                </nz-form-item>
+
+                <nz-form-item>
+                  <nz-form-label>Parent Document</nz-form-label>
+                  <nz-form-control>
+                    <input 
+                      nz-input 
+                      formControlName="parentSearch" 
+                      placeholder="Search for parent document..."
+                      [nzAutocomplete]="auto" />
+                    <nz-autocomplete #auto>
+                      <nz-auto-option 
+                        *ngIf="isSearchingParents()" 
+                        nzDisabled 
+                        nzCustomContent>
+                        <span nz-icon nzType="loading" nzTheme="outline"></span>
+                        Searching...
+                      </nz-auto-option>
+                      <nz-auto-option 
+                        *ngIf="!isSearchingParents() && parentSearchResults().length === 0 && parentSearchQuery().length > 0" 
+                        nzDisabled 
+                        nzCustomContent>
+                        No documents found
+                      </nz-auto-option>
+                      <nz-auto-option 
+                        *ngFor="let doc of parentSearchResults()" 
+                        [nzValue]="doc" 
+                        [nzLabel]="doc.title">
+                        <div class="parent-option">
+                          <div>{{ doc.title }}</div>
+                          <div class="option-meta">
+                            <nz-tag nzColor="cyan">{{ doc.resourceCode }}</nz-tag>
+                          </div>
+                        </div>
+                      </nz-auto-option>
+                    </nz-autocomplete>
+                  </nz-form-control>
+                </nz-form-item>
+
+                <nz-form-item>
+                  <nz-form-label>Tags</nz-form-label>
+                  <nz-form-control nzExtra="Separate tags with commas">
+                    <input nz-input formControlName="tags" placeholder="Enter tags (comma separated)" />
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
+
+              <!-- Custom Fields -->
+              <div *ngIf="selectedResourceType()?.fields && selectedResourceType()!.fields!.length > 0" class="form-section">
+                <nz-divider></nz-divider>
+                <h4 nz-typography>Custom Fields</h4>
+                
+                <ng-container *ngFor="let field of selectedResourceType()!.fields">
+                  <!-- Boolean Field -->
+                  <nz-form-item *ngIf="field.kind === FieldType.BOOLEAN">
+                    <nz-form-control>
+                      <label nz-checkbox [formControlName]="field.name">
+                        {{ field.label || field.name }}
+                        <span *ngIf="field.required" class="required-marker">*</span>
+                      </label>
+                    </nz-form-control>
+                  </nz-form-item>
+
+                  <!-- Date Field -->
+                  <nz-form-item *ngIf="field.kind === FieldType.DATE">
+                    <nz-form-label [nzRequired]="field.required">{{ field.label || field.name }}</nz-form-label>
+                    <nz-form-control [nzErrorTip]="field.label + ' is required'">
+                      <nz-date-picker 
+                        [formControlName]="field.name"
+                        nzFormat="yyyy-MM-dd"
+                        style="width: 100%;">
+                      </nz-date-picker>
+                    </nz-form-control>
+                  </nz-form-item>
+
+                  <!-- Select Field -->
+                  <nz-form-item *ngIf="field.kind === FieldType.SELECT">
+                    <nz-form-label [nzRequired]="field.required">{{ field.label || field.name }}</nz-form-label>
+                    <nz-form-control [nzErrorTip]="field.label + ' is required'">
+                      <nz-select 
+                        [formControlName]="field.name"
+                        nzPlaceHolder="Select an option">
+                        <nz-option 
+                          *ngFor="let option of field.options" 
+                          [nzValue]="option" 
+                          [nzLabel]="option">
+                        </nz-option>
+                      </nz-select>
+                    </nz-form-control>
+                  </nz-form-item>
+
+                  <!-- Textarea Field -->
+                  <nz-form-item *ngIf="field.kind === FieldType.TEXTAREA">
+                    <nz-form-label [nzRequired]="field.required">{{ field.label || field.name }}</nz-form-label>
+                    <nz-form-control [nzErrorTip]="field.label + ' is required'">
+                      <textarea 
+                        nz-input 
+                        [formControlName]="field.name" 
+                        [nzAutosize]="{ minRows: 3, maxRows: 6 }"
+                        [placeholder]="'Enter ' + (field.label || field.name)">
+                      </textarea>
+                    </nz-form-control>
+                  </nz-form-item>
+
+                  <!-- Number Field -->
+                  <nz-form-item *ngIf="field.kind === FieldType.NUMBER">
+                    <nz-form-label [nzRequired]="field.required">{{ field.label || field.name }}</nz-form-label>
+                    <nz-form-control [nzErrorTip]="field.label + ' is required'">
+                      <nz-input-number 
+                        [formControlName]="field.name"
+                        [nzPlaceHolder]="'Enter ' + (field.label || field.name)"
+                        style="width: 100%;">
+                      </nz-input-number>
+                    </nz-form-control>
+                  </nz-form-item>
+
+                  <!-- Text Field (default) -->
+                  <nz-form-item *ngIf="!field.kind || field.kind === FieldType.TEXT">
+                    <nz-form-label [nzRequired]="field.required">{{ field.label || field.name }}</nz-form-label>
+                    <nz-form-control [nzErrorTip]="field.label + ' is required'">
+                      <input 
+                        nz-input 
+                        [formControlName]="field.name"
+                        [placeholder]="'Enter ' + (field.label || field.name)" />
+                    </nz-form-control>
+                  </nz-form-item>
+                </ng-container>
+              </div>
+
+              <nz-alert 
+                *ngIf="selectedResourceType()?.fields && selectedResourceType()!.fields!.length === 0"
+                nzType="info" 
+                nzMessage="No custom fields"
+                nzDescription="This document type doesn't have any custom fields defined."
+                [nzShowIcon]="true">
+              </nz-alert>
+            </form>
+          </div>
+
+          <!-- Step 4: Upload Primary File -->
+          <div *ngIf="currentStep === 3" class="step-container">
+            <h3 nz-typography>Upload Primary File</h3>
+            <p nz-typography nzType="secondary">Upload the main file for this document</p>
+            
+            <nz-divider></nz-divider>
+            
+            <div class="upload-section">
+              <nz-upload
+                nzType="drag"
+                [nzMultiple]="false"
+                [nzBeforeUpload]="beforeUpload"
+                [nzShowUploadList]="false"
+                [nzAccept]="acceptFileTypes()">
+                <p class="ant-upload-drag-icon">
+                  <span nz-icon nzType="cloud-upload" nzTheme="outline"></span>
+                </p>
+                <p class="ant-upload-text">Click or drag file to this area to upload</p>
+                <p class="ant-upload-hint">
+                  Support for a single file upload. Maximum file size: {{ maxFileSize / (1024*1024) }}MB
+                </p>
+              </nz-upload>
+              
+              <div *ngIf="primaryFile()" class="file-info-card">
+                <nz-card>
+                  <div class="file-info-content">
+                    <span nz-icon nzType="file" nzTheme="outline" class="file-icon"></span>
+                    <div class="file-details">
+                      <div class="file-name">{{ primaryFile()!.name }}</div>
+                      <div class="file-meta">
+                        <span>{{ getFileSize(primaryFile()!.size) }}</span>
+                        <nz-divider nzType="vertical"></nz-divider>
+                        <span>{{ primaryFile()!.type || 'Unknown type' }}</span>
+                      </div>
+                    </div>
+                    <button nz-button nzType="text" nzDanger (click)="removePrimaryFile()">
+                      <span nz-icon nzType="delete" nzTheme="outline"></span>
+                    </button>
+                  </div>
+                </nz-card>
+              </div>
+              
+              <nz-alert 
+                nzType="info" 
+                [nzMessage]="'Allowed file types: ' + allowedFileExtensions.join(', ')"
+                [nzShowIcon]="true"
+                style="margin-top: 16px;">
+              </nz-alert>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation buttons -->
+        <div class="steps-action">
+          <button 
+            nz-button 
+            nzType="default" 
+            (click)="previousStep()"
+            *ngIf="currentStep > 0">
+            <span nz-icon nzType="left" nzTheme="outline"></span>
+            Previous
+          </button>
+          
+          <button 
+            nz-button 
+            nzType="primary" 
+            (click)="nextStep()"
+            [disabled]="!canProceed()"
+            *ngIf="currentStep < 3">
+            Next
+            <span nz-icon nzType="right" nzTheme="outline"></span>
+          </button>
+          
+          <button 
+            nz-button 
+            nzType="primary" 
+            (click)="onSubmit()"
+            [nzLoading]="isSubmitting()"
+            [disabled]="!canSubmit()"
+            *ngIf="currentStep === 3">
+            <span nz-icon nzType="check" nzTheme="outline"></span>
+            Create Document
+          </button>
+        </div>
+      </nz-card>
     </div>
-  `
+  `,
+  styles: [`
+    .create-document-container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .steps-content {
+      margin-top: 32px;
+      min-height: 400px;
+    }
+
+    .step-container {
+      padding: 24px 0;
+    }
+
+    .steps-action {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #f0f0f0;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .form-section {
+      margin-bottom: 32px;
+    }
+
+    .form-section h4 {
+      margin-bottom: 16px;
+    }
+
+    .resource-type-option {
+      padding: 4px 0;
+    }
+
+    .option-title {
+      font-weight: 500;
+    }
+
+    .option-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .option-desc {
+      color: rgba(0, 0, 0, 0.45);
+      font-size: 12px;
+    }
+
+    .parent-option {
+      padding: 4px 0;
+    }
+
+    .upload-section {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .file-info-card {
+      margin-top: 24px;
+    }
+
+    .file-info-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .file-icon {
+      font-size: 32px;
+      color: #1890ff;
+    }
+
+    .file-details {
+      flex: 1;
+    }
+
+    .file-name {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .file-meta {
+      color: rgba(0, 0, 0, 0.45);
+      font-size: 12px;
+    }
+
+    .required-marker {
+      color: #ff4d4f;
+      margin-left: 4px;
+    }
+
+    ::ng-deep .ant-upload.ant-upload-drag {
+      border-color: #d9d9d9;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    ::ng-deep .ant-upload.ant-upload-drag:hover {
+      border-color: #1890ff;
+    }
+
+    ::ng-deep .ant-form-item {
+      margin-bottom: 16px;
+    }
+  `],
+  providers: [NzMessageService]
 })
 export class DocumentCreatePageComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -292,7 +522,7 @@ export class DocumentCreatePageComponent implements OnInit {
   private companyService = inject(CompanyService);
   private documentService = inject(DocumentService);
   private snackbar = inject(SnackbarService);
-  private dialogRef = inject(MatDialogRef<DocumentCreatePageComponent>, { optional: true });
+  private message = inject(NzMessageService);
 
   FieldType = FieldType;
 
@@ -300,22 +530,21 @@ export class DocumentCreatePageComponent implements OnInit {
   resourceTypes = signal<ResourceType[]>([]);
   selectedCompany = signal<Company | undefined>(undefined);
   selectedResourceType = signal<ResourceType | undefined>(undefined);
+  loadingResourceTypes = false;
   
   primaryFile = signal<File | null>(null);
-  attachmentFiles = signal<File[]>([]);
   isSubmitting = signal(false);
+  currentStep = 0;
 
   // Parent document search
   isSearchingParents = signal(false);
   parentSearchQuery = signal('');
   parentSearchResults = signal<Document[]>([]);
 
-  // File upload options - revert to plain properties
+  // File upload options
   maxFileSize = 100 * 1024 * 1024; // 100MB
   allowedFileExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'jpg', 'jpeg', 'png', 'zip', 'rar'];
 
-  primaryFileProgress = signal<FileUploadProgress[]>([]);  attachmentsProgress = signal<FileUploadProgress[]>([]);
-  
   companyForm: FormGroup = this.fb.group({
     companyId: ['', Validators.required]
   });
@@ -335,12 +564,27 @@ export class DocumentCreatePageComponent implements OnInit {
   // Getter for the accept string for file inputs
   acceptFileTypes = computed(() => this.allowedFileExtensions.map(ext => '.' + ext).join(','));
 
-  // Getter for submit button disabled state
-  isSubmitDisabled = computed(() => {
-    const primaryFileInvalid = !this.primaryFile() || (this.primaryFileProgress().length > 0 && !!this.primaryFileProgress()[0].error);
-    const attachmentsInvalid = this.attachmentsProgress().some(att => !!att.error);
-    return this.metadataForm.invalid || primaryFileInvalid || attachmentsInvalid;
-  });
+  // File upload handler
+  beforeUpload = (file: any): boolean => {
+    const isValidType = this.allowedFileExtensions.some(ext => 
+      file.name.toLowerCase().endsWith('.' + ext)
+    );
+    
+    if (!isValidType) {
+      this.message.error(`File type not allowed. Allowed types: ${this.allowedFileExtensions.join(', ')}`);
+      return false;
+    }
+    
+    const isValidSize = file.size / 1024 / 1024 < (this.maxFileSize / 1024 / 1024);
+    if (!isValidSize) {
+      this.message.error(`File must be smaller than ${this.maxFileSize / (1024 * 1024)}MB!`);
+      return false;
+    }
+    
+    this.primaryFile.set(file);
+    return false; // Prevent automatic upload
+  };
+
   ngOnInit(): void {
     this.loadCompanies();
     this.setupParentDocumentSearch();
@@ -391,28 +635,16 @@ export class DocumentCreatePageComponent implements OnInit {
     );
   }
 
-  displayParentFn(doc: Document): string {
-    return doc ? `${doc.title} (${doc.resourceCode})` : '';
-  }
-
-  clearParentSelection(): void {
-    this.metadataForm.patchValue({
-      parentSearch: '',
-      parentId: null
-    });
-    this.parentSearchResults.set([]);
-  }
-
   loadCompanies(): void {
     this.companyService.getAccessibleCompanies().subscribe({
       next: companies => {
         this.companies.set(companies);
         if (companies.length === 0) {
-          this.snackbar.info('No companies are accessible to you. Please contact your administrator for access.');
+          this.message.warning('No companies are accessible to you. Please contact your administrator.');
         }
       },
       error: err => {
-        this.snackbar.error('Failed to load companies: ' + (err.error?.message || err.message));
+        this.message.error('Failed to load companies');
       }
     });
   }
@@ -427,34 +659,20 @@ export class DocumentCreatePageComponent implements OnInit {
       this.loadResourceTypesForCompany(companyId);
     }
   }
+
   loadResourceTypesForCompany(companyId: number): void {
-    console.log('Loading accessible resource types for company ID:', companyId);
+    this.loadingResourceTypes = true;
     this.resourceTypeService.getAccessibleForCompany(companyId).subscribe({
       next: types => {
-        console.log('Accessible resource types received:', types);
-        
         this.resourceTypes.set(types);
+        this.loadingResourceTypes = false;
         if (types.length === 0) {
-          this.snackbar.info('No document types are accessible to you in this company. Please contact your administrator for access.');
+          this.message.info('No document types are accessible in this company.');
         }
       },
       error: err => {
-        console.error('Error loading accessible resource types:', err);
-        this.snackbar.error('Failed to load document types: ' + (err.error?.message || err.message));
-      }
-    });
-  }
-
-  loadResourceTypes(): void {
-    this.resourceTypeService.listAllNonPaged().subscribe({
-      next: types => {
-        this.resourceTypes.set(types);
-        if (types.length === 0) {
-          this.snackbar.info('No document types (resource types) are defined. Please create one first.');
-        }
-      },
-      error: err => {
-        this.snackbar.error('Failed to load document types: ' + (err.error?.message || err.message));
+        this.loadingResourceTypes = false;
+        this.message.error('Failed to load document types');
       }
     });
   }
@@ -463,85 +681,51 @@ export class DocumentCreatePageComponent implements OnInit {
     const resourceType = this.resourceTypes().find(rt => rt.id === resourceTypeId);
     
     if (resourceType) {
-      // Debug the initial resource type
-      console.log('Selected resource type from dropdown:', resourceType);
-      console.log('Fields available from dropdown selection:', resourceType.fields);
-      
-      // Check if the fields are already available from the list
+      // Check if fields are already available
       if (resourceType.fields && resourceType.fields.length > 0) {
-        console.log('Using fields already available from dropdown selection');
         this.selectedResourceType.set(resourceType);
-        
-        // Generate resource code
-        const baseCode = resourceType.code;
-        const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-        const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-        const generatedCode = `${baseCode}-${timestamp}-${randomSuffix}`;
-        
-        this.metadataForm.patchValue({ resourceCode: generatedCode });
-        
-        // Build the form with the fields we already have
+        this.generateResourceCode(resourceType);
         this.buildMetadataForm(resourceType.fields);
       } else {
-        // If fields aren't available in the dropdown selection, fetch the complete resource type
-        console.log('Fields not available from dropdown, fetching complete resource type');
+        // Fetch complete resource type with fields
         this.resourceTypeService.getWithFields(resourceTypeId).subscribe({
           next: (fullResourceType) => {
-            console.log('Fetched resource type with fields:', fullResourceType);
-            console.log('Fields from backend:', fullResourceType.fields);
-            
             this.selectedResourceType.set(fullResourceType);
-            
-            // Generate resource code based on the resource type code
-            const baseCode = fullResourceType.code;
-            const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-            const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-            const generatedCode = `${baseCode}-${timestamp}-${randomSuffix}`;
-            
-            // Update the resource code in the form
-            this.metadataForm.patchValue({ resourceCode: generatedCode });
-            
-            // Initialize dynamic form fields
-            if (fullResourceType.fields && fullResourceType.fields.length > 0) {
-              this.buildMetadataForm(fullResourceType.fields);
-            } else {
-              // Reset any previously added dynamic fields
-              const currentControls = { ...this.metadataForm.controls };
-              Object.keys(currentControls).forEach(key => {
-                if (key !== 'title' && key !== 'resourceCode' && key !== 'tags' && key !== 'parentSearch' && key !== 'parentId') {
-                  this.metadataForm.removeControl(key);
-                }
-              });
-              
-              // If fields is empty array (not null/undefined), inform user that the resource type has no fields
-              if (Array.isArray(fullResourceType.fields) && fullResourceType.fields.length === 0) {
-                this.snackbar.info(`Resource type '${fullResourceType.code}' has no custom fields defined.`);
-              }
-            }
+            this.generateResourceCode(fullResourceType);
+            this.buildMetadataForm(fullResourceType.fields || []);
           },
-          error: (err) => {
-            this.snackbar.error('Failed to load resource type details: ' + (err.error?.message || err.message));
+          error: () => {
+            this.message.error('Failed to load document type details');
           }
         });
       }
-    } else {
-      this.selectedResourceType.set(undefined);
     }
   }
 
-  buildMetadataForm(fields: FieldDefinitionDto[]): void {
-    // Remove existing dynamic field controls
-    const currentControls = { ...this.metadataForm.controls };
-    Object.keys(currentControls).forEach(key => {
-      if (key !== 'title' && key !== 'resourceCode' && key !== 'tags' && key !== 'parentSearch' && key !== 'parentId') {
-        this.metadataForm.removeControl(key);
-      }
-    });
+  generateResourceCode(resourceType: ResourceType): void {
+    const baseCode = resourceType.code;
+    const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const generatedCode = `${baseCode}-${timestamp}-${randomSuffix}`;
     
-    // Add new field controls
+    this.metadataForm.patchValue({ resourceCode: generatedCode });
+  }
+
+  buildMetadataForm(fields: FieldDefinitionDto[]): void {
+    // Reset form to base fields
+    const currentValues = this.metadataForm.value;
+    this.metadataForm = this.fb.group({
+      title: [currentValues.title, Validators.required],
+      resourceCode: [currentValues.resourceCode, Validators.required],
+      tags: [currentValues.tags],
+      parentSearch: [currentValues.parentSearch],
+      parentId: [currentValues.parentId]
+    });
+
+    // Add dynamic fields
     fields.forEach(field => {
       const validators = field.required ? [Validators.required] : [];
-      let defaultValue: any;
+      let defaultValue: any = '';
       
       switch (field.kind) {
         case FieldType.BOOLEAN:
@@ -553,164 +737,122 @@ export class DocumentCreatePageComponent implements OnInit {
         case FieldType.DATE:
           defaultValue = null;
           break;
-        case FieldType.SELECT:
-          defaultValue = field.options && field.options.length > 0 ? field.options[0] : '';
-          break;
-        case FieldType.TEXTAREA:
-          defaultValue = '';
-          break;
-        case FieldType.TEXT:
         default:
           defaultValue = '';
-          break;
       }
       
       this.metadataForm.addControl(field.name, this.fb.control(defaultValue, validators));
     });
   }
 
-  onPrimaryFileChanged(file: File | null): void {
-    this.primaryFileProgress.set([]);
-    if (file) {
-      this.primaryFile.set(file);
-      // Progress will be updated by the FileUploadComponent via the input binding
-      // Validation errors are handled by onFileValidationError
-    } else {
-      this.primaryFile.set(null);
+  removePrimaryFile(): void {
+    this.primaryFile.set(null);
+  }
+
+  getFileSize(bytes: number): string {
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    if (bytes === 0) return '0 Bytes';
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+  }
+
+  canProceed(): boolean {
+    switch (this.currentStep) {
+      case 0:
+        return this.companyForm.valid;
+      case 1:
+        return this.resourceTypeForm.valid;
+      case 2:
+        return this.metadataForm.valid;
+      case 3:
+        return true;
+      default:
+        return false;
     }
   }
 
-  onAttachmentFilesChanged(files: File[]): void {
-    this.attachmentsProgress.set([]);
-    this.attachmentFiles.set(files);
-    // Progress will be updated by the FileUploadComponent via the input binding
-    // Validation errors are handled by onFileValidationError
+  canSubmit(): boolean {
+    return this.metadataForm.valid && this.primaryFile() !== null && !this.isSubmitting();
   }
 
-  onFileValidationError(event: { file: File; reason: string }, type: 'primary' | 'attachment'): void {
-    const { file, reason } = event;
-    if (type === 'primary') {
-      this.primaryFile.set(null);
-      this.primaryFileProgress.set([{ file: file, progress: 0, error: reason, uploaded: false }]);
-      this.snackbar.error(reason);
-    } else if (type === 'attachment') {
-      this.attachmentsProgress.update(progressArray => {
-        const existingIndex = progressArray.findIndex(p => p.file.name === file.name && p.file.size === file.size);
-        if (existingIndex > -1) {
-          progressArray[existingIndex].error = reason;
-        } else {
-          progressArray.push({ file: file, progress: 0, error: reason, uploaded: false });
-        }
-        return [...progressArray];
-      });
-      this.attachmentFiles.update(files => files.filter(f => f.name !== file.name || f.size !== file.size));
-      this.snackbar.error(`Attachment '${file.name}': ${reason}`);
+  nextStep(): void {
+    if (this.canProceed() && this.currentStep < 3) {
+      this.currentStep++;
     }
+  }
+
+  previousStep(): void {
+    if (this.currentStep > 0) {
+      this.currentStep--;
+    }
+  }
+
+  navigateBack(): void {
+    this.router.navigate(['/documents']);
   }
 
   onSubmit(): void {
-    if (this.metadataForm.invalid || !this.primaryFile()) return;
-    
-    const formValue = this.metadataForm.value;
-    const pFile = this.primaryFile();
-    if (!pFile) {
-      this.snackbar.error('Primary file is required');
-      return;
-    }
-    
-    // Extract specific fields from the form
-    const { title, resourceCode, tags, parentId, parentSearch, ...fieldValues } = formValue;
-    
-    // Extract tags from comma-separated string
-    const tagNames = tags ? tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag) : [];
-    
-    // Prepare document DTO
-    const documentDto: CreateDocumentDto = {
-      title,
-      resourceTypeId: this.resourceTypeForm.value.resourceTypeId,
-      resourceCode,
-      mimeType: pFile.type,
-      parentId: parentId || undefined,
-      fieldValues: this.convertFieldValuesToStrings(fieldValues),
-      tagNames
-    };
-    
-    this.isSubmitting.set(true);
+    if (!this.canSubmit()) return;
 
-    this.documentService.create(documentDto, pFile, this.attachmentFiles()).subscribe({
-      next: (newDoc: Document) => {
-        this.isSubmitting.set(false);
-        this.snackbar.success(`Document '${newDoc.title}' created successfully!`);
-        if (this.dialogRef) {
-          this.dialogRef.close('created');
-        } else {
-          this.router.navigate(['/documents', newDoc.id]);
-        }
+    this.isSubmitting.set(true);
+    
+    // Prepare field values
+    const fieldValues = this.convertFieldValuesToStrings(
+      Object.keys(this.metadataForm.value)
+        .filter(key => !['title', 'resourceCode', 'tags', 'parentSearch', 'parentId'].includes(key))
+        .reduce((acc, key) => {
+          acc[key] = this.metadataForm.value[key];
+          return acc;
+        }, {} as Record<string, any>)
+    );
+
+    // Prepare tags
+    const tags = this.metadataForm.value.tags 
+      ? this.metadataForm.value.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t.length > 0)
+      : [];
+
+    const dto: CreateDocumentDto = {
+      title: this.metadataForm.value.title,
+      resourceCode: this.metadataForm.value.resourceCode,
+      resourceTypeId: this.resourceTypeForm.value.resourceTypeId,
+      parentId: this.metadataForm.value.parentId,
+      fieldValues,
+      tagNames: tags
+    };
+
+    const loading = this.message.loading('Creating document...', { nzDuration: 0 });
+    
+    this.documentService.create(dto, this.primaryFile()!).subscribe({
+      next: (createdDoc: Document) => {
+        this.message.remove(loading.messageId);
+        this.message.success('Document created successfully');
+        this.router.navigate(['/documents', createdDoc.id]);
       },
-      error: (err) => {
+      error: (err: any) => {
+        this.message.remove(loading.messageId);
+        this.message.error('Failed to create document: ' + (err.error?.message || err.message));
         this.isSubmitting.set(false);
-        this.snackbar.error('Failed to create document. ' + (err.error?.message || err.message || 'Unknown error'));
       }
     });
   }
 
-  // Helper method to convert all field values to strings as required by the backend
   private convertFieldValuesToStrings(fieldValues: Record<string, any>): Record<string, string> {
     const result: Record<string, string> = {};
     
-    // Get resource type to check field types
-    const resourceType = this.selectedResourceType();
-    
-    for (const key in fieldValues) {
-      if (fieldValues.hasOwnProperty(key)) {
-        let value = fieldValues[key];
-        
-        // Handle null/undefined values
-        if (value === null || value === undefined) {
-          result[key] = '';
-          continue;
-        }
-        
-        // Check if this is a date field
-        const isDateField = resourceType?.fields?.some(
-          field => field.name === key && field.kind === FieldType.DATE
-        );
-        
-        if (isDateField) {
-          // For date fields, ensure we have a proper YYYY-MM-DD format without time
-          if (value instanceof Date) {
-            // Format as YYYY-MM-DD
-            const year = value.getFullYear();
-            const month = String(value.getMonth() + 1).padStart(2, '0');
-            const day = String(value.getDate()).padStart(2, '0');
-            result[key] = `${year}-${month}-${day}`;
-          } else if (typeof value === 'string') {
-            // Handle string date input - try to parse and format
-            try {
-              const date = new Date(value);
-              if (!isNaN(date.getTime())) {
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                result[key] = `${year}-${month}-${day}`;
-              } else {
-                result[key] = value; // Keep original if parsing fails
-              }
-            } catch (e) {
-              result[key] = value; // Keep original if parsing fails
-            }
-          } else {
-            result[key] = String(value); // Fallback
-          }
-        } else if (typeof value === 'boolean') {
-          // Handle boolean values
-          result[key] = value ? 'true' : 'false';
-        } else {
-          // Handle all other types
-          result[key] = String(value);
-        }
+    for (const [key, value] of Object.entries(fieldValues)) {
+      if (value === null || value === undefined) {
+        result[key] = '';
+      } else if (typeof value === 'boolean') {
+        result[key] = value.toString();
+      } else if (value instanceof Date) {
+        result[key] = value.toISOString();
+      } else if (typeof value === 'object') {
+        result[key] = JSON.stringify(value);
+      } else {
+        result[key] = String(value);
       }
     }
+    
     return result;
   }
 }

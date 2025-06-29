@@ -1,16 +1,18 @@
-import { Component, ViewChild, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatListModule } from '@angular/material/list';
-import { MatIconModule } from '@angular/material/icon';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatButtonModule } from '@angular/material/button';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { map } from 'rxjs/operators';
+import { RouterModule, Router } from '@angular/router';
+
+// NG-ZORRO imports
+import { NzLayoutModule } from 'ng-zorro-antd/layout';
+import { NzMenuModule } from 'ng-zorro-antd/menu';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzAvatarModule } from 'ng-zorro-antd/avatar';
+import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
+import { NzBreadCrumbModule } from 'ng-zorro-antd/breadcrumb';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzBadgeModule } from 'ng-zorro-antd/badge';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzDividerModule } from 'ng-zorro-antd/divider';
 
 import { AuthService } from '../../core/services/auth.service';
 import { LoadingService } from '../../core/services/loading.service';
@@ -22,129 +24,385 @@ import { HasRoleDirective } from '../../shared/directives/has-role.directive';
   imports: [
     CommonModule, 
     RouterModule,
-    MatSidenavModule,
-    MatListModule,
-    MatIconModule,
-    MatToolbarModule,
-    MatButtonModule,
-    MatTooltipModule,
-    MatMenuModule,
-    MatProgressBarModule,
+    NzLayoutModule,
+    NzMenuModule,
+    NzIconModule,
+    NzAvatarModule,
+    NzDropDownModule,
+    NzBreadCrumbModule,
+    NzSpinModule,
+    NzBadgeModule,
+    NzButtonModule,
+    NzDividerModule,
     HasRoleDirective
   ],
   template: `
-    <div class="shell-container h-full flex flex-col">
-      <!-- Top toolbar -->
-      <mat-toolbar color="primary" class="z-10">
-        <button 
-          mat-icon-button 
-          (click)="sidenav.toggle()" 
-          class="mr-2">
-          <mat-icon>menu</mat-icon>
-        </button>
-        <span class="flex-grow">Document Management System</span>
+    <nz-layout class="app-layout">
+      <!-- Sider -->
+      <nz-sider 
+        class="menu-sidebar"
+        nzCollapsible
+        nzBreakpoint="lg"
+        [nzCollapsed]="isCollapsed"
+        (nzCollapsedChange)="isCollapsed = $event"
+        [nzTrigger]="null">
         
-        <!-- Loading bar -->
-        @if (loadingService.loading()) {
-          <div class="loading-bar-container absolute top-0 left-0 right-0">
-            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-          </div>
-        }
-        
-        <!-- User menu -->
-        <button mat-icon-button [matMenuTriggerFor]="userMenu" class="ml-2">
-          <mat-icon>account_circle</mat-icon>
-        </button>
-        <mat-menu #userMenu="matMenu">
-          <span mat-menu-item disabled>
-            <span>{{ authService.currentUserSignal()?.username }}</span>
-          </span>
-          <a mat-menu-item routerLink="/profile">
-            <mat-icon>person</mat-icon>
-            <span>Profile</span>
+        <div class="sidebar-logo">
+          <a routerLink="/dashboard">
+            <span nz-icon nzType="file-text" nzTheme="outline" class="logo-icon"></span>
+            <h1 *ngIf="!isCollapsed">DMS</h1>
           </a>
-          <button mat-menu-item (click)="authService.logout()">
-            <mat-icon>exit_to_app</mat-icon>
-            <span>Logout</span>
-          </button>
-        </mat-menu>
-      </mat-toolbar>
-      
-      <!-- Main content container -->
-      <mat-sidenav-container class="flex-grow">
-        <!-- Side navigation -->
-        <mat-sidenav 
-          #sidenav 
-          [mode]="(isHandset$ | async) ? 'over' : 'side'"
-          [opened]="!(isHandset$ | async)"
-          class="w-64">
-          <div class="p-4">
-            <nav class="flex flex-col">
-              <a mat-button class="text-left" routerLink="/dashboard" routerLinkActive="bg-gray-200">
-                <mat-icon class="mr-2">dashboard</mat-icon>
-                <span>Dashboard</span>
-              </a>              <a mat-button class="text-left" routerLink="/documents" routerLinkActive="bg-gray-200">
-                <mat-icon class="mr-2">description</mat-icon>
-                <span>Documents</span>
-              </a>
-              <a mat-button class="text-left" routerLink="/documents/browse" routerLinkActive="bg-gray-200">
-                <mat-icon class="mr-2">account_tree</mat-icon>
-                <span>Browse by Company</span>
-              </a><!-- Admin section -->
-              <div *appHasRole="'SYS_ADMIN'" class="mt-4 flex flex-col">
-                <div class="text-xs text-gray-500 mb-2 pl-4">Admin</div>
-                <a mat-button class="text-left mb-1" routerLink="/companies" routerLinkActive="bg-gray-200">
-                  <mat-icon class="mr-2">business</mat-icon>
-                  <span>Companies</span>
-                </a>
-                <a mat-button class="text-left mb-1" routerLink="/resource-types" routerLinkActive="bg-gray-200">
-                  <mat-icon class="mr-2">category</mat-icon>
-                  <span>Resource Types</span>
-                </a>
-                <a mat-button class="text-left mb-1" routerLink="/users" routerLinkActive="bg-gray-200">
-                  <mat-icon class="mr-2">people</mat-icon>
-                  <span>Users</span>
-                </a>
-              </div>
-            </nav>
-          </div>
-        </mat-sidenav>
+        </div>
         
-        <!-- Main content -->
-        <mat-sidenav-content class="p-4">
-          <!-- Breadcrumbs would go here, will implement separately -->
+        <ul nz-menu nzMode="inline" [nzInlineCollapsed]="isCollapsed">
+          <li nz-menu-item nzMatchRouter routerLink="/dashboard">
+            <span nz-icon nzType="dashboard" nzTheme="outline"></span>
+            <span>Dashboard</span>
+          </li>
           
-          <main>
+          <li nz-menu-item nzMatchRouter routerLink="/documents">
+            <span nz-icon nzType="file-text" nzTheme="outline"></span>
+            <span>Documents</span>
+          </li>
+          
+          <li nz-menu-item nzMatchRouter routerLink="/documents/browse">
+            <span nz-icon nzType="apartment" nzTheme="outline"></span>
+            <span>Browse by Company</span>
+          </li>
+          
+          <!-- Admin Section -->
+          <ng-container *appHasRole="'SYS_ADMIN'">
+            <li nz-menu-divider></li>
+            <li nz-submenu nzTitle="Admin" nzIcon="setting">
+              <ul>
+                <li nz-menu-item nzMatchRouter routerLink="/companies">
+                  <span nz-icon nzType="bank" nzTheme="outline"></span>
+                  <span>Companies</span>
+                </li>
+                <li nz-menu-item nzMatchRouter routerLink="/resource-types">
+                  <span nz-icon nzType="folder" nzTheme="outline"></span>
+                  <span>Resource Types</span>
+                </li>
+                <li nz-menu-item nzMatchRouter routerLink="/users">
+                  <span nz-icon nzType="team" nzTheme="outline"></span>
+                  <span>Users</span>
+                </li>
+              </ul>
+            </li>
+          </ng-container>
+        </ul>
+      </nz-sider>
+      
+      <nz-layout>
+        <!-- Header -->
+        <nz-header>
+          <div class="app-header">
+            <span class="header-trigger" (click)="isCollapsed = !isCollapsed">
+              <span nz-icon [nzType]="isCollapsed ? 'menu-unfold' : 'menu-fold'" nzTheme="outline"></span>
+            </span>
+            
+            <div class="header-title">
+              <h2>Document Management System</h2>
+            </div>
+            
+            <div class="header-actions">
+              <!-- Loading indicator -->
+              <div *ngIf="loadingService.loading()" class="loading-indicator">
+                <nz-spin nzSimple [nzSize]="'small'"></nz-spin>
+              </div>
+              
+              <!-- User dropdown -->
+              <div nz-dropdown [nzDropdownMenu]="userMenu" nzTrigger="click" class="user-dropdown">
+                  <nz-avatar 
+                    [nzText]="getUserInitial()" 
+                    nzSize="default"
+                    style="background-color: #1890ff;">
+                  </nz-avatar>
+                  <span class="username">{{ authService.currentUserSignal()?.username }}</span>
+                  <span nz-icon nzType="down" nzTheme="outline"></span>
+              </div>
+                
+              <nz-dropdown-menu #userMenu="nzDropdownMenu">
+                <ul nz-menu nzSelectable>
+                  <li nz-menu-item disabled>
+                    <div class="user-info">
+                      <div class="user-name">{{ authService.currentUserSignal()?.username }}</div>
+                      <div class="user-email">{{ authService.currentUserSignal()?.email }}</div>
+                      <div class="user-role">
+                        <nz-badge 
+                          [nzStatus]="'success'" 
+                          [nzText]="getUserRole()">
+                        </nz-badge>
+                      </div>
+                    </div>
+                  </li>
+                  <li nz-menu-divider></li>
+                  <li nz-menu-item routerLink="/profile">
+                    <span nz-icon nzType="user" nzTheme="outline"></span>
+                    My Profile
+                  </li>
+                  <li nz-menu-item routerLink="/profile/change-password">
+                    <span nz-icon nzType="lock" nzTheme="outline"></span>
+                    Change Password
+                  </li>
+                  <li nz-menu-divider></li>
+                  <li nz-menu-item (click)="logout()">
+                    <span nz-icon nzType="logout" nzTheme="outline"></span>
+                    Logout
+                  </li>
+                </ul>
+              </nz-dropdown-menu>
+            </div>
+          </div>
+        </nz-header>
+        
+        <!-- Content -->
+        <nz-content>
+          <div class="inner-content">
             <router-outlet></router-outlet>
-          </main>
-        </mat-sidenav-content>
-      </mat-sidenav-container>
-    </div>
+          </div>
+        </nz-content>
+        
+        <!-- Footer -->
+        <nz-footer>
+          <div class="footer-content">
+            <span>Document Management System © 2024</span>
+            <span class="version">v1.0.0</span>
+          </div>
+        </nz-footer>
+      </nz-layout>
+    </nz-layout>
   `,
   styles: [`
-    .shell-container {
+    :host {
       display: flex;
-      flex-direction: column;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
-    
-    .loading-bar-container {
-      z-index: 1000;
+
+    .app-layout {
+      height: 100vh;
     }
-    
-    mat-sidenav {
-      width: 250px;
+
+    .menu-sidebar {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.03);
+    }
+
+    .sidebar-logo {
+      position: relative;
+      height: 64px;
+      padding-left: 24px;
+      overflow: hidden;
+      line-height: 64px;
+      background: #001529;
+      transition: all .3s;
+    }
+
+    .sidebar-logo a {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .sidebar-logo .logo-icon {
+      font-size: 28px;
+      margin-right: 12px;
+    }
+
+    .sidebar-logo h1 {
+      display: inline-block;
+      margin: 0;
+      color: #fff;
+      font-weight: 600;
+      font-size: 18px;
+      vertical-align: middle;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      height: 64px;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0,21,41,0.08);
+      position: relative;
+      z-index: 1;
+    }
+
+    .header-trigger {
+      font-size: 20px;
+      cursor: pointer;
+      transition: color 0.3s;
+      padding: 0 24px 0 0;
+    }
+
+    .header-trigger:hover {
+      color: #1890ff;
+    }
+
+    .header-title {
+      flex: 1;
+    }
+
+    .header-title h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.85);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .loading-indicator {
+      display: flex;
+      align-items: center;
+    }
+
+    .user-dropdown {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      padding: 4px 12px;
+      border-radius: 4px;
+      transition: background-color 0.3s;
+    }
+
+    .user-dropdown:hover {
+      background-color: rgba(0, 0, 0, 0.025);
+    }
+
+    .username {
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .user-info {
+      padding: 8px 0;
+    }
+
+    .user-name {
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.85);
+    }
+
+    .user-email {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.45);
+      margin: 4px 0;
+    }
+
+    .user-role {
+      margin-top: 8px;
+    }
+
+    nz-header {
+      padding: 0;
+      width: 100%;
+      z-index: 2;
+    }
+
+    nz-content {
+      margin: 24px;
+      min-height: 280px;
+    }
+
+    .inner-content {
+      background: transparent;
+      min-height: calc(100vh - 64px - 24px - 24px - 64px);
+    }
+
+    nz-footer {
+      text-align: center;
+      background: #f0f2f5;
+      padding: 16px 50px;
+    }
+
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      color: rgba(0, 0, 0, 0.45);
+      font-size: 14px;
+    }
+
+    .version {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.25);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header-title h2 {
+        font-size: 16px;
+      }
+      
+      .username {
+        display: none;
+      }
+      
+      nz-content {
+        margin: 16px;
+      }
+    }
+
+    /* Custom scrollbar for the sidebar */
+    ::ng-deep .ant-layout-sider-children::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::ng-deep .ant-layout-sider-children::-webkit-scrollbar-track {
+      background: #001529;
+    }
+
+    ::ng-deep .ant-layout-sider-children::-webkit-scrollbar-thumb {
+      background: #1890ff;
+      border-radius: 3px;
+    }
+
+    ::ng-deep .ant-menu-dark .ant-menu-inline.ant-menu-sub {
+      background: #000c17;
     }
   `]
 })
 export class ShellLayoutComponent {
   authService = inject(AuthService);
   loadingService = inject(LoadingService);
-  breakpointObserver = inject(BreakpointObserver);
+  router = inject(Router);
   
-  @ViewChild('sidenav') sidenav: any;
+  isCollapsed = false;
   
-  isHandset$ = this.breakpointObserver.observe([Breakpoints.Handset])
-    .pipe(
-      map(result => result.matches)
-    );
+  getUserInitial(): string {
+    const user = this.authService.currentUserSignal();
+    if (user?.username) {
+      return user.username.charAt(0).toUpperCase();
+    }
+    return 'U';
+  }
+  
+  getUserRole(): string {
+    const user = this.authService.currentUserSignal();
+    if (user?.roles?.includes('SYS_ADMIN')) {
+      return 'System Admin';
+    }
+    return 'User';
+  }
+  
+  logout(): void {
+    this.authService.logout();
+  }
 }
