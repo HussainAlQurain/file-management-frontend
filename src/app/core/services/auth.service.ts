@@ -53,19 +53,45 @@ export class AuthService {
     localStorage.removeItem(this.tokenKey);
     this.authSignal.set(null);
     this.currentUserSignal.set(null);
-    this.router.navigate(['/login']);
+    // Don't automatically navigate here - let the caller decide
   }
   
   isAuthenticated(): boolean {
-    return !!this.authSignal();
+    const auth = this.authSignal();
+    return auth !== null && !this.isTokenExpired(auth.token);
   }
   
   getToken(): string | null {
-    return this.authSignal()?.token ?? null;
+    const auth = this.authSignal();
+    if (!auth) return null;
+    
+    // Check if token is expired
+    if (this.isTokenExpired(auth.token)) {
+      console.warn('Token is expired, logging out...');
+      this.logout();
+      return null;
+    }
+    
+    return auth.token;
   }
-    hasRole(role: string): boolean {
-    const userRoles = this.currentUserSignal()?.roles ?? [];
-    return userRoles.includes(role);
+  
+  /**
+   * Check if JWT token is expired
+   */
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payload = jwtDecode<JwtPayload>(token);
+      const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+      return payload.exp < currentTime;
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return true; // Treat invalid tokens as expired
+    }
+  }
+  
+  hasRole(role: string): boolean {
+    const user = this.currentUserSignal();
+    return user?.roles?.includes(role) ?? false;
   }
   
   requireRole(role: string): boolean {
@@ -98,27 +124,36 @@ private setSession(auth: Auth): void {
   this.currentUserSignal.set(user);
 }
     private loadTokenFromStorage(): void {
-  const authJson = localStorage.getItem(this.tokenKey);
-  if (!authJson) return;
+    const authJson = localStorage.getItem(this.tokenKey);
+    if (!authJson) return;
 
-  try {
-    const auth: Auth = JSON.parse(authJson);
-    this.authSignal.set(auth);
+    try {
+      const auth: Auth = JSON.parse(authJson);
+      
+      // Check if token is expired before setting it
+      if (this.isTokenExpired(auth.token)) {
+        console.warn('Stored token is expired, removing...');
+        localStorage.removeItem(this.tokenKey);
+        return;
+      }
+      
+      this.authSignal.set(auth);
 
-    const payload = jwtDecode<JwtPayload>(auth.token);
-    const user: User = {
-      username: payload.sub,
-      roles: payload.roles?.map(r => r.replace('ROLE_', '')) ?? [],
-      id: -1, // Provide a default or meaningful value
-      email: '', // Provide a default or meaningful value
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    this.currentUserSignal.set(user);
-  } catch (e) {
-    localStorage.removeItem(this.tokenKey);
+      const payload = jwtDecode<JwtPayload>(auth.token);
+      const user: User = {
+        username: payload.sub,
+        roles: payload.roles?.map(r => r.replace('ROLE_', '')) ?? [],
+        id: -1,
+        email: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      this.currentUserSignal.set(user);
+    } catch (e) {
+      console.error('Error loading token from storage:', e);
+      localStorage.removeItem(this.tokenKey);
+    }
   }
-}
 
   
   // Public method to force reload the token (useful for debugging)
