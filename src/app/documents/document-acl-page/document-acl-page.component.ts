@@ -2,16 +2,21 @@ import { Component, OnInit, inject, signal, WritableSignal, DestroyRef } from '@
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule } from '@angular/material/table';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog } from '@angular/material/dialog';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
+import { NzCardModule } from 'ng-zorro-antd/card';
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzTableModule } from 'ng-zorro-antd/table';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzModalService } from 'ng-zorro-antd/modal';
+import { NzEmptyModule } from 'ng-zorro-antd/empty';
+import { NzBreadCrumbModule } from 'ng-zorro-antd/breadcrumb';
+import { NzPageHeaderModule } from 'ng-zorro-antd/page-header';
+import { NzGridModule } from 'ng-zorro-antd/grid';
 
 import { AclService, AclEntryResponse } from '../../core/services/acl.service'; // Import AclEntryResponse
 import { DocumentService } from '../../core/services/document.service';
@@ -20,8 +25,6 @@ import { SnackbarService } from '../../core/services/snackbar.service';
 import { AclRecordDto, Permission, PrincipalType } from '../../core/models/acl.model';
 import { Document } from '../../core/models/document.model';
 import { User } from '../../core/models/auth.model';
-import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-document-acl-page',
@@ -31,133 +34,185 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     RouterModule,
     FormsModule,
     ReactiveFormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTableModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule
+    NzCardModule,
+    NzFormModule,
+    NzInputModule,
+    NzSelectModule,
+    NzButtonModule,
+    NzIconModule,
+    NzTableModule,
+    NzSpinModule,
+    NzEmptyModule,
+    NzBreadCrumbModule,
+    NzPageHeaderModule,
+    NzGridModule
   ],
   template: `
-    <div class="p-4 md:p-8">
+    <div class="p-6">
       @if (isLoadingDocument()) {
         <div class="flex justify-center items-center min-h-[200px]">
-          <mat-spinner diameter="50"></mat-spinner>
+          <nz-spin nzSize="large"></nz-spin>
         </div>
       } @else if (document()) {
-        <header class="mb-6">
-          <h1 class="text-2xl font-bold">Manage Access for: {{ document()?.title }}</h1>
-          <button mat-stroked-button [routerLink]="['/documents', document()?.id]">
-            <mat-icon>arrow_back</mat-icon>
-            Back to Document
-          </button>
-        </header>
+        <!-- Page Header -->
+        <nz-page-header class="mb-6" [nzGhost]="false">
+          <nz-breadcrumb nz-page-header-breadcrumb>
+            <nz-breadcrumb-item>
+              <a routerLink="/documents">Documents</a>
+            </nz-breadcrumb-item>
+            <nz-breadcrumb-item>
+              <a [routerLink]="['/documents', document()?.id]">{{ document()?.title }}</a>
+            </nz-breadcrumb-item>
+            <nz-breadcrumb-item>Access Control</nz-breadcrumb-item>
+          </nz-breadcrumb>
+          
+          <nz-page-header-title>Manage Access Control</nz-page-header-title>
+          <nz-page-header-subtitle>{{ document()?.title }}</nz-page-header-subtitle>
+          
+          <nz-page-header-extra>
+            <button nz-button nzType="default" [routerLink]="['/documents', document()?.id]">
+              <nz-icon nzType="arrow-left"></nz-icon>
+              Back to Document
+            </button>
+          </nz-page-header-extra>
+        </nz-page-header>
 
-        <!-- Add/Edit ACL Form -->
-        <mat-card class="mb-6">
-          <mat-card-header>
-            <mat-card-title>Grant New Permission</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <form [formGroup]="aclForm" (ngSubmit)="grantPermission()" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-              <mat-form-field appearance="outline" class="md:col-span-1">
-                <mat-label>User</mat-label>
-                <input matInput placeholder="Search user..." [value]="userFilter" (input)="onUserFilterInput($event)" autocomplete="off" />
-                <mat-select formControlName="userId" required>
-                  @if(isLoadingUsers()) { <mat-option disabled>Loading users...</mat-option> }
-                  @for (user of filteredUsers(); track user.id) {
-                    <mat-option [value]="user.id">
-                      <div class="flex flex-col">
-                        <span>{{ user.fullName || user.username }}</span>
-                        <span class="text-xs text-gray-500">{{ user.email }}</span>
-                      </div>
-                    </mat-option>
-                  }
-                </mat-select>
-                 @if (aclForm.get('userId')?.hasError('required')) {
-                  <mat-error>User is required.</mat-error>
-                }
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="md:col-span-1">
-                <mat-label>Permission</mat-label>
-                <mat-select formControlName="permission" required>
-                   @for (perm of permissions; track perm.value) {
-                    <mat-option [value]="perm.value">{{ perm.label }}</mat-option>
-                  }
-                </mat-select>
-                @if (aclForm.get('permission')?.hasError('required')) {
-                  <mat-error>Permission is required.</mat-error>
-                }
-              </mat-form-field>
-
-              <button mat-raised-button color="primary" type="submit" [disabled]="aclForm.invalid || isGrantingPermission()" class="md:col-span-1 h-[56px]">
-                @if(isGrantingPermission()){ <mat-spinner diameter="20" class="inline-block mr-2"></mat-spinner> } 
-                Grant Permission
-              </button>
-            </form>
-          </mat-card-content>
-        </mat-card>
-
-        <!-- Current ACLs Table -->
-        <mat-card>
-          <mat-card-header>
-            <mat-card-title>Current Permissions</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            @if (isLoadingAcls()) {
-              <div class="flex justify-center items-center py-6">
-                <mat-spinner diameter="40"></mat-spinner>
+        <!-- Grant Permission Form -->
+        <nz-card nzTitle="Grant New Permission" class="mb-6">
+          <form nz-form [formGroup]="aclForm" (ngSubmit)="grantPermission()" class="space-y-4">
+            <div nz-row [nzGutter]="[16, 16]">
+              <div nz-col [nzSpan]="8">
+                <nz-form-item>
+                  <nz-form-label [nzRequired]="true">User</nz-form-label>
+                  <nz-form-control [nzErrorTip]="'User is required'">
+                    <nz-select 
+                      formControlName="userId" 
+                      nzPlaceHolder="Select a user"
+                      nzShowSearch
+                      nzAllowClear
+                      (nzOnSearch)="onUserSearch($event)">
+                      @for (user of filteredUsers(); track user.id) {
+                        <nz-option [nzValue]="user.id" [nzLabel]="user.fullName || user.username">
+                          <div class="flex flex-col">
+                            <span>{{ user.fullName || user.username }}</span>
+                            <span class="text-xs text-gray-500">{{ user.email }}</span>
+                          </div>
+                        </nz-option>
+                      }
+                    </nz-select>
+                  </nz-form-control>
+                </nz-form-item>
               </div>
-            } @else if (currentAcls().length > 0) {
-              <table mat-table [dataSource]="currentAcls()" class="w-full">
-                <!-- Principal Column -->
-                <ng-container matColumnDef="username">
-                  <th mat-header-cell *matHeaderCellDef> Username </th>
-                  <td mat-cell *matCellDef="let acl"> {{ acl.username }} </td>
-                </ng-container>
+              
+              <div nz-col [nzSpan]="8">
+                <nz-form-item>
+                  <nz-form-label [nzRequired]="true">Permission</nz-form-label>
+                  <nz-form-control [nzErrorTip]="'Permission is required'">
+                    <nz-select formControlName="permission" nzPlaceHolder="Select permission">
+                      @for (perm of permissions; track perm.value) {
+                        <nz-option [nzValue]="perm.value" [nzLabel]="perm.label">
+                          <nz-icon [nzType]="getPermissionIcon(perm.value)" class="mr-2"></nz-icon>
+                          {{ perm.label }}
+                        </nz-option>
+                      }
+                    </nz-select>
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
+              
+              <div nz-col [nzSpan]="8">
+                <nz-form-item>
+                  <nz-form-label>&nbsp;</nz-form-label>
+                  <nz-form-control>
+                    <button 
+                      nz-button 
+                      nzType="primary" 
+                      type="submit" 
+                      [nzLoading]="isGrantingPermission()"
+                      [disabled]="aclForm.invalid">
+                      <nz-icon nzType="plus"></nz-icon>
+                      Grant Permission
+                    </button>
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
+            </div>
+          </form>
+        </nz-card>
 
-                <!-- Permission Column -->
-                <ng-container matColumnDef="permission">
-                  <th mat-header-cell *matHeaderCellDef> Permission </th>
-                  <td mat-cell *matCellDef="let acl"> {{ acl.permission }} </td>
-                </ng-container>
-
-                <!-- Actions Column -->
-                <ng-container matColumnDef="actions">
-                  <th mat-header-cell *matHeaderCellDef class="text-right"> Actions </th>
-                  <td mat-cell *matCellDef="let acl" class="text-right">
-                    <button mat-icon-button color="warn" (click)="revokePermissionConfirmation(acl)" matTooltip="Revoke Permission">
-                      <mat-icon>delete</mat-icon>
+        <!-- Current Permissions Table -->
+        <nz-card nzTitle="Current Permissions">
+          @if (isLoadingAcls()) {
+            <div class="flex justify-center items-center py-12">
+              <nz-spin nzSize="large"></nz-spin>
+            </div>
+          } @else if (currentAcls().length > 0) {
+            <nz-table #basicTable [nzData]="currentAcls()" [nzSize]="'middle'">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Permission</th>
+                  <th nzWidth="100px" nzAlign="center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let acl of basicTable.data">
+                  <td>
+                    <div class="flex items-center">
+                      <nz-icon nzType="user" class="text-blue-500 mr-2"></nz-icon>
+                      <span class="font-medium">{{ acl.username }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="flex items-center">
+                      <nz-icon [nzType]="getPermissionIcon(acl.permission)" class="mr-2" 
+                               [class]="getPermissionColor(acl.permission)"></nz-icon>
+                      <span>{{ acl.permission }}</span>
+                    </div>
+                  </td>
+                  <td nzAlign="center">
+                    <button 
+                      nz-button 
+                      nzType="text" 
+                      nzDanger
+                      nzSize="small"
+                      (click)="revokePermissionConfirmation(acl)">
+                      <nz-icon nzType="delete"></nz-icon>
                     </button>
                   </td>
-                </ng-container>
-
-                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-              </table>
-            } @else {
-              <p class="text-center text-gray-500 py-6">No permissions granted yet for this document.</p>
-            }
-          </mat-card-content>
-        </mat-card>
+                </tr>
+              </tbody>
+            </nz-table>
+          } @else {
+            <nz-empty nzNotFoundImage="simple" nzNotFoundContent="No permissions granted yet">
+              <div nz-empty-footer>
+                <span class="text-gray-500">Grant permissions using the form above</span>
+              </div>
+            </nz-empty>
+          }
+        </nz-card>
 
       } @else {
-        <mat-card class="text-center p-8">
-          <mat-icon class="text-6xl text-gray-400">error_outline</mat-icon>
-          <h2 class="text-2xl font-semibold mt-4 mb-2">Document Not Found</h2>
-          <p class="text-gray-600 mb-6">The document details could not be loaded.</p>
-          <button mat-stroked-button routerLink="/documents">
-            <mat-icon>arrow_back</mat-icon> Back to Documents List
-          </button>
-        </mat-card>
+        <nz-card class="text-center">
+          <div class="py-12">
+            <nz-icon nzType="exclamation-circle" class="text-6xl text-gray-400 mb-4"></nz-icon>
+            <h2 class="text-2xl font-semibold mb-2">Document Not Found</h2>
+            <p class="text-gray-600 mb-6">The document details could not be loaded.</p>
+            <button nz-button nzType="primary" routerLink="/documents">
+              <nz-icon nzType="arrow-left"></nz-icon> 
+              Back to Documents
+            </button>
+          </div>
+        </nz-card>
       }
     </div>
   `,
-  styles: [``]
+  styles: [`
+    nz-page-header {
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+    }
+  `]
 })
 export class DocumentAclPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -167,14 +222,13 @@ export class DocumentAclPageComponent implements OnInit {
   private documentService = inject(DocumentService);
   private userService = inject(UserService);
   private snackbar = inject(SnackbarService);
-  private dialog = inject(MatDialog);
+  private modal = inject(NzModalService);
   private destroyRef = inject(DestroyRef);
 
   documentId = signal<number | null>(null);
   document: WritableSignal<Document | null> = signal(null);
-  currentAcls: WritableSignal<AclEntryResponse[]> = signal([]); // Use AclEntryResponse from service
+  currentAcls: WritableSignal<AclEntryResponse[]> = signal([]);
   users: WritableSignal<User[]> = signal([]);
-  userFilter: string = '';
   filteredUsers: WritableSignal<User[]> = signal([]);
 
   isLoadingDocument = signal(true);
@@ -183,12 +237,11 @@ export class DocumentAclPageComponent implements OnInit {
   isGrantingPermission = signal(false);
 
   aclForm!: FormGroup;
-  displayedColumns: string[] = ['username', 'permission', 'actions'];
 
   permissions = [
+    { value: 'VIEW', label: 'View' },
     { value: 'EDIT', label: 'Edit' },
-    { value: 'DELETE', label: 'Delete' },
-    { value: 'VIEW', label: 'View' }
+    { value: 'DELETE', label: 'Delete' }
   ];
 
   constructor() {
@@ -260,8 +313,8 @@ export class DocumentAclPageComponent implements OnInit {
       });
   }
 
-  filterUsers(): void {
-    const filter = this.userFilter.toLowerCase();
+  onUserSearch(searchTerm: string): void {
+    const filter = searchTerm.toLowerCase();
     this.filteredUsers.set(
       this.users().filter(u =>
         (u.fullName && u.fullName.toLowerCase().includes(filter)) ||
@@ -269,11 +322,6 @@ export class DocumentAclPageComponent implements OnInit {
         (u.email && u.email.toLowerCase().includes(filter))
       )
     );
-  }
-
-  onUserFilterInput(event: Event) {
-    this.userFilter = (event.target as HTMLInputElement).value;
-    this.filterUsers();
   }
 
   grantPermission(): void {
@@ -300,15 +348,14 @@ export class DocumentAclPageComponent implements OnInit {
   }
 
   revokePermissionConfirmation(acl: AclEntryResponse): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: {
-        title: 'Confirm Revoke',
-        message: `Are you sure you want to revoke ${acl.permission} permission for ${acl.username}?`
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) { 
+    this.modal.confirm({
+      nzTitle: 'Confirm Revoke',
+      nzContent: `Are you sure you want to revoke ${acl.permission} permission for ${acl.username}?`,
+      nzOkText: 'Revoke',
+      nzOkType: 'primary',
+      nzOkDanger: true,
+      nzCancelText: 'Cancel',
+      nzOnOk: () => {
         this.revokePermission(acl);
       }
     });
@@ -334,5 +381,31 @@ export class DocumentAclPageComponent implements OnInit {
         this.snackbar.error('Failed to revoke permission: ' + (err.error?.message || err.message));
       }
     });
+  }
+
+  getPermissionIcon(permission: string): string {
+    switch (permission) {
+      case 'VIEW':
+        return 'eye';
+      case 'EDIT':
+        return 'edit';
+      case 'DELETE':
+        return 'delete';
+      default:
+        return 'safety-certificate';
+    }
+  }
+
+  getPermissionColor(permission: string): string {
+    switch (permission) {
+      case 'VIEW':
+        return 'text-blue-500';
+      case 'EDIT':
+        return 'text-yellow-500';
+      case 'DELETE':
+        return 'text-red-500';
+      default:
+        return 'text-gray-500';
+    }
   }
 }

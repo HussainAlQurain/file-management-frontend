@@ -2,20 +2,24 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { switchMap } from 'rxjs/operators';
+
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzCardModule } from 'ng-zorro-antd/card';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzResultModule } from 'ng-zorro-antd/result';
+import { NzGridModule } from 'ng-zorro-antd/grid';
+import { NzPageHeaderModule } from 'ng-zorro-antd/page-header';
+import { NzBreadCrumbModule } from 'ng-zorro-antd/breadcrumb';
 
 import { UserService } from '../../../core/services/user.service';
 import { SnackbarService } from '../../../core/services/snackbar.service';
 import { User, UserRole } from '../../../core/models/auth.model';
 import { UpdateUserDTO } from '../../../core/services/user.service';
-import { AsyncBtnComponent } from '../../../shared/components/async-btn/async-btn.component';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -25,87 +29,140 @@ import { AuthService } from '../../../core/services/auth.service';
     CommonModule,
     RouterModule,
     ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCardModule,
-    MatProgressSpinnerModule,
-    AsyncBtnComponent
+    NzFormModule,
+    NzInputModule,
+    NzSelectModule,
+    NzButtonModule,
+    NzIconModule,
+    NzCardModule,
+    NzSpinModule,
+    NzResultModule,
+    NzGridModule,
+    NzPageHeaderModule,
+    NzBreadCrumbModule
   ],
   template: `
-    <div class="p-4">
-      <div class="flex items-center mb-6">
-        <button mat-icon-button routerLink="../../" matTooltip="Back to User List">
-          <mat-icon>arrow_back</mat-icon>
-        </button>
-        <h2 class="text-3xl font-bold ml-2">Edit User: {{ userForm.get('username')?.value || '' }}</h2>
-      </div>
+    <div class="p-6">
+      <!-- Page Header -->
+      <nz-page-header class="mb-6" [nzGhost]="false">
+        <nz-breadcrumb nz-page-header-breadcrumb>
+          <nz-breadcrumb-item>
+            <a routerLink="../../">Users</a>
+          </nz-breadcrumb-item>
+          <nz-breadcrumb-item>Edit User</nz-breadcrumb-item>
+        </nz-breadcrumb>
+        
+        <nz-page-header-title>Edit User</nz-page-header-title>
+        <nz-page-header-subtitle>{{ userForm.get('username')?.value || 'Loading...' }}</nz-page-header-subtitle>
+        
+        <nz-page-header-extra>
+          <button nz-button nzType="default" routerLink="../../">
+            <nz-icon nzType="arrow-left"></nz-icon>
+            Back to Users
+          </button>
+        </nz-page-header-extra>
+      </nz-page-header>
 
       @if (isLoadingUser()) {
-        <div class="flex justify-center items-center py-10">
-          <mat-spinner diameter="50"></mat-spinner>
+        <div class="flex justify-center items-center py-20">
+          <nz-spin nzSize="large" nzTip="Loading user..."></nz-spin>
         </div>
       } @else if (!userForm.value.id && !isLoadingUser()) {
-        <mat-card class="text-center p-6">
-          <mat-icon class="text-6xl text-gray-400 mb-4">error_outline</mat-icon>
-          <h3 class="text-xl text-gray-600">User not found.</h3>
-          <p class="mt-2">The user you are trying to edit does not exist or could not be loaded.</p>
-          <button mat-stroked-button routerLink="../../" class="mt-4">Back to User List</button>
-        </mat-card>
+        <nz-result 
+          nzStatus="404" 
+          nzTitle="User Not Found" 
+          nzSubTitle="The user you are trying to edit does not exist or could not be loaded.">
+          <div nz-result-extra>
+            <button nz-button nzType="primary" routerLink="../../">
+              <nz-icon nzType="arrow-left"></nz-icon>
+              Back to Users
+            </button>
+          </div>
+        </nz-result>
       } @else {
-        <mat-card>
-          <mat-card-content>
-            <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <mat-form-field appearance="outline">
-                  <mat-label>Username</mat-label>
-                  <input matInput formControlName="username" required>
-                  @if (userForm.get('username')?.hasError('required')) {
-                    <mat-error>Username is required</mat-error>
-                  }
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Email</mat-label>
-                  <input matInput type="email" formControlName="email" required>
-                  @if (userForm.get('email')?.hasError('required')) {
-                    <mat-error>Email is required</mat-error>
-                  }
-                  @if (userForm.get('email')?.hasError('email')) {
-                    <mat-error>Please enter a valid email address</mat-error>
-                  }
-                </mat-form-field>
-
-                <mat-form-field appearance="outline" class="md:col-span-2">
-                  <mat-label>Roles</mat-label>
-                  <mat-select formControlName="roles" multiple required>
-                    @for (role of userRoles; track role) {
-                      <mat-option [value]="role">{{role}}</mat-option>
-                    }
-                  </mat-select>
-                  @if (userForm.get('roles')?.hasError('required')) {
-                    <mat-error>At least one role is required</mat-error>
-                  }
-                </mat-form-field>
+        <!-- User Form -->
+        <nz-card nzTitle="User Information">
+          <form nz-form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="space-y-6">
+            <div nz-row [nzGutter]="[16, 16]">
+              <div nz-col [nzSpan]="12">
+                <nz-form-item>
+                  <nz-form-label [nzRequired]="true">Username</nz-form-label>
+                  <nz-form-control [nzErrorTip]="usernameErrorTpl">
+                    <input nz-input formControlName="username" placeholder="Enter username">
+                    <ng-template #usernameErrorTpl let-control>
+                      @if (control.hasError('required')) {
+                        <span>Username is required</span>
+                      } @else if (control.hasError('minlength')) {
+                        <span>Username must be at least 3 characters long</span>
+                      }
+                    </ng-template>
+                  </nz-form-control>
+                </nz-form-item>
               </div>
-
-              <div class="mt-8 flex justify-end space-x-3">
-                <button mat-stroked-button routerLink="../../">Cancel</button>
-                <app-async-btn 
-                  type="submit"
-                  [isLoading]="isSubmitting()"
-                  [disabled]="userForm.invalid || !userForm.dirty">
-                  Save Changes
-                </app-async-btn>
+              
+              <div nz-col [nzSpan]="12">
+                <nz-form-item>
+                  <nz-form-label [nzRequired]="true">Email</nz-form-label>
+                  <nz-form-control [nzErrorTip]="emailErrorTpl">
+                    <input nz-input type="email" formControlName="email" placeholder="Enter email address">
+                    <ng-template #emailErrorTpl let-control>
+                      @if (control.hasError('required')) {
+                        <span>Email is required</span>
+                      } @else if (control.hasError('email')) {
+                        <span>Please enter a valid email address</span>
+                      }
+                    </ng-template>
+                  </nz-form-control>
+                </nz-form-item>
               </div>
-            </form>
-          </mat-card-content>
-        </mat-card>
+              
+              <div nz-col [nzSpan]="24">
+                <nz-form-item>
+                  <nz-form-label [nzRequired]="true">Roles</nz-form-label>
+                  <nz-form-control [nzErrorTip]="'At least one role is required'">
+                    <nz-select 
+                      formControlName="roles" 
+                      nzMode="multiple" 
+                      nzPlaceHolder="Select user roles">
+                      @for (role of userRoles; track role) {
+                        <nz-option [nzValue]="role" [nzLabel]="role">
+                          <nz-icon [nzType]="getRoleIcon(role)" class="mr-2"></nz-icon>
+                          {{ role }}
+                        </nz-option>
+                      }
+                    </nz-select>
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex justify-end gap-3 pt-6 border-t">
+              <button nz-button nzType="default" routerLink="../../">
+                <nz-icon nzType="close"></nz-icon>
+                Cancel
+              </button>
+              <button 
+                nz-button 
+                nzType="primary" 
+                [nzLoading]="isSubmitting()"
+                [disabled]="userForm.invalid || !userForm.dirty"
+                type="submit">
+                <nz-icon nzType="save"></nz-icon>
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </nz-card>
       }
     </div>
-  `
+  `,
+  styles: [`
+    nz-page-header {
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+    }
+  `]
 })
 export class UserEditPageComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -209,5 +266,16 @@ export class UserEditPageComponent implements OnInit {
         }
       }
     });
+  }
+
+  getRoleIcon(role: string): string {
+    switch (role) {
+      case 'SYS_ADMIN':
+        return 'crown';
+      case 'USER':
+        return 'user';
+      default:
+        return 'user';
+    }
   }
 }

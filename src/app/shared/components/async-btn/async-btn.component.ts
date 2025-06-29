@@ -1,42 +1,46 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzIconModule } from 'ng-zorro-antd/icon';
 
 @Component({
   selector: 'app-async-btn',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatProgressSpinnerModule],
+  imports: [
+    CommonModule,
+    NzButtonModule,
+    NzIconModule
+  ],
   template: `
-    <button
-      mat-raised-button
-      [color]="color"
+    <button 
+      nz-button 
+      [nzType]="type || 'default'"
+      [nzSize]="size || 'default'"
+      [nzDanger]="danger"
+      [nzGhost]="ghost"
+      [nzLoading]="isLoading"
       [disabled]="disabled || isLoading"
-      [type]="type"
-      (click)="onClick()"
-      class="flex items-center justify-center gap-2"
-    >
-      <mat-spinner *ngIf="isLoading" [diameter]="20"></mat-spinner>
+      [type]="buttonType || 'button'"
+      [class]="customClass">
+      @if (isLoading) {
+        <!-- Loading state is handled by nzLoading -->
+      } @else if (icon) {
+        <nz-icon [nzType]="icon" [nzTheme]="iconTheme || 'outline'"></nz-icon>
+      }
       <ng-content></ng-content>
     </button>
-  `,
-  styles: [`
-    button {
-      min-width: 100px;
-    }
-  `]
+  `
 })
 export class AsyncBtnComponent {
-  @Input() isLoading = false;
-  @Input() disabled = false;
-  @Input() color: 'primary' | 'accent' | 'warn' = 'primary';
-  @Input() type: 'button' | 'submit' = 'button';
-  
-  @Output() btnClick = new EventEmitter<void>();
-  
-  onClick(): void {
-    if (!this.isLoading && !this.disabled) {
-      this.btnClick.emit();
-    }
-  }
+  @Input() isLoading: boolean = false;
+  @Input() disabled: boolean = false;
+  @Input() type: 'primary' | 'default' | 'dashed' | 'text' | 'link' = 'default';
+  @Input() size: 'large' | 'default' | 'small' = 'default';
+  @Input() danger: boolean = false;
+  @Input() ghost: boolean = false;
+  @Input() icon: string = '';
+  @Input() iconTheme: 'outline' | 'fill' | 'twotone' = 'outline';
+  @Input() buttonType: 'button' | 'submit' | 'reset' = 'button';
+  @Input() customClass: string = '';
 }

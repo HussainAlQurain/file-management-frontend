@@ -1,17 +1,18 @@
-import { Component, Input, OnChanges, OnInit, SimpleChanges, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, OnInit, SimpleChanges, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatTabsModule } from '@angular/material/tabs';
 import { HttpClient } from '@angular/common/http';
 import * as XLSX from 'xlsx';
 import { FormsModule } from '@angular/forms';
+
+import { NzCardModule } from 'ng-zorro-antd/card';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzResultModule } from 'ng-zorro-antd/result';
+import { NzSpaceModule } from 'ng-zorro-antd/space';
+
+import { FileDownloadService } from '../../../core/services/file-download.service';
 
 @Component({
   selector: 'app-file-viewer',
@@ -19,219 +20,161 @@ import { FormsModule } from '@angular/forms';
   imports: [
     CommonModule,
     NgxExtendedPdfViewerModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatToolbarModule,
-    MatProgressBarModule,
-    MatTooltipModule,
-    MatTabsModule,
-    FormsModule
+    FormsModule,
+    NzCardModule,
+    NzButtonModule,
+    NzIconModule,
+    NzSpinModule,
+    NzResultModule,
+    NzSpaceModule
   ],
   template: `
-    <div class="file-viewer">
-      <mat-card>
-        <mat-card-header>
-          <div class="flex justify-between items-center w-full">
-            <mat-card-title>
-              {{ fileName || 'Document Viewer' }}
-            </mat-card-title>
+    <nz-card>
+      <div nz-card-meta>
+        <div nz-card-meta-title>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <nz-icon [nzType]="getFileIcon()" class="text-blue-500 mr-3 text-2xl"></nz-icon>
+              <span class="text-lg font-medium">{{ fileName }}</span>
+            </div>
             
-            <div class="flex gap-2">
-              <button mat-icon-button [matTooltip]="'Download ' + fileName" (click)="download()">
-                <mat-icon>download</mat-icon>
+            <nz-space>
+              <button *nzSpaceItem nz-button nzType="primary" nzGhost (click)="download()">
+                <nz-icon nzType="download"></nz-icon>
+                Download
               </button>
-              <button mat-icon-button matTooltip="Close Viewer" (click)="close()">
-                <mat-icon>close</mat-icon>
+              <button *nzSpaceItem nz-button nzType="default" (click)="close()">
+                <nz-icon nzType="close"></nz-icon>
+                Close
               </button>
-            </div>
+            </nz-space>
           </div>
-        </mat-card-header>
-        
-        <mat-card-content>
-          <!-- Loading indicator -->
-          @if (isLoading) {
-            <div class="flex justify-center items-center py-20">
-              <mat-spinner diameter="50"></mat-spinner>
-            </div>
-          }
-          
-          <!-- Error message -->
-          @if (error) {
-            <div class="flex flex-col items-center justify-center py-20 text-center px-4">
-              <mat-icon class="text-5xl text-red-500 mb-4">error_outline</mat-icon>
-              <h3 class="text-xl font-medium mb-2">Error Loading File</h3>
-              <p class="text-gray-600">{{ error }}</p>
-              <button mat-stroked-button color="primary" class="mt-4" (click)="loadFile()">
-                Try Again
+        </div>
+      </div>
+
+      <div nz-card-body class="mt-4">
+        @if (isLoading()) {
+          <div class="text-center py-12">
+            <nz-spin nzSize="large" nzTip="Loading file..."></nz-spin>
+          </div>
+        } @else if (hasError()) {
+          <nz-result 
+            nzStatus="error" 
+            nzTitle="Failed to load file" 
+            [nzSubTitle]="errorMessage()">
+            <div nz-result-extra>
+              <button nz-button nzType="primary" (click)="loadFile()">
+                <nz-icon nzType="reload"></nz-icon>
+                Retry
               </button>
             </div>
-          }
-          
-          <!-- PDF Viewer -->
-          @if (!isLoading && !error && isPdf) {
-            <div class="pdf-container" style="height: 80vh;">
-              <ngx-extended-pdf-viewer 
-                [src]="fileUrl || ''"
-                height="100%"
-                [showToolbar]="true"
-                [showSecondaryToolbarButton]="true"
-                [showOpenFileButton]="false"
-                [showPrintButton]="true"
-                [showDownloadButton]="true"
-                [showPagingButtons]="true"
-                [showZoomButtons]="true"
-                [showFindButton]="true"
-                [zoom]="'auto'"
-                [filenameForDownload]="fileName || 'document.pdf'">
-              </ngx-extended-pdf-viewer>
-            </div>
-          }
-          
-          <!-- Excel Viewer -->
-          @if (!isLoading && !error && isExcel) {
-            <div class="excel-container mt-4">
-              <div class="flex justify-between items-center mb-4">
-                <div>
-                  <span class="font-medium">Sheet: </span>
-                  <select [(ngModel)]="activeSheet" (change)="changeSheet()" class="border rounded p-1 ml-2">
-                    @for (sheet of sheetNames; track sheet) {
-                      <option [value]="sheet">{{ sheet }}</option>
-                    }
-                  </select>
-                </div>
-                
-                <div class="flex gap-2">
-                  <button mat-stroked-button color="primary" *ngIf="hasChanges" (click)="saveExcel()">
-                    <mat-icon>save</mat-icon> Save Changes
-                  </button>
-                  
-                  <button mat-stroked-button (click)="exportExcel()">
-                    <mat-icon>description</mat-icon> Export
-                  </button>
-                </div>
-              </div>
-              
-              <div class="overflow-auto border rounded">
-                <table class="w-full excel-table">
-                  <thead>
-                    <tr>
-                      <th></th> <!-- Corner cell -->
-                      @for (col of excelColumnHeaders; track col) {
-                        <th class="excel-header">{{ col }}</th>
-                      }
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (row of excelData; track row.index; let rowIndex = $index) {
-                      <tr>
-                        <th class="excel-header">{{ rowIndex + 1 }}</th>
-                        @for (cell of row.data; track cell.col; let colIndex = $index) {
-                          <td 
-                            class="excel-cell" 
-                            [class.active]="activeCell.row === rowIndex && activeCell.col === colIndex"
-                            (click)="selectCell(rowIndex, colIndex)">
-                            @if (editingCell.row === rowIndex && editingCell.col === colIndex) {
-                              <input 
-                                #cellInput
-                                type="text" 
-                                class="cell-input" 
-                                [value]="cell.value" 
-                                (blur)="updateCell(rowIndex, colIndex, $event)"
-                                (keydown.enter)="updateCellAndBlur(rowIndex, colIndex, $event)"
-                                (keydown.escape)="cancelEditAndBlur($event)"
-                                (click)="$event.stopPropagation()">
-                            } @else {
-                              {{ cell.value === null ? '' : cell.value }}
-                            }
-                          </td>
-                        }
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          }
-          
-          <!-- Unsupported file type -->
-          @if (!isLoading && !error && !isPdf && !isExcel) {
-            <div class="flex flex-col items-center justify-center py-20 text-center px-4">
-              <mat-icon class="text-5xl text-gray-500 mb-4">insert_drive_file</mat-icon>
-              <h3 class="text-xl font-medium mb-2">Unsupported File Type</h3>
-              <p class="text-gray-600">
-                This file type ({{ fileType }}) cannot be previewed in the browser.
-                You can download the file to view it.
-              </p>
-              <button mat-raised-button color="primary" class="mt-4" (click)="download()">
-                <mat-icon>download</mat-icon> Download File
+          </nz-result>
+        } @else if (fileType === 'pdf') {
+          <div class="pdf-container">
+            <ngx-extended-pdf-viewer 
+              [src]="fileUrl" 
+              [zoom]="'page-fit'"
+              [showToolbar]="true"
+              [showSidebarButton]="true"
+              [showFindButton]="true"
+              [showPagingButtons]="true"
+              [showZoomButtons]="true"
+              [showPresentationModeButton]="true"
+              [showOpenFileButton]="false"
+              [showPrintButton]="true"
+              [showDownloadButton]="false"
+              [showSecondaryToolbarButton]="true"
+              [showRotateButton]="true"
+              [showHandToolButton]="true"
+              [showScrollingButton]="true"
+              [showSpreadButton]="true"
+              [showPropertiesButton]="true"
+              [height]="'70vh'"
+              [useBrowserLocale]="true"
+              backgroundColor="white">
+            </ngx-extended-pdf-viewer>
+          </div>
+        } @else if (fileType === 'excel') {
+          <div class="excel-controls mb-4">
+            <nz-space>
+              @if (hasChanges) {
+                <button *nzSpaceItem nz-button nzType="primary" (click)="saveExcel()">
+                  <nz-icon nzType="save"></nz-icon>
+                  Save Changes
+                </button>
+              }
+              <button *nzSpaceItem nz-button nzType="default" (click)="exportExcel()">
+                <nz-icon nzType="file-excel"></nz-icon>
+                Export
               </button>
-            </div>
-          }
-        </mat-card-content>
-      </mat-card>
-    </div>
+            </nz-space>
+          </div>
+          <div id="excel-container" class="border rounded-lg"></div>
+        } @else if (fileType === 'image') {
+          <div class="text-center">
+            <img [src]="fileUrl" [alt]="fileName" class="max-w-full h-auto rounded-lg shadow-md" />
+          </div>
+        } @else if (fileType === 'text') {
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <pre class="whitespace-pre-wrap font-mono text-sm">{{ textContent }}</pre>
+          </div>
+        } @else {
+          <!-- Generic file display -->
+          <div class="text-center py-12">
+            <nz-icon [nzType]="getFileIcon()" class="text-6xl text-gray-400 mb-4"></nz-icon>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">{{ fileName }}</h3>
+            <p class="text-gray-500 mb-4">Preview not available for this file type</p>
+            <button nz-button nzType="primary" (click)="download()">
+              <nz-icon nzType="download"></nz-icon>
+              Download File
+            </button>
+          </div>
+        }
+      </div>
+    </nz-card>
   `,
-  styles: `
-    .file-viewer {
+  styles: [`
+    .pdf-container {
       width: 100%;
-      height: 100%;
+      height: 70vh;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      overflow: hidden;
     }
-
-    .excel-table {
-      border-collapse: collapse;
-      min-width: 100%;
+    
+    .excel-controls {
+      border-bottom: 1px solid #f0f0f0;
+      padding-bottom: 16px;
+      margin-bottom: 16px;
     }
-
-    .excel-header {
-      background-color: #f3f4f6;
-      padding: 6px 10px;
-      text-align: center;
-      font-weight: 500;
-      border: 1px solid #e5e7eb;
-      position: sticky;
-      top: 0;
-      z-index: 10;
+    
+    #excel-container {
+      min-height: 400px;
+      background: white;
     }
-
-    .excel-cell {
-      border: 1px solid #e5e7eb;
-      padding: 4px 8px;
-      min-width: 80px;
-      height: 28px;
-      position: relative;
+    
+    pre {
+      max-height: 60vh;
+      overflow: auto;
     }
-
-    .excel-cell.active {
-      outline: 2px solid #2563eb;
-      z-index: 5;
-    }
-
-    .cell-input {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
-      padding: 4px 8px;
-      outline: 2px solid #2563eb;
-      z-index: 10;
-    }
-  `
+  `]
 })
 export class FileViewerComponent implements OnInit, OnChanges {
-  private http = inject(HttpClient);
-
-  @Input() fileUrl: string | null = null;
-  @Input() fileName: string | null = null;
-  @Input() fileType: string | null = null;
+  @Input() fileUrl: string = '';
+  @Input() fileName: string = '';
+  @Input() fileType: string = '';
   @Input() documentId: number | null = null;
   @Input() allowEdit: boolean = false;
-  
-  isLoading = true;
-  error: string | null = null;
+  @Output() closeViewer = new EventEmitter<void>();
+
+  private http = inject(HttpClient);
+  private fileDownloadService = inject(FileDownloadService);
+
+  isLoading = signal(false);
+  hasError = signal(false);
+  errorMessage = signal('');
+  textContent = '';
+  hasChanges = false;
   
   // Excel viewer state
   workbook: XLSX.WorkBook | null = null;
@@ -241,7 +184,6 @@ export class FileViewerComponent implements OnInit, OnChanges {
   excelColumnHeaders: string[] = [];
   activeCell: { row: number; col: number } = { row: -1, col: -1 };
   editingCell: { row: number; col: number } = { row: -1, col: -1 };
-  hasChanges: boolean = false;
   
   get isPdf(): boolean {
     return this.fileType === 'application/pdf';
@@ -255,7 +197,9 @@ export class FileViewerComponent implements OnInit, OnChanges {
   }
   
   ngOnInit(): void {
-    this.loadFile();
+    if (this.fileUrl) {
+      this.loadFile();
+    }
   }
   
   ngOnChanges(changes: SimpleChanges): void {
@@ -266,20 +210,23 @@ export class FileViewerComponent implements OnInit, OnChanges {
   
   loadFile(): void {
     if (!this.fileUrl) {
-      this.error = 'No file URL provided';
-      this.isLoading = false;
+      this.errorMessage.set('No file URL provided');
+      this.isLoading.set(false);
       return;
     }
 
-    this.isLoading = true;
-    this.error = null;
+    this.isLoading.set(true);
+    this.hasError.set(false);
+    this.errorMessage.set('');
     
     // For Excel files, we need to fetch and process them
     if (this.isExcel) {
       this.loadExcelFile();
+    } else if (this.fileType === 'text') {
+      this.loadTextFile();
     } else {
       // For PDFs and other file types, the viewer components handle the loading
-      this.isLoading = false;
+      this.isLoading.set(false);
     }
   }
   
@@ -297,20 +244,37 @@ export class FileViewerComponent implements OnInit, OnChanges {
             this.activeSheet = this.sheetNames[0];
             this.processExcelSheet();
           } else {
-            this.error = 'No sheets found in the Excel file';
+            this.errorMessage.set('No sheets found in the Excel file');
           }
           
-          this.isLoading = false;
+          this.isLoading.set(false);
         } catch (err) {
-          this.error = 'Failed to parse Excel file';
-          this.isLoading = false;
+          this.errorMessage.set('Failed to parse Excel file');
+          this.isLoading.set(false);
           console.error('Excel parsing error:', err);
         }
       },
       error: (err) => {
-        this.error = 'Failed to load Excel file';
-        this.isLoading = false;
+        this.errorMessage.set('Failed to load Excel file');
+        this.isLoading.set(false);
         console.error('Excel file loading error:', err);
+      }
+    });
+  }
+  
+  private loadTextFile(): void {
+    if (!this.fileUrl) return;
+    
+    this.http.get(this.fileUrl, { responseType: 'text' }).subscribe({
+      next: (text) => {
+        this.textContent = text;
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        this.hasError.set(true);
+        this.errorMessage.set('Failed to load text file');
+        this.isLoading.set(false);
+        console.error('Text file loading error:', err);
       }
     });
   }
@@ -458,8 +422,39 @@ export class FileViewerComponent implements OnInit, OnChanges {
   }
   
   close(): void {
-    // Emit an event or use a service to notify parent component
-    // For now, this would be handled by the parent via routing
-    window.history.back();
+    this.closeViewer.emit();
+  }
+
+  getFileIcon(): string {
+    const extension = this.fileName.split('.').pop()?.toLowerCase();
+    
+    switch (extension) {
+      case 'pdf':
+        return 'file-pdf';
+      case 'doc':
+      case 'docx':
+        return 'file-word';
+      case 'xls':
+      case 'xlsx':
+        return 'file-excel';
+      case 'ppt':
+      case 'pptx':
+        return 'file-ppt';
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+      case 'bmp':
+        return 'file-image';
+      case 'txt':
+      case 'md':
+        return 'file-text';
+      case 'zip':
+      case 'rar':
+      case '7z':
+        return 'file-zip';
+      default:
+        return 'file';
+    }
   }
 }

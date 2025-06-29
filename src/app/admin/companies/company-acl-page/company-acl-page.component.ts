@@ -1,18 +1,24 @@
-import { Component, OnInit, inject, signal, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
-import { MatSortModule, MatSort } from '@angular/material/sort';
 import { forkJoin } from 'rxjs';
+
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzCardModule } from 'ng-zorro-antd/card';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzTableModule } from 'ng-zorro-antd/table';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzModalService } from 'ng-zorro-antd/modal';
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
+import { NzTagModule } from 'ng-zorro-antd/tag';
+import { NzEmptyModule } from 'ng-zorro-antd/empty';
+import { NzPageHeaderModule } from 'ng-zorro-antd/page-header';
+import { NzBreadCrumbModule } from 'ng-zorro-antd/breadcrumb';
+import { NzGridModule } from 'ng-zorro-antd/grid';
+import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
 
 import { CompanyService } from '../../../core/services/company.service';
 import { UserService, UserDTO } from '../../../core/services/user.service';
@@ -24,7 +30,6 @@ import {
   UpdateUserCompanyResourceTypeAccessDto 
 } from '../../../core/models/company.model';
 import { SnackbarService } from '../../../core/services/snackbar.service';
-import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 interface User {
   id: number;
@@ -44,196 +49,257 @@ interface ResourceType {
   selector: 'app-company-acl-page',
   standalone: true,
   imports: [
+    CommonModule,
     ReactiveFormsModule,
-    MatButtonModule,
-    MatCardModule,
-    MatIconModule,
-    MatTableModule,
-    MatProgressSpinnerModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    MatCheckboxModule,
-    MatPaginatorModule,
-    MatSortModule
+    NzButtonModule,
+    NzCardModule,
+    NzIconModule,
+    NzTableModule,
+    NzSpinModule,
+    NzFormModule,
+    NzSelectModule,
+    NzCheckboxModule,
+    NzTagModule,
+    NzEmptyModule,
+    NzPageHeaderModule,
+    NzBreadCrumbModule,
+    NzGridModule,
+    NzDropDownModule
   ],
   template: `
-    <div class="p-4">
-      <div class="flex items-center gap-4 mb-6">
-        <button mat-icon-button (click)="goBack()">
-          <mat-icon>arrow_back</mat-icon>
-        </button>
-        <h2 class="text-3xl font-bold">Manage Company ACLs</h2>
-        @if (company()) {
-          <span class="text-xl text-gray-600">- {{ company()!.name }}</span>
-        }
-      </div>
+    <div class="p-6">
+      <!-- Page Header -->
+      <nz-page-header class="mb-6" [nzGhost]="false">
+        <nz-breadcrumb nz-page-header-breadcrumb>
+          <nz-breadcrumb-item>
+            <a (click)="goBack()">Companies</a>
+          </nz-breadcrumb-item>
+          <nz-breadcrumb-item>Manage Access</nz-breadcrumb-item>
+        </nz-breadcrumb>
+        
+        <nz-page-header-title>Manage Company Access</nz-page-header-title>
+        <nz-page-header-subtitle>{{ company()?.name || 'Loading...' }}</nz-page-header-subtitle>
+        
+        <nz-page-header-extra>
+          <button nz-button nzType="default" (click)="goBack()">
+            <nz-icon nzType="arrow-left"></nz-icon>
+            Back to Companies
+          </button>
+        </nz-page-header-extra>
+      </nz-page-header>
 
       @if (isLoading()) {
-        <div class="flex justify-center items-center py-8">
-          <mat-spinner diameter="50"></mat-spinner>
+        <div class="flex justify-center items-center py-20">
+          <nz-spin nzSize="large" nzTip="Loading access data..."></nz-spin>
         </div>
       } @else {
-        <!-- Add User Access Form -->
-        <mat-card class="mb-6">
-          <mat-card-header>
-            <mat-card-title>Grant User Access</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <form [formGroup]="accessForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <mat-form-field appearance="outline">
-                <mat-label>User</mat-label>
-                <mat-select formControlName="userId" required>                  @for (user of users(); track user.id) {
-                    <mat-option [value]="user.id">
-                      {{ user.username }} ({{ user.email }})
-                    </mat-option>
-                  }
-                </mat-select>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>Resource Type (Optional)</mat-label>
-                <mat-select formControlName="resourceTypeId">
-                  <mat-option [value]="null">All Resource Types</mat-option>
-                  @for (rt of resourceTypes(); track rt.id) {
-                    <mat-option [value]="rt.id">{{ rt.name }}</mat-option>
-                  }
-                </mat-select>
-              </mat-form-field>
-
-              <div class="flex flex-col gap-2">
-                <label class="text-sm font-medium mb-2">Permissions</label>
-                <mat-checkbox formControlName="canRead">Read</mat-checkbox>
-                <mat-checkbox formControlName="canWrite">Write</mat-checkbox>
-                <mat-checkbox formControlName="canDelete">Delete</mat-checkbox>
-                <mat-checkbox formControlName="canManage">Manage</mat-checkbox>
+        <!-- Grant User Access Form -->
+        <nz-card nzTitle="Grant User Access" class="mb-6">
+          <form nz-form [formGroup]="accessForm" (ngSubmit)="onSubmit()" class="space-y-6">
+            <div nz-row [nzGutter]="[16, 16]">
+              <div nz-col [nzSpan]="8">
+                <nz-form-item>
+                  <nz-form-label [nzRequired]="true">User</nz-form-label>
+                  <nz-form-control [nzErrorTip]="'User is required'">
+                    <nz-select formControlName="userId" nzPlaceHolder="Select a user">
+                      @for (user of users(); track user.id) {
+                        <nz-option [nzValue]="user.id" [nzLabel]="user.username">
+                          <div class="flex flex-col">
+                            <span class="font-medium">{{ user.username }}</span>
+                            <span class="text-xs text-gray-500">{{ user.email }}</span>
+                          </div>
+                        </nz-option>
+                      }
+                    </nz-select>
+                  </nz-form-control>
+                </nz-form-item>
               </div>
-
-              <div class="flex items-end">
-                <button mat-raised-button color="primary" type="submit" 
-                        [disabled]="accessForm.invalid || isSubmitting()" class="w-full">
-                  @if (isSubmitting()) {
-                    <mat-spinner diameter="16" class="mr-2"></mat-spinner>
-                  }
-                  Grant Access
-                </button>
+              
+              <div nz-col [nzSpan]="8">
+                <nz-form-item>
+                  <nz-form-label>Resource Type</nz-form-label>
+                  <nz-form-control>
+                    <nz-select formControlName="resourceTypeId" nzPlaceHolder="All Resource Types" nzAllowClear>
+                      @for (rt of resourceTypes(); track rt.id) {
+                        <nz-option [nzValue]="rt.id" [nzLabel]="rt.name">
+                          <nz-icon nzType="file-text" class="mr-2"></nz-icon>
+                          {{ rt.name }}
+                        </nz-option>
+                      }
+                    </nz-select>
+                  </nz-form-control>
+                </nz-form-item>
               </div>
-            </form>
-          </mat-card-content>
-        </mat-card>
+              
+              <div nz-col [nzSpan]="8">
+                <nz-form-item>
+                  <nz-form-label>&nbsp;</nz-form-label>
+                  <nz-form-control>
+                    <button 
+                      nz-button 
+                      nzType="primary" 
+                      type="submit" 
+                      [nzLoading]="isSubmitting()"
+                      [disabled]="accessForm.invalid || !hasAnyPermission()"
+                      class="w-full">
+                      <nz-icon nzType="plus"></nz-icon>
+                      Grant Access
+                    </button>
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
+            </div>
+            
+            <!-- Permissions Section -->
+            <nz-form-item>
+              <nz-form-label>Permissions</nz-form-label>
+              <nz-form-control>
+                <div class="flex gap-4">
+                  <label nz-checkbox formControlName="canRead">
+                    <nz-icon nzType="eye" class="mr-1"></nz-icon>
+                    Read
+                  </label>
+                  <label nz-checkbox formControlName="canWrite">
+                    <nz-icon nzType="edit" class="mr-1"></nz-icon>
+                    Write
+                  </label>
+                  <label nz-checkbox formControlName="canDelete">
+                    <nz-icon nzType="delete" class="mr-1"></nz-icon>
+                    Delete
+                  </label>
+                  <label nz-checkbox formControlName="canManage">
+                    <nz-icon nzType="setting" class="mr-1"></nz-icon>
+                    Manage
+                  </label>
+                </div>
+              </nz-form-control>
+            </nz-form-item>
+          </form>
+        </nz-card>
 
         <!-- Current Access List -->
-        <mat-card>
-          <mat-card-header>
-            <mat-card-title>Current User Access</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="overflow-x-auto">
-              <table mat-table [dataSource]="dataSource" matSort class="w-full">
-                <!-- User Column -->
-                <ng-container matColumnDef="user">
-                  <th mat-header-cell *matHeaderCellDef mat-sort-header>User</th>
-                  <td mat-cell *matCellDef="let access">{{ access.userName }}</td>
-                </ng-container>
+        <nz-card nzTitle="Current User Access">
+          <nz-table #basicTable [nzData]="accessList()" [nzSize]="'middle'">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Resource Type</th>
+                <th>Permissions</th>
+                <th nzWidth="120px" nzAlign="center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let access of basicTable.data">
+                <td>
+                  <div class="flex items-center">
+                    <nz-icon nzType="user" class="text-blue-500 mr-2"></nz-icon>
+                    <span class="font-medium">{{ access.userName }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="flex items-center">
+                    <nz-icon nzType="file-text" class="text-gray-500 mr-2"></nz-icon>
+                    <span>{{ access.resourceTypeName || 'All Resource Types' }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="flex gap-1 flex-wrap">
+                    @if (access.canRead) {
+                      <nz-tag nzColor="blue">
+                        <nz-icon nzType="eye"></nz-icon>
+                        Read
+                      </nz-tag>
+                    }
+                    @if (access.canWrite) {
+                      <nz-tag nzColor="green">
+                        <nz-icon nzType="edit"></nz-icon>
+                        Write
+                      </nz-tag>
+                    }
+                    @if (access.canDelete) {
+                      <nz-tag nzColor="red">
+                        <nz-icon nzType="delete"></nz-icon>
+                        Delete
+                      </nz-tag>
+                    }
+                    @if (access.canManage) {
+                      <nz-tag nzColor="purple">
+                        <nz-icon nzType="setting"></nz-icon>
+                        Manage
+                      </nz-tag>
+                    }
+                  </div>
+                </td>
+                <td nzAlign="center">
+                  <div class="flex justify-center">
+                    <button 
+                      nz-button 
+                      nzType="text" 
+                      nzSize="small"
+                      nz-dropdown 
+                      [nzDropdownMenu]="menu">
+                      <nz-icon nzType="more" nzTheme="outline"></nz-icon>
+                    </button>
+                    <nz-dropdown-menu #menu="nzDropdownMenu">
+                      <ul nz-menu>
+                        <li nz-menu-item (click)="editAccess(access)">
+                          <nz-icon nzType="edit" nzTheme="outline"></nz-icon>
+                          Edit Access
+                        </li>
+                        <li nz-menu-divider></li>
+                        <li nz-menu-item (click)="deleteAccess(access)" class="text-red-500">
+                          <nz-icon nzType="delete" nzTheme="outline"></nz-icon>
+                          Remove Access
+                        </li>
+                      </ul>
+                    </nz-dropdown-menu>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </nz-table>
 
-                <!-- Resource Type Column -->
-                <ng-container matColumnDef="resourceType">
-                  <th mat-header-cell *matHeaderCellDef>Resource Type</th>
-                  <td mat-cell *matCellDef="let access">
-                    {{ access.resourceTypeName || 'All Resource Types' }}
-                  </td>
-                </ng-container>
-
-                <!-- Permissions Column -->
-                <ng-container matColumnDef="permissions">
-                  <th mat-header-cell *matHeaderCellDef>Permissions</th>
-                  <td mat-cell *matCellDef="let access">
-                    <div class="flex gap-1 flex-wrap">
-                      @if (access.canRead) {
-                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Read</span>
-                      }
-                      @if (access.canWrite) {
-                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Write</span>
-                      }
-                      @if (access.canDelete) {
-                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs">Delete</span>
-                      }
-                      @if (access.canManage) {
-                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Manage</span>
-                      }
-                    </div>
-                  </td>
-                </ng-container>
-
-                <!-- Actions Column -->
-                <ng-container matColumnDef="actions">
-                  <th mat-header-cell *matHeaderCellDef>Actions</th>
-                  <td mat-cell *matCellDef="let access">
-                    <div class="flex gap-2">
-                      <button mat-icon-button (click)="editAccess(access)" matTooltip="Edit Access">
-                        <mat-icon>edit</mat-icon>
-                      </button>
-                      <button mat-icon-button color="warn" (click)="deleteAccess(access)" matTooltip="Remove Access">
-                        <mat-icon>delete</mat-icon>
-                      </button>
-                    </div>
-                  </td>
-                </ng-container>
-
-                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-              </table>
-            </div>
-
-            @if (dataSource.data.length === 0) {
-              <div class="text-center py-8 text-gray-500">
-                <mat-icon class="text-6xl mb-4">security</mat-icon>
-                <p class="text-lg">No user access granted</p>
-                <p>Grant access to users to get started</p>
+          <!-- Empty State -->
+          @if (accessList().length === 0) {
+            <nz-empty 
+              nzNotFoundImage="simple" 
+              nzNotFoundContent="No user access granted">
+              <div nz-empty-footer>
+                <span class="text-gray-500">Grant access to users using the form above</span>
               </div>
-            }
-
-            <mat-paginator
-              [pageSizeOptions]="[5, 10, 25, 100]"
-              [pageSize]="10"
-              showFirstLastButtons>
-            </mat-paginator>
-          </mat-card-content>
-        </mat-card>
+            </nz-empty>
+          }
+        </nz-card>
       }
     </div>
   `,
   styles: [`
-    .mat-mdc-table {
-      width: 100%;
+    nz-page-header {
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
     }
     
-    .mat-mdc-row:hover {
-      background-color: #f5f5f5;
+    nz-table ::ng-deep .ant-table-tbody > tr:hover > td {
+      background: #f5f5f5;
     }
   `]
 })
-export class CompanyAclPageComponent implements OnInit, AfterViewInit {
+export class CompanyAclPageComponent implements OnInit {
   private companyService = inject(CompanyService);
   private userService = inject(UserService);
   private resourceTypeService = inject(ResourceTypeService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private dialog = inject(MatDialog);
+  private modal = inject(NzModalService);
   private snackbar = inject(SnackbarService);
   private fb = inject(FormBuilder);
-
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
 
   isLoading = signal(false);
   isSubmitting = signal(false);
   company = signal<Company | null>(null);
   users = signal<User[]>([]);
   resourceTypes = signal<ResourceType[]>([]);
-  
-  dataSource = new MatTableDataSource<UserCompanyResourceTypeAccessDto>([]);
-  displayedColumns = ['user', 'resourceType', 'permissions', 'actions'];
+  accessList = signal<UserCompanyResourceTypeAccessDto[]>([]);
 
   accessForm: FormGroup = this.fb.group({
     userId: [null, [Validators.required]],
@@ -248,16 +314,11 @@ export class CompanyAclPageComponent implements OnInit, AfterViewInit {
     this.loadData();
   }
 
-  ngAfterViewInit() {
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
-  }
-
   loadData() {
     const companyId = Number(this.route.snapshot.paramMap.get('id'));
     if (companyId) {
       this.isLoading.set(true);
-        forkJoin({
+      forkJoin({
         company: this.companyService.get(companyId),
         users: this.userService.getAllUsers(),
         resourceTypes: this.resourceTypeService.listAllNonPaged(),
@@ -267,7 +328,7 @@ export class CompanyAclPageComponent implements OnInit, AfterViewInit {
           this.company.set(data.company);
           this.users.set(data.users);
           this.resourceTypes.set(data.resourceTypes.filter(rt => rt.companyId === companyId));
-          this.dataSource.data = data.userAccess;
+          this.accessList.set(data.userAccess);
           this.isLoading.set(false);
         },
         error: (error) => {
@@ -279,8 +340,13 @@ export class CompanyAclPageComponent implements OnInit, AfterViewInit {
     }
   }
 
+  hasAnyPermission(): boolean {
+    const form = this.accessForm.value;
+    return form.canRead || form.canWrite || form.canDelete || form.canManage;
+  }
+
   onSubmit() {
-    if (this.accessForm.valid && this.company()) {
+    if (this.accessForm.valid && this.company() && this.hasAnyPermission()) {
       this.isSubmitting.set(true);
       
       const accessData: CreateUserCompanyResourceTypeAccessDto = {
@@ -310,7 +376,7 @@ export class CompanyAclPageComponent implements OnInit, AfterViewInit {
   }
 
   editAccess(access: UserCompanyResourceTypeAccessDto) {
-    // For now, just allow updating permissions
+    // Populate form with existing access for editing
     this.accessForm.patchValue({
       userId: access.userId,
       resourceTypeId: access.resourceTypeId,
@@ -322,27 +388,24 @@ export class CompanyAclPageComponent implements OnInit, AfterViewInit {
   }
 
   deleteAccess(access: UserCompanyResourceTypeAccessDto) {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: {
-        title: 'Remove Access',
-        message: `Are you sure you want to remove access for "${access.userName}"?`,
-        confirmText: 'Remove',
-        cancelText: 'Cancel'
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result && access.id) {
-        this.companyService.deleteUserAccess(access.id).subscribe({
-          next: () => {
+    this.modal.confirm({
+      nzTitle: 'Remove Access',
+      nzContent: `Are you sure you want to remove access for "${access.userName}"?`,
+      nzOkText: 'Remove',
+      nzOkType: 'primary',
+      nzOkDanger: true,
+      nzCancelText: 'Cancel',
+      nzOnOk: () => {
+        if (access.id) {
+          return this.companyService.deleteUserAccess(access.id).toPromise().then(() => {
             this.snackbar.success('User access removed successfully');
             this.loadData();
-          },
-          error: (error) => {
+          }).catch((error) => {
             console.error('Error removing access:', error);
             this.snackbar.error('Failed to remove user access');
-          }
-        });
+          });
+        }
+        return Promise.resolve();
       }
     });
   }

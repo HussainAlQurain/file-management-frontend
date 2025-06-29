@@ -11,6 +11,8 @@ import { NZ_I18N, en_US } from 'ng-zorro-antd/i18n';
 import { NZ_ICONS } from 'ng-zorro-antd/icon';
 import { IconDefinition } from '@ant-design/icons-angular';
 import * as AllIcons from '@ant-design/icons-angular/icons';
+import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzMessageModule } from 'ng-zorro-antd/message';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
@@ -49,6 +51,6 @@ export const appConfig: ApplicationConfig = {
     // NG-ZORRO providers
     { provide: NZ_I18N, useValue: en_US },
     { provide: NZ_ICONS, useValue: icons },
-    importProvidersFrom(FormsModule)
+    importProvidersFrom(FormsModule, NzModalModule, NzMessageModule)
   ]
 };
