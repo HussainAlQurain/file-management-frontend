@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, WritableSignal, computed, OnDestroy 
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 
 // NG-ZORRO imports
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -35,9 +36,11 @@ import { SnackbarService } from '../../core/services/snackbar.service';
 import { FileSizePipe } from '../../shared/pipes/file-size.pipe';
 import { environment } from '../../../environments/environment';
 import { ReminderService, ReminderDTO } from '../../core/services/reminder.service';
+import { UserService, UserDTO } from '../../core/services/user.service';
+import { User } from '../../core/models/auth.model';
 import { ReminderDialogComponent } from '../components/reminder-dialog/reminder-dialog.component';
 import { AuthService } from '../../core/services/auth.service';
-import { MatDialog } from '@angular/material/dialog';
+import { NzModalService } from 'ng-zorro-antd/modal';
 
 @Component({
   selector: 'app-document-detail-page',
@@ -349,7 +352,7 @@ import { MatDialog } from '@angular/material/dialog';
                           <nz-descriptions-item nzTitle="Created">{{ version.createdAt | date:'medium' }}</nz-descriptions-item>
                           <nz-descriptions-item nzTitle="Size">{{ version.sizeBytes | fileSize }}</nz-descriptions-item>
                           <nz-descriptions-item nzTitle="Checksum">
-                            <span class="text-xs font-mono">{{ version.checksumSha256.substring(0, 16) }}...</span>
+                            <span class="text-xs font-mono">{{ version.checksumSha256 ? version.checksumSha256.substring(0, 16) + '...' : 'N/A' }}</span>
                           </nz-descriptions-item>
                         </nz-descriptions>
                         <nz-space style="margin-top: 12px;">
@@ -516,12 +519,14 @@ import { MatDialog } from '@angular/material/dialog';
 export class DocumentDetailPageComponent implements OnInit, OnDestroy {
   private documentService = inject(DocumentService);
   private reminderService = inject(ReminderService);
+  private userService = inject(UserService);
   private authService = inject(AuthService);
-  private dialog = inject(MatDialog);
+  private modal = inject(NzModalService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private snackbar = inject(SnackbarService);
   private message = inject(NzMessageService);
+  private http = inject(HttpClient);
 
   isLoading = signal(true);
   document: WritableSignal<Document | null> = signal(null);
@@ -617,14 +622,19 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
   loadReminders(documentId: number): void {
     this.reminderService.getForDocument(documentId).subscribe({
       next: reminders => {
-        this.reminders = reminders;
-        if (this.isAdmin) {
+        this.reminders = reminders || [];
+        if (this.isAdmin && this.reminders.length > 0) {
           // For admin, fetch user names for display
           this.reminders.forEach(r => {
             if (r.userId && !this.userMap[r.userId]) {
-              // Fetch user info (ideally batch, but for now per user)
-              this.documentService['http'].get<any>(`${environment.apiBase}/users/${r.userId}`).subscribe(u => {
-                this.userMap[r.userId!] = u.username;
+              // Use HTTP directly like in the working version
+              this.http.get<any>(`${environment.apiBase}/users/${r.userId}`).subscribe({
+                next: (u) => {
+                  this.userMap[r.userId!] = u.username;
+                },
+                error: () => {
+                  this.userMap[r.userId!] = `User ${r.userId}`;
+                }
               });
             }
           });
@@ -632,6 +642,7 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
       },
       error: err => {
         this.reminders = [];
+        this.message.error('Failed to load reminders: ' + (err.error?.message || err.message));
       }
     });
   }
@@ -709,18 +720,44 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
   }
 
   openReminderDialog(reminder?: ReminderDTO) {
-    const dialogRef = this.dialog.open(ReminderDialogComponent, {
-      width: '500px',
-      data: {
+    const modalRef = this.modal.create({
+      nzTitle: reminder ? 'Edit Reminder' : 'Add Reminder',
+      nzContent: ReminderDialogComponent,
+      nzData: {
         documentId: this.documentId(),
         reminder: reminder,
         isAdmin: this.isAdmin
-      }
+      },
+      nzWidth: '500px',
+      nzFooter: null
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    modalRef.afterClose.subscribe((result: ReminderDTO | undefined) => {
       if (result) {
-        this.loadReminders(this.documentId()!);
+        // Save the reminder
+        if (reminder?.id) {
+          // Update existing reminder
+          this.reminderService.update(reminder.id, result).subscribe({
+            next: () => {
+              this.message.success('Reminder updated successfully');
+              this.loadReminders(this.documentId()!);
+            },
+            error: (err) => {
+              this.message.error('Failed to update reminder: ' + (err.error?.message || err.message));
+            }
+          });
+        } else {
+          // Create new reminder
+          this.reminderService.create(result).subscribe({
+            next: () => {
+              this.message.success('Reminder created successfully');
+              this.loadReminders(this.documentId()!);
+            },
+            error: (err) => {
+              this.message.error('Failed to create reminder: ' + (err.error?.message || err.message));
+            }
+          });
+        }
       }
     });
   }

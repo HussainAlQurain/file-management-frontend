@@ -83,7 +83,7 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
         </nz-steps>
         
         <div class="steps-content">
-          <!-- Step 1: Select Company -->
+        <!-- Step 1: Select Company -->
           <div *ngIf="currentStep === 0" class="step-container">
             <form nz-form [formGroup]="companyForm" nzLayout="vertical">
               <h3 nz-typography>Select Company</h3>
@@ -109,9 +109,9 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
                 </nz-form-control>
               </nz-form-item>
             </form>
-          </div>
+            </div>
 
-          <!-- Step 2: Select Resource Type -->
+        <!-- Step 2: Select Resource Type -->
           <div *ngIf="currentStep === 1" class="step-container">
             <form nz-form [formGroup]="resourceTypeForm" nzLayout="vertical">
               <h3 nz-typography>Select Document Type</h3>
@@ -151,8 +151,8 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
                   *ngIf="resourceTypes().length === 0" 
                   nzNotFoundContent="No document types available for this company">
                 </nz-empty>
-              </div>
-            </form>
+            </div>
+          </form>
           </div>
 
           <!-- Step 3: Fill Metadata -->
@@ -184,10 +184,10 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
                 <nz-form-item>
                   <nz-form-label>Parent Document</nz-form-label>
                   <nz-form-control>
-                    <input 
+              <input 
                       nz-input 
-                      formControlName="parentSearch" 
-                      placeholder="Search for parent document..."
+                formControlName="parentSearch" 
+                placeholder="Search for parent document..." 
                       [nzAutocomplete]="auto" />
                     <nz-autocomplete #auto>
                       <nz-auto-option 
@@ -544,7 +544,7 @@ export class DocumentCreatePageComponent implements OnInit {
   // File upload options
   maxFileSize = 100 * 1024 * 1024; // 100MB
   allowedFileExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'jpg', 'jpeg', 'png', 'zip', 'rar'];
-
+  
   companyForm: FormGroup = this.fb.group({
     companyId: ['', Validators.required]
   });
@@ -746,7 +746,7 @@ export class DocumentCreatePageComponent implements OnInit {
   }
 
   removePrimaryFile(): void {
-    this.primaryFile.set(null);
+      this.primaryFile.set(null);
   }
 
   getFileSize(bytes: number): string {
@@ -840,16 +840,17 @@ export class DocumentCreatePageComponent implements OnInit {
     const result: Record<string, string> = {};
     
     for (const [key, value] of Object.entries(fieldValues)) {
-      if (value === null || value === undefined) {
-        result[key] = '';
-      } else if (typeof value === 'boolean') {
+        if (value === null || value === undefined) {
+          result[key] = '';
+        } else if (typeof value === 'boolean') {
         result[key] = value.toString();
       } else if (value instanceof Date) {
-        result[key] = value.toISOString();
+        // Format date as YYYY-MM-DD for backend compatibility
+        result[key] = value.toISOString().split('T')[0];
       } else if (typeof value === 'object') {
         result[key] = JSON.stringify(value);
-      } else {
-        result[key] = String(value);
+        } else {
+          result[key] = String(value);
       }
     }
     

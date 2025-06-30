@@ -81,8 +81,8 @@ import { Company } from '../../core/models/company.model';
             </button>
             <button *nzSpaceItem nz-button nzType="primary" routerLink="/documents/new">
               <span nz-icon nzType="plus" nzTheme="outline"></span>
-              New Document
-            </button>
+          New Document
+        </button>
           </nz-space>
         </nz-page-header-extra>
         <nz-page-header-content>
@@ -181,7 +181,7 @@ import { Company } from '../../core/models/company.model';
               <button *nzSpaceItem nz-button nzType="default" nzBlock (click)="resetFilters()">
                 <span nz-icon nzType="reload" nzTheme="outline"></span>
                 Reset Filters
-              </button>
+        </button>
             </nz-space>
           </form>
         </ng-container>
@@ -379,13 +379,13 @@ export class DocumentListPageComponent implements OnInit {
     return this.query.page ?? 0;
   }
   
-  ngOnInit(): void {
+    ngOnInit(): void {
     this.loadResourceTypes();
     this.loadCompanies();
     this.initializeFromQueryParams();
   }
   
-  initializeFromQueryParams(): void {
+    initializeFromQueryParams(): void {
     this.route.queryParams
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => {
@@ -533,7 +533,7 @@ export class DocumentListPageComponent implements OnInit {
     this.query.page = index - 1; // NZ-Table uses 1-based index
     this.loadDocuments();
   }
-  
+
   downloadDocument(doc: Document): void {
     if (!doc.storageKey) return;
     
