@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -183,13 +183,15 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
 
                 <nz-form-item>
                   <nz-form-label>Parent Document</nz-form-label>
-                  <nz-form-control>
-              <input 
+                  <nz-form-control nzExtra="Select a parent document of the same type (optional)">
+                    <input 
                       nz-input 
-                formControlName="parentSearch" 
-                placeholder="Search for parent document..." 
-                      [nzAutocomplete]="auto" />
-                    <nz-autocomplete #auto>
+                      formControlName="parentSearch" 
+                      placeholder="Search for parent document..." 
+                      [nzAutocomplete]="auto"
+                      (focus)="onParentSearchFocus()"
+                      (input)="onParentSearchInput($event)" />
+                    <nz-autocomplete #auto (selectionChange)="onParentSelected($event)">
                       <nz-auto-option 
                         *ngIf="isSearchingParents()" 
                         nzDisabled 
@@ -198,23 +200,34 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
                         Searching...
                       </nz-auto-option>
                       <nz-auto-option 
-                        *ngIf="!isSearchingParents() && parentSearchResults().length === 0 && parentSearchQuery().length > 0" 
+                        *ngIf="!isSearchingParents() && parentSearchResults().length === 0 && (parentSearchQuery().length > 0 || hasSearchedOnFocus)" 
                         nzDisabled 
                         nzCustomContent>
-                        No documents found
+                        <span *ngIf="!selectedResourceType()">Please select a document type first</span>
+                        <span *ngIf="selectedResourceType()">No documents found</span>
                       </nz-auto-option>
                       <nz-auto-option 
                         *ngFor="let doc of parentSearchResults()" 
-                        [nzValue]="doc" 
-                        [nzLabel]="doc.title">
-                        <div class="parent-option">
-                          <div>{{ doc.title }}</div>
+                        [nzValue]="getParentDisplayText(doc)" 
+                        [nzLabel]="getParentDisplayText(doc)">
+                        <div class="parent-option" (click)="selectParentDocument(doc)">
+                          <div class="option-title">{{ doc.title }}</div>
                           <div class="option-meta">
                             <nz-tag nzColor="cyan">{{ doc.resourceCode }}</nz-tag>
+                            <span *ngIf="doc.resourceTypeName" class="resource-type">{{ doc.resourceTypeName }}</span>
                           </div>
                         </div>
                       </nz-auto-option>
                     </nz-autocomplete>
+                    <button 
+                      *ngIf="metadataForm.get('parentId')?.value" 
+                      nz-button 
+                      nzType="text" 
+                      nzSize="small"
+                      (click)="clearParentSelection()"
+                      style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); z-index: 10;">
+                      <span nz-icon nzType="close" nzTheme="outline"></span>
+                    </button>
                   </nz-form-control>
                 </nz-form-item>
 
@@ -460,6 +473,17 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
       padding: 4px 0;
     }
 
+    .parent-option .option-title {
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .parent-option .resource-type {
+      color: rgba(0, 0, 0, 0.45);
+      font-size: 12px;
+      margin-left: 8px;
+    }
+
     .upload-section {
       max-width: 500px;
       margin: 0 auto;
@@ -515,7 +539,7 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
   `],
   providers: [NzMessageService]
 })
-export class DocumentCreatePageComponent implements OnInit {
+export class DocumentCreatePageComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private resourceTypeService = inject(ResourceTypeService);
@@ -540,6 +564,8 @@ export class DocumentCreatePageComponent implements OnInit {
   isSearchingParents = signal(false);
   parentSearchQuery = signal('');
   parentSearchResults = signal<Document[]>([]);
+  hasSearchedOnFocus = false;
+  private searchTimeout: any;
 
   // File upload options
   maxFileSize = 100 * 1024 * 1024; // 100MB
@@ -590,49 +616,122 @@ export class DocumentCreatePageComponent implements OnInit {
     this.setupParentDocumentSearch();
   }
 
+  ngOnDestroy(): void {
+    // Clean up search timeout to prevent memory leaks
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+  }
+
   setupParentDocumentSearch(): void {
-    this.metadataForm.get('parentSearch')?.valueChanges.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      tap(value => {
-        if (typeof value === 'string') {
-          this.parentSearchQuery.set(value);
-          this.isSearchingParents.set(value.length > 0);
-        }
-      }),
-      switchMap(value => {
-        // If the value is an object, it means an option was selected
-        if (typeof value === 'object' && value !== null) {
-          this.metadataForm.patchValue({ parentId: value.id });
-          return of([]);
-        }
-        
-        // Otherwise search for documents matching the query
-        if (typeof value === 'string' && value.length > 2) {
-          return this.searchDocuments(value).pipe(
-            catchError(() => {
-              this.snackbar.error('Failed to search for documents');
-              return of([]);
-            })
-          );
-        }
-        
-        return of([]);
-      })
-    ).subscribe(results => {
-      this.parentSearchResults.set(results);
-      this.isSearchingParents.set(false);
-    });
+    // Parent document search is now handled through direct input events
+    // and focus events rather than FormControl valueChanges to avoid conflicts
   }
 
   searchDocuments(query: string): Observable<Document[]> {
-    return this.documentService.list({
-      titleContains: query,
+    const searchParams: any = {
       page: 0,
-      size: 10
-    }).pipe(
+      size: 10 // Limit to 10 results for autocomplete
+    };
+
+    // Add title search if query is not empty
+    if (query && query.trim().length > 0) {
+      searchParams.titleContains = query.trim();
+    }
+
+    // Filter by same resource type if available
+    const selectedResourceTypeId = this.resourceTypeForm.get('resourceTypeId')?.value;
+    if (selectedResourceTypeId) {
+      searchParams.resourceTypeIdEquals = selectedResourceTypeId;
+    }
+
+    // Filter by company if available
+    const selectedCompanyId = this.companyForm.get('companyId')?.value;
+    if (selectedCompanyId) {
+      searchParams.companyIdEquals = selectedCompanyId;
+    }
+
+    return this.documentService.list(searchParams).pipe(
       map(page => page.content)
     );
+  }
+
+  onParentSearchFocus(): void {
+    // Trigger search with empty string to show initial results
+    if (this.selectedResourceType()) {
+      this.hasSearchedOnFocus = true;
+      
+      // Force trigger a search with empty string to show initial results
+      this.isSearchingParents.set(true);
+      this.searchDocuments('').subscribe({
+        next: (results) => {
+          this.parentSearchResults.set(results);
+          this.isSearchingParents.set(false);
+        },
+        error: (error) => {
+          this.isSearchingParents.set(false);
+        }
+      });
+    }
+  }
+
+  onParentSearchInput(event: any): void {
+    const value = event.target.value;
+    
+    // Clear existing timeout
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    
+    if (value.length >= 2) {
+      this.isSearchingParents.set(true);
+      
+      // Debounce the search by 300ms
+      this.searchTimeout = setTimeout(() => {
+        this.searchDocuments(value).subscribe({
+          next: (results) => {
+            this.parentSearchResults.set(results);
+            this.isSearchingParents.set(false);
+          },
+          error: (error) => {
+            this.isSearchingParents.set(false);
+          }
+        });
+      }, 300);
+    } else if (value.length === 0) {
+      // Clear results when input is empty
+      this.parentSearchResults.set([]);
+      this.isSearchingParents.set(false);
+    } else {
+      // For 1 character, just clear results
+      this.parentSearchResults.set([]);
+      this.isSearchingParents.set(false);
+    }
+  }
+
+  selectParentDocument(doc: Document): void {
+    this.metadataForm.patchValue({ 
+      parentId: doc.id,
+      parentSearch: this.getParentDisplayText(doc)
+    });
+    this.parentSearchResults.set([]); // Hide dropdown after selection
+  }
+
+  onParentSelected(event: any): void {
+    // This method might not be needed anymore since we're using click events
+  }
+
+  getParentDisplayText(doc: Document): string {
+    return `${doc.title} (${doc.resourceCode})`;
+  }
+
+  clearParentSelection(): void {
+    this.metadataForm.patchValue({
+      parentSearch: '',
+      parentId: null
+    });
+    this.parentSearchResults.set([]);
+    this.hasSearchedOnFocus = false;
   }
 
   loadCompanies(): void {
@@ -654,6 +753,14 @@ export class DocumentCreatePageComponent implements OnInit {
     this.selectedCompany.set(company);
     this.selectedResourceType.set(undefined);
     this.resourceTypeForm.patchValue({ resourceTypeId: '' });
+    
+    // Clear parent selection when company changes
+    this.metadataForm.patchValue({
+      parentSearch: '',
+      parentId: null
+    });
+    this.parentSearchResults.set([]);
+    this.hasSearchedOnFocus = false;
     
     if (company) {
       this.loadResourceTypesForCompany(companyId);
@@ -681,6 +788,14 @@ export class DocumentCreatePageComponent implements OnInit {
     const resourceType = this.resourceTypes().find(rt => rt.id === resourceTypeId);
     
     if (resourceType) {
+      // Clear parent selection when resource type changes
+      this.metadataForm.patchValue({
+        parentSearch: '',
+        parentId: null
+      });
+      this.parentSearchResults.set([]);
+      this.hasSearchedOnFocus = false;
+
       // Check if fields are already available
       if (resourceType.fields && resourceType.fields.length > 0) {
         this.selectedResourceType.set(resourceType);
