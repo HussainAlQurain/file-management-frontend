@@ -206,10 +206,16 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
 
                   <nz-form-item>
                     <nz-form-control>
-                      <label nz-checkbox formControlName="required">
-                        <nz-icon nzType="exclamation-circle" class="mr-1"></nz-icon>
-                        Required field
-                      </label>
+                      <div class="flex items-center gap-4">
+                        <label nz-checkbox formControlName="required">
+                          <nz-icon nzType="exclamation-circle" class="mr-1"></nz-icon>
+                          Required field
+                        </label>
+                        <label nz-checkbox formControlName="uniqueWithinType">
+                          <nz-icon nzType="safety-certificate" class="mr-1"></nz-icon>
+                          Unique within type
+                        </label>
+                      </div>
                     </nz-form-control>
                   </nz-form-item>
                 </div>
@@ -302,6 +308,7 @@ export class ResourceTypeCreatePageComponent implements OnInit {
       label: ['', Validators.required],
       type: [null, Validators.required],
       required: [false],
+      uniqueWithinType: [false],
       options: [''], // Comma-separated string
       order: [this.fields.length] // Set order based on current length
     });
@@ -395,7 +402,7 @@ export class ResourceTypeCreatePageComponent implements OnInit {
         label: f.label,
         kind,
         required: f.required,
-        uniqueWithinType: false, // or add to form if needed
+        uniqueWithinType: f.uniqueWithinType || false,
         options
       };
     });
