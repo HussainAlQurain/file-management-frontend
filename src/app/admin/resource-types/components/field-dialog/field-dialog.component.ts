@@ -37,14 +37,16 @@ export interface FieldDialogData {
       <mat-dialog-content>
         <form [formGroup]="fieldForm" *ngIf="data.action !== 'delete'" class="field-form">
           <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Field Name</mat-label>
-            <input matInput formControlName="name" required>
-            <mat-error *ngIf="fieldForm.get('name')?.hasError('required')">
-              Field name is required
+            <mat-label>Field Label</mat-label>
+            <input matInput formControlName="label" required>
+            <mat-error *ngIf="fieldForm.get('label')?.hasError('required')">
+              Field label is required
             </mat-error>
-            <mat-error *ngIf="fieldForm.get('name')?.hasError('pattern')">
-              Field name must be alphanumeric and underscores only
-            </mat-error>
+          </mat-form-field>
+          
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Field Name (Auto-generated)</mat-label>
+            <input matInput formControlName="name" readonly placeholder="Auto-generated from label">
           </mat-form-field>
           
           <mat-form-field appearance="outline" class="w-full">
@@ -109,10 +111,19 @@ export class FieldDialogComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: FieldDialogData
   ) {
     this.fieldForm = this.fb.group({
-      name: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9_]+$/)]],
+      name: [''], // Auto-generated, no validation needed
+      label: ['', Validators.required],
       kind: [null, Validators.required],
       required: [false],
       uniqueWithinType: [false]
+    });
+
+    // Auto-generate field name when label changes
+    this.fieldForm.get('label')?.valueChanges.subscribe(label => {
+      if (label) {
+        const generatedName = this.generateFieldName(label);
+        this.fieldForm.get('name')?.setValue(generatedName);
+      }
     });
   }
   
@@ -120,11 +131,24 @@ export class FieldDialogComponent implements OnInit {
     if (this.data.action === 'edit' && this.data.field) {
       this.fieldForm.patchValue({
         name: this.data.field.name,
+        label: this.data.field.label || this.data.field.name, // Use label if available, fallback to name
         kind: this.data.field.kind,
         required: this.data.field.required,
         uniqueWithinType: this.data.field.uniqueWithinType
       });
     }
+  }
+
+  generateFieldName(label: string): string {
+    if (!label) return '';
+    
+    return label
+      .toLowerCase()
+      .trim()
+      .replace(/[^\p{L}\p{N}\s-]/gu, '') // Keep letters (including Arabic), numbers, spaces, hyphens
+      .replace(/[\s-]+/g, '_')  // Replace spaces and hyphens with underscores
+      .replace(/^_+|_+$/g, '')  // Remove leading/trailing underscores
+      .substring(0, 50);        // Limit length to 50 chars to match database
   }
   
   submit(): void {
@@ -137,7 +161,13 @@ export class FieldDialogComponent implements OnInit {
       return;
     }
     
-    const fieldData: CreateFieldDto = this.fieldForm.value;
+    const fieldData: CreateFieldDto = {
+      name: this.fieldForm.value.name,
+      label: this.fieldForm.value.label,
+      kind: this.fieldForm.value.kind,
+      required: this.fieldForm.value.required,
+      uniqueWithinType: this.fieldForm.value.uniqueWithinType
+    };
     this.dialogRef.close(fieldData);
   }
 }

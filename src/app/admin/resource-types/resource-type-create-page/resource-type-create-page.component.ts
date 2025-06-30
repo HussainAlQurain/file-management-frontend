@@ -89,15 +89,8 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
             <div nz-col [nzSpan]="8">
               <nz-form-item>
                 <nz-form-label [nzRequired]="true">Code</nz-form-label>
-                <nz-form-control [nzErrorTip]="codeErrorTpl">
-                  <input nz-input formControlName="code" placeholder="e.g. INVOICE_2024">
-                  <ng-template #codeErrorTpl let-control>
-                    @if (control.hasError('required')) {
-                      <span>Code is required</span>
-                    } @else if (control.hasError('pattern')) {
-                      <span>Code must contain only uppercase letters, numbers, and underscores</span>
-                    }
-                  </ng-template>
+                <nz-form-control [nzErrorTip]="'Code is required'">
+                  <input nz-input formControlName="code" placeholder="e.g. Invoice 2024, Contract, فاتورة">
                 </nz-form-control>
               </nz-form-item>
             </div>
@@ -149,32 +142,29 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
 
                 <div [formGroupName]="i">
                   <div nz-row [nzGutter]="[16, 16]">
-                    <div nz-col [nzSpan]="8">
-                      <nz-form-item>
-                        <nz-form-label [nzRequired]="true">Field Name</nz-form-label>
-                        <nz-form-control [nzErrorTip]="fieldNameErrorTpl">
-                          <input nz-input formControlName="name" placeholder="e.g. invoice_number">
-                          <ng-template #fieldNameErrorTpl let-control>
-                            @if (control.hasError('required')) {
-                              <span>Field name is required</span>
-                            } @else if (control.hasError('pattern')) {
-                              <span>Field name must be alphanumeric and underscores only</span>
-                            }
-                          </ng-template>
-                        </nz-form-control>
-                      </nz-form-item>
-                    </div>
-                    
-                    <div nz-col [nzSpan]="8">
+                    <div nz-col [nzSpan]="12">
                       <nz-form-item>
                         <nz-form-label [nzRequired]="true">Field Label</nz-form-label>
                         <nz-form-control [nzErrorTip]="'Field label is required'">
-                          <input nz-input formControlName="label" placeholder="e.g. Invoice Number">
+                          <input nz-input formControlName="label" placeholder="e.g. Invoice Number, رقم الفاتورة">
                         </nz-form-control>
                       </nz-form-item>
                     </div>
                     
-                    <div nz-col [nzSpan]="8">
+                    <div nz-col [nzSpan]="12">
+                      <nz-form-item>
+                        <nz-form-label>Field Name (Auto-generated)</nz-form-label>
+                        <nz-form-control>
+                          <input nz-input formControlName="name" readonly placeholder="Auto-generated from label" class="bg-gray-50">
+                        </nz-form-control>
+                      </nz-form-item>
+                    </div>
+                    
+
+                  </div>
+
+                  <div nz-row [nzGutter]="[16, 16]" class="mt-4">
+                    <div nz-col [nzSpan]="24">
                       <nz-form-item>
                         <nz-form-label [nzRequired]="true">Field Type</nz-form-label>
                         <nz-form-control [nzErrorTip]="'Field type is required'">
@@ -275,7 +265,7 @@ export class ResourceTypeCreatePageComponent implements OnInit {
     this.loadCompanies();
     this.resourceTypeForm = this.fb.group({
       companyId: [null, Validators.required],
-      code: ['', [Validators.required, Validators.pattern(/^[A-Z0-9_]+$/)]],
+                    code: ['', Validators.required],
       name: ['', Validators.required],
       description: [''],
       fields: this.fb.array([])
@@ -304,13 +294,21 @@ export class ResourceTypeCreatePageComponent implements OnInit {
 
   createFieldGroup(): FormGroup {
     const fieldGroup = this.fb.group({
-      name: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9_]+$/)]],
+      name: [''], // Auto-generated, no validation needed
       label: ['', Validators.required],
       type: [null, Validators.required],
       required: [false],
       uniqueWithinType: [false],
       options: [''], // Comma-separated string
       order: [this.fields.length] // Set order based on current length
+    });
+
+    // Auto-generate field name when label changes
+    fieldGroup.get('label')?.valueChanges.subscribe(label => {
+      if (label) {
+        const generatedName = this.generateFieldName(label);
+        fieldGroup.get('name')?.setValue(generatedName);
+      }
     });
 
     // Add validator for options if type is SELECT
@@ -355,6 +353,18 @@ export class ResourceTypeCreatePageComponent implements OnInit {
       default:
         return 'question-circle';
     }
+  }
+
+  generateFieldName(label: string): string {
+    if (!label) return '';
+    
+    return label
+      .toLowerCase()
+      .trim()
+      .replace(/[^\p{L}\p{N}\s-]/gu, '') // Keep letters (including Arabic), numbers, spaces, hyphens
+      .replace(/[\s-]+/g, '_')  // Replace spaces and hyphens with underscores
+      .replace(/^_+|_+$/g, '')  // Remove leading/trailing underscores
+      .substring(0, 50);        // Limit length to 50 chars to match database
   }
 
   // Check for duplicate field names/codes when adding a new field
