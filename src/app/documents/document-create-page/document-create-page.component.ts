@@ -955,20 +955,74 @@ export class DocumentCreatePageComponent implements OnInit, OnDestroy {
     const result: Record<string, string> = {};
     
     for (const [key, value] of Object.entries(fieldValues)) {
-        if (value === null || value === undefined) {
-          result[key] = '';
-        } else if (typeof value === 'boolean') {
+      if (value === null || value === undefined) {
+        result[key] = '';
+      } else if (typeof value === 'boolean') {
         result[key] = value.toString();
-      } else if (value instanceof Date) {
-        // Format date as YYYY-MM-DD for backend compatibility
-        result[key] = value.toISOString().split('T')[0];
+      } else if (this.isDateValue(value)) {
+        // Handle various date formats including NG-ZORRO date objects
+        result[key] = this.formatDateForBackend(value);
       } else if (typeof value === 'object') {
         result[key] = JSON.stringify(value);
-        } else {
-          result[key] = String(value);
+      } else {
+        result[key] = String(value);
       }
     }
     
     return result;
+  }
+
+  private isDateValue(value: any): boolean {
+    // Check for standard Date instance
+    if (value instanceof Date) {
+      return true;
+    }
+    
+    // Check for NG-ZORRO date objects or moment-like objects
+    if (value && typeof value === 'object') {
+      // NG-ZORRO might return objects with toDate(), valueOf(), or getTime() methods
+      if (typeof value.toDate === 'function' || 
+          typeof value.valueOf === 'function' || 
+          typeof value.getTime === 'function') {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  private formatDateForBackend(dateValue: any): string {
+    try {
+      let date: Date;
+      
+      // Handle different date object types
+      if (dateValue instanceof Date) {
+        date = dateValue;
+      } else if (typeof dateValue.toDate === 'function') {
+        // NG-ZORRO or moment.js objects
+        date = dateValue.toDate();
+      } else if (typeof dateValue.valueOf === 'function') {
+        // Objects with valueOf method
+        date = new Date(dateValue.valueOf());
+      } else if (typeof dateValue.getTime === 'function') {
+        // Objects with getTime method
+        date = new Date(dateValue.getTime());
+      } else {
+        // Fallback: try to convert to Date
+        date = new Date(dateValue);
+      }
+      
+      // Validate the date
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date value:', dateValue);
+        return '';
+      }
+      
+      // Format as YYYY-MM-DD for backend compatibility
+      return date.toISOString().split('T')[0];
+    } catch (error) {
+      console.error('Error formatting date:', dateValue, error);
+      return '';
+    }
   }
 }
