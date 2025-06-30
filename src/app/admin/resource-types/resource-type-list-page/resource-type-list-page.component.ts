@@ -95,8 +95,8 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
                 <span class="text-gray-600">{{ rt.description || '-' }}</span>
               </td>
               <td nzAlign="center">
-                <nz-tag [nzColor]="getFieldCountColor(rt.fields?.length || 0)">
-                  {{ rt.fields?.length || 0 }} field{{ (rt.fields?.length || 0) !== 1 ? 's' : '' }}
+                <nz-tag [nzColor]="getFieldCountColor(rt.fields.length || 0)">
+                  {{ rt.fields.length || 0 }} field{{ (rt.fields.length || 0) !== 1 ? 's' : '' }}
                 </nz-tag>
               </td>
               <td>
