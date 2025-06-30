@@ -166,7 +166,7 @@ import { HasRoleDirective } from '../../shared/directives/has-role.directive';
         <!-- Footer -->
         <nz-footer>
           <div class="footer-content">
-            <span>Document Management System © 2024</span>
+            <span>Document Management System © 2025</span>
             <span class="version">v1.0.0</span>
           </div>
         </nz-footer>
@@ -182,13 +182,13 @@ import { HasRoleDirective } from '../../shared/directives/has-role.directive';
     }
 
     .app-layout {
-      height: 100vh;
+      height: 100%;
     }
 
     .menu-sidebar {
       position: relative;
       z-index: 10;
-      min-height: 100vh;
+      min-height: 100%;
       box-shadow: 2px 0 8px rgba(0,0,0,0.03);
     }
 
