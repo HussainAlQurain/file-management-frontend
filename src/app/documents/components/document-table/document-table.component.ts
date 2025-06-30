@@ -61,13 +61,14 @@ export interface PageEvent {
           
           <thead>
             <tr>
-              <th nzWidth="35%">Title</th>
-              <th nzWidth="15%">Resource Code</th>
-              <th nzWidth="12%">Type</th>
-              <th nzWidth="10%">Status</th>
-              <th nzWidth="10%">Owner</th>
+              <th nzWidth="28%">Title</th>
+              <th nzWidth="13%">Resource Code</th>
+              <th nzWidth="10%">Type</th>
+              <th nzWidth="12%">Tags</th>
+              <th nzWidth="8%">Status</th>
+              <th nzWidth="9%">Owner</th>
               <th nzWidth="8%">File Type</th>
-              <th nzWidth="10%" nzAlign="center">Actions</th>
+              <th nzWidth="12%" nzAlign="center">Actions</th>
             </tr>
           </thead>
           
@@ -121,6 +122,29 @@ export interface PageEvent {
                 <nz-tag [nzColor]="getTypeColor(document.resourceType?.name || document.resourceTypeName)">
                   {{ document.resourceType?.name || document.resourceTypeName }}
                 </nz-tag>
+              </td>
+              
+              <!-- Tags -->
+              <td>
+                <div class="tags-container">
+                  <nz-tag 
+                    *ngFor="let tag of document.tags?.slice(0, 2); trackBy: trackByTag"
+                    nzColor="blue"
+                    class="tag-item">
+                    {{ tag }}
+                  </nz-tag>
+                  <nz-tag 
+                    *ngIf="document.tags && document.tags.length > 2"
+                    nzColor="default"
+                    [nz-tooltip]="getExtraTagsTooltip(document.tags)">
+                    +{{ document.tags.length - 2 }}
+                  </nz-tag>
+                  <span 
+                    *ngIf="!document.tags || document.tags.length === 0"
+                    class="text-gray-400 text-sm">
+                    —
+                  </span>
+                </div>
               </td>
               
               <!-- Status -->
@@ -291,6 +315,18 @@ export interface PageEvent {
       background-color: #fff2f0;
       color: #ff4d4f;
     }
+
+    .tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .tag-item {
+      font-size: 12px;
+      margin: 0;
+    }
   `]
 })
 export class DocumentTableComponent {
@@ -324,6 +360,16 @@ export class DocumentTableComponent {
   
   onDelete(document: Document): void {
     this.delete.emit(document.id);
+  }
+
+  trackByTag(index: number, tag: string): string {
+    return tag;
+  }
+
+  getExtraTagsTooltip(tags: string[]): string {
+    if (tags.length <= 2) return '';
+    const extraTags = tags.slice(2);
+    return `Additional tags: ${extraTags.join(', ')}`;
   }
 
   getDocumentIcon(resourceTypeName: string | undefined): string {
