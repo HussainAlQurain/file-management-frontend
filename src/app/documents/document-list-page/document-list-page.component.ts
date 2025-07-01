@@ -79,6 +79,10 @@ import { Company } from '../../core/models/company.model';
               Filters
               <nz-badge *ngIf="activeFiltersCount > 0" [nzCount]="activeFiltersCount"></nz-badge>
             </button>
+            <button *nzSpaceItem nz-button nzType="default" routerLink="/documents/bulk-import">
+              <span nz-icon nzType="cloud-upload" nzTheme="outline"></span>
+              Bulk Import
+            </button>
             <button *nzSpaceItem nz-button nzType="primary" routerLink="/documents/new">
               <span nz-icon nzType="plus" nzTheme="outline"></span>
           New Document
@@ -181,7 +185,18 @@ import { Company } from '../../core/models/company.model';
               <button *nzSpaceItem nz-button nzType="default" nzBlock (click)="resetFilters()">
                 <span nz-icon nzType="reload" nzTheme="outline"></span>
                 Reset Filters
-        </button>
+              </button>
+              <nz-divider></nz-divider>
+              <button 
+                *nzSpaceItem 
+                nz-button 
+                nzType="dashed" 
+                nzBlock 
+                [routerLink]="['/documents/bulk-import']"
+                [queryParams]="getBulkImportParams()">
+                <span nz-icon nzType="cloud-upload" nzTheme="outline"></span>
+                Bulk Import Documents
+              </button>
             </nz-space>
           </form>
         </ng-container>
@@ -581,5 +596,20 @@ export class DocumentListPageComponent implements OnInit {
       hash = typeCode.charCodeAt(i) + ((hash << 5) - hash);
     }
     return colors[Math.abs(hash) % colors.length];
+  }
+
+  getBulkImportParams(): any {
+    const filters = this.filterForm.value;
+    const params: any = {};
+    
+    if (filters.companyId) {
+      params.companyId = filters.companyId;
+    }
+    
+    if (filters.resourceTypeId) {
+      params.resourceTypeId = filters.resourceTypeId;
+    }
+    
+    return params;
   }
 }

@@ -34,6 +34,7 @@ export const routes: Routes = [
           { path: '', loadComponent: () => import('./documents/document-list-page/document-list-page.component').then(c => c.DocumentListPageComponent) },
           { path: 'browse', loadComponent: () => import('./documents/company-hierarchy-page/company-hierarchy-page.component').then(c => c.CompanyHierarchyPageComponent) },
           { path: 'new', loadComponent: () => import('./documents/document-create-page/document-create-page.component').then(c => c.DocumentCreatePageComponent) },
+          { path: 'bulk-import', loadComponent: () => import('./documents/document-bulk-import-page/document-bulk-import-page.component').then(c => c.DocumentBulkImportPageComponent) },
           { path: ':id', loadComponent: () => import('./documents/document-detail-page/document-detail-page.component').then(c => c.DocumentDetailPageComponent), canActivate: [canViewDocGuard] },
           { path: ':id/edit', loadComponent: () => import('./documents/document-edit-page/document-edit-page.component').then(c => c.DocumentEditPageComponent), canActivate: [canEditDocGuard] },
           { path: ':id/acl', loadComponent: () => import('./documents/document-acl-page/document-acl-page.component').then(c => c.DocumentAclPageComponent), canActivate: [canEditDocGuard] },
