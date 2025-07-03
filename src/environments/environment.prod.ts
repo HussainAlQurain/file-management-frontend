@@ -1,4 +1,5 @@
 export const environment = {
-  apiBase: 'http://localhost:8080/api', // Change this to your production API URL
-  production: true
+  apiBase: (window as any)['env']?.['apiUrl'] || 'http://localhost:8080/api',
+  production: true,
+  appName: (window as any)['env']?.['appName'] || 'Document Management System'
 };

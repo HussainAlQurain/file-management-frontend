@@ -17,6 +17,7 @@ import { NzDividerModule } from 'ng-zorro-antd/divider';
 import { AuthService } from '../../core/services/auth.service';
 import { LoadingService } from '../../core/services/loading.service';
 import { HasRoleDirective } from '../../shared/directives/has-role.directive';
+import { LanguageSwitcherComponent } from '../../shared/components/language-switcher/language-switcher.component';
 
 @Component({
   selector: 'app-shell-layout',
@@ -34,7 +35,8 @@ import { HasRoleDirective } from '../../shared/directives/has-role.directive';
     NzBadgeModule,
     NzButtonModule,
     NzDividerModule,
-    HasRoleDirective
+    HasRoleDirective,
+    LanguageSwitcherComponent
   ],
   template: `
     <nz-layout class="app-layout">
@@ -50,42 +52,42 @@ import { HasRoleDirective } from '../../shared/directives/has-role.directive';
         <div class="sidebar-logo">
           <a routerLink="/dashboard">
             <span nz-icon nzType="file-text" nzTheme="outline" class="logo-icon"></span>
-            <h1 *ngIf="!isCollapsed">DMS</h1>
+            <h1 *ngIf="!isCollapsed" i18n="@@app.title">DMS</h1>
           </a>
         </div>
         
         <ul nz-menu nzMode="inline" [nzInlineCollapsed]="isCollapsed">
           <li nz-menu-item nzMatchRouter routerLink="/dashboard">
             <span nz-icon nzType="dashboard" nzTheme="outline"></span>
-            <span>Dashboard</span>
+            <span i18n="@@nav.dashboard">Dashboard</span>
           </li>
           
           <li nz-menu-item nzMatchRouter routerLink="/documents">
             <span nz-icon nzType="file-text" nzTheme="outline"></span>
-            <span>Documents</span>
+            <span i18n="@@nav.documents">Documents</span>
           </li>
           
           <li nz-menu-item nzMatchRouter routerLink="/documents/browse">
             <span nz-icon nzType="apartment" nzTheme="outline"></span>
-            <span>Browse by Company</span>
+            <span i18n="@@nav.browse.company">Browse by Company</span>
           </li>
           
           <!-- Admin Section -->
           <ng-container *appHasRole="'SYS_ADMIN'">
             <li nz-menu-divider></li>
-            <li nz-submenu nzTitle="Admin" nzIcon="setting">
+            <li nz-submenu nzIcon="setting" [nzTitle]="adminTitle">
               <ul>
                 <li nz-menu-item nzMatchRouter routerLink="/companies">
                   <span nz-icon nzType="bank" nzTheme="outline"></span>
-                  <span>Companies</span>
+                  <span i18n="@@nav.admin.companies">Companies</span>
                 </li>
                 <li nz-menu-item nzMatchRouter routerLink="/resource-types">
                   <span nz-icon nzType="folder" nzTheme="outline"></span>
-                  <span>Resource Types</span>
+                  <span i18n="@@nav.admin.resource-types">Resource Types</span>
                 </li>
                 <li nz-menu-item nzMatchRouter routerLink="/users">
                   <span nz-icon nzType="team" nzTheme="outline"></span>
-                  <span>Users</span>
+                  <span i18n="@@nav.admin.users">Users</span>
                 </li>
               </ul>
             </li>
@@ -102,7 +104,7 @@ import { HasRoleDirective } from '../../shared/directives/has-role.directive';
             </span>
             
             <div class="header-title">
-              <h2>Document Management System</h2>
+              <h2 i18n="@@app.header.title">Document Management System</h2>
             </div>
             
             <div class="header-actions">
@@ -110,6 +112,9 @@ import { HasRoleDirective } from '../../shared/directives/has-role.directive';
               <div *ngIf="loadingService.loading()" class="loading-indicator">
                 <nz-spin nzSimple [nzSize]="'small'"></nz-spin>
               </div>
+              
+              <!-- Language Switcher -->
+              <app-language-switcher></app-language-switcher>
               
               <!-- User dropdown -->
               <div nz-dropdown [nzDropdownMenu]="userMenu" nzTrigger="click" class="user-dropdown">
@@ -139,16 +144,16 @@ import { HasRoleDirective } from '../../shared/directives/has-role.directive';
                   <li nz-menu-divider></li>
                   <li nz-menu-item routerLink="/profile">
                     <span nz-icon nzType="user" nzTheme="outline"></span>
-                    My Profile
+                    <span i18n="@@user.menu.profile">My Profile</span>
                   </li>
                   <li nz-menu-item routerLink="/profile/change-password">
                     <span nz-icon nzType="lock" nzTheme="outline"></span>
-                    Change Password
+                    <span i18n="@@user.menu.change-password">Change Password</span>
                   </li>
                   <li nz-menu-divider></li>
                   <li nz-menu-item (click)="logout()">
                     <span nz-icon nzType="logout" nzTheme="outline"></span>
-                    Logout
+                    <span i18n="@@user.menu.logout">Logout</span>
                   </li>
                 </ul>
               </nz-dropdown-menu>
@@ -166,8 +171,8 @@ import { HasRoleDirective } from '../../shared/directives/has-role.directive';
         <!-- Footer -->
         <nz-footer>
           <div class="footer-content">
-            <span>Document Management System © 2025</span>
-            <span class="version">v1.0.0</span>
+            <span i18n="@@footer.copyright">Document Management System © 2025</span>
+            <span class="version" i18n="@@footer.version">v1.0.0</span>
           </div>
         </nz-footer>
       </nz-layout>
@@ -386,6 +391,9 @@ export class ShellLayoutComponent {
   
   isCollapsed = false;
   
+  // i18n strings
+  adminTitle = $localize`:@@nav.admin.title:Admin`;
+  
   getUserInitial(): string {
     const user = this.authService.currentUserSignal();
     if (user?.username) {
@@ -397,9 +405,9 @@ export class ShellLayoutComponent {
   getUserRole(): string {
     const user = this.authService.currentUserSignal();
     if (user?.roles?.includes('SYS_ADMIN')) {
-      return 'System Admin';
+      return $localize`:@@user.role.admin:System Admin`;
     }
-    return 'User';
+    return $localize`:@@user.role.user:User`;
   }
   
   logout(): void {

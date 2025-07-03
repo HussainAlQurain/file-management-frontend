@@ -50,12 +50,12 @@ import { Company } from '../../core/models/company.model';
       <!-- Page Header -->
       <div class="flex justify-between items-center mb-6">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p class="text-gray-600 mt-1">Welcome back! Here's what's happening with your documents.</p>
+          <h1 class="text-3xl font-bold text-gray-900" i18n="@@dashboard.title">Dashboard</h1>
+          <p class="text-gray-600 mt-1" i18n="@@dashboard.subtitle">Welcome back! Here's what's happening with your documents.</p>
         </div>
         <button nz-button nzType="primary" routerLink="/documents/new">
           <nz-icon nzType="plus"></nz-icon>
-          New Document
+          <span i18n="@@dashboard.new-document">New Document</span>
         </button>
       </div>
 
@@ -63,10 +63,10 @@ import { Company } from '../../core/models/company.model';
       <app-stats-cards></app-stats-cards>
 
       <!-- Recent Documents with Search and Filters -->
-      <nz-card nzTitle="Recent Documents" class="mb-6">
+      <nz-card [nzTitle]="recentDocumentsTitle" class="mb-6">
         <ng-template #extra>
           <button nz-button nzType="link" routerLink="/documents">
-            View All
+            <span i18n="@@dashboard.view-all">View All</span>
             <nz-icon nzType="arrow-right"></nz-icon>
           </button>
         </ng-template>
@@ -81,6 +81,7 @@ import { Company } from '../../core/models/company.model';
                 <input 
                   type="text" 
                   nz-input 
+                  i18n-placeholder="@@dashboard.search.placeholder"
                   placeholder="Search documents..." 
                   [formControl]="searchControl">
               </nz-input-group>
@@ -92,6 +93,7 @@ import { Company } from '../../core/models/company.model';
             <!-- Company Filter -->
             <div nz-col [nzSpan]="4">
               <nz-select 
+                i18n-nzPlaceHolder="@@dashboard.filter.company"
                 nzPlaceHolder="Company" 
                 nzAllowClear
                 [formControl]="companyControl"
@@ -107,6 +109,7 @@ import { Company } from '../../core/models/company.model';
             <!-- Resource Type Filter -->
             <div nz-col [nzSpan]="4">
               <nz-select 
+                i18n-nzPlaceHolder="@@dashboard.filter.document-type"
                 nzPlaceHolder="Document Type" 
                 nzAllowClear
                 [formControl]="resourceTypeControl"
@@ -122,28 +125,30 @@ import { Company } from '../../core/models/company.model';
             <!-- Status Filter -->
             <div nz-col [nzSpan]="4">
               <nz-select 
+                i18n-nzPlaceHolder="@@dashboard.filter.status"
                 nzPlaceHolder="Status" 
                 nzAllowClear
                 [formControl]="statusControl"
                 style="width: 100%;">
-                <nz-option nzLabel="Active" nzValue="ACTIVE"></nz-option>
-                <nz-option nzLabel="Inactive" nzValue="INACTIVE"></nz-option>
-                <nz-option nzLabel="Archived" nzValue="ARCHIVED"></nz-option>
-                <nz-option nzLabel="Draft" nzValue="DRAFT"></nz-option>
+                <nz-option [nzLabel]="statusActive" nzValue="ACTIVE"></nz-option>
+                <nz-option [nzLabel]="statusInactive" nzValue="INACTIVE"></nz-option>
+                <nz-option [nzLabel]="statusArchived" nzValue="ARCHIVED"></nz-option>
+                <nz-option [nzLabel]="statusDraft" nzValue="DRAFT"></nz-option>
               </nz-select>
             </div>
             
             <!-- Sort Options -->
             <div nz-col [nzSpan]="4">
               <nz-select 
+                i18n-nzPlaceHolder="@@dashboard.filter.sort"
                 nzPlaceHolder="Sort by" 
                 [formControl]="sortControl"
                 style="width: 100%;">
-                <nz-option nzLabel="Newest First" nzValue="createdAt,desc"></nz-option>
-                <nz-option nzLabel="Oldest First" nzValue="createdAt,asc"></nz-option>
-                <nz-option nzLabel="Title A-Z" nzValue="title,asc"></nz-option>
-                <nz-option nzLabel="Title Z-A" nzValue="title,desc"></nz-option>
-                <nz-option nzLabel="Recently Updated" nzValue="updatedAt,desc"></nz-option>
+                <nz-option [nzLabel]="sortNewest" nzValue="createdAt,desc"></nz-option>
+                <nz-option [nzLabel]="sortOldest" nzValue="createdAt,asc"></nz-option>
+                <nz-option [nzLabel]="sortTitleAZ" nzValue="title,asc"></nz-option>
+                <nz-option [nzLabel]="sortTitleZA" nzValue="title,desc"></nz-option>
+                <nz-option [nzLabel]="sortRecentlyUpdated" nzValue="updatedAt,desc"></nz-option>
               </nz-select>
             </div>
           </div>
@@ -154,12 +159,13 @@ import { Company } from '../../core/models/company.model';
               <nz-input-group nzCompact>
                 <input 
                   nz-input 
+                  i18n-placeholder="@@dashboard.search.tags.placeholder"
                   placeholder="Search by tags (comma separated)..." 
                   [formControl]="tagSearchControl"
                   style="width: 100%;">
               </nz-input-group>
               <div class="tag-help-text">
-                <small class="text-gray-500">
+                <small class="text-gray-500" i18n="@@dashboard.search.tags.help">
                   Enter tag names separated by commas. Example: finance, invoice, contract
                 </small>
               </div>
@@ -198,20 +204,20 @@ import { Company } from '../../core/models/company.model';
             <div class="text-center py-12">
               <nz-icon nzType="file-text" class="text-6xl text-gray-300 mb-4"></nz-icon>
               <h3 class="text-lg font-medium text-gray-900 mb-2">
-                {{ hasFilters() ? 'No documents match your search' : 'No documents yet' }}
+                {{ hasFilters() ? noMatchMessage : noDocumentsMessage }}
               </h3>
               <p class="text-gray-500 mb-4">
-                {{ hasFilters() ? 'Try adjusting your search filters' : 'Create your first document to get started' }}
+                {{ hasFilters() ? tryAdjustingMessage : createFirstMessage }}
               </p>
               @if (!hasFilters()) {
                 <button nz-button nzType="primary" routerLink="/documents/new">
                   <nz-icon nzType="plus"></nz-icon>
-                  Create Document
+                  <span i18n="@@dashboard.create-document">Create Document</span>
                 </button>
               } @else {
                 <button nz-button nzType="default" (click)="clearFilters()">
                   <nz-icon nzType="clear"></nz-icon>
-                  Clear Filters
+                  <span i18n="@@dashboard.clear-filters">Clear Filters</span>
                 </button>
               }
             </div>
@@ -283,6 +289,28 @@ export class DashboardPageComponent implements OnInit {
   companyControl = new FormControl<number | null>(null);
   resourceTypeControl = new FormControl<number | null>(null);
   tagSearchControl = new FormControl('');
+  
+  // i18n strings
+  recentDocumentsTitle = $localize`:@@dashboard.recent-documents:Recent Documents`;
+  
+  // Status options
+  statusActive = $localize`:@@status.active:Active`;
+  statusInactive = $localize`:@@status.inactive:Inactive`;
+  statusArchived = $localize`:@@status.archived:Archived`;
+  statusDraft = $localize`:@@status.draft:Draft`;
+  
+  // Sort options
+  sortNewest = $localize`:@@sort.newest:Newest First`;
+  sortOldest = $localize`:@@sort.oldest:Oldest First`;
+  sortTitleAZ = $localize`:@@sort.title-az:Title A-Z`;
+  sortTitleZA = $localize`:@@sort.title-za:Title Z-A`;
+  sortRecentlyUpdated = $localize`:@@sort.recently-updated:Recently Updated`;
+  
+  // Messages
+  noMatchMessage = $localize`:@@dashboard.no-match:No documents match your search`;
+  noDocumentsMessage = $localize`:@@dashboard.no-documents:No documents yet`;
+  tryAdjustingMessage = $localize`:@@dashboard.try-adjusting:Try adjusting your search filters`;
+  createFirstMessage = $localize`:@@dashboard.create-first:Create your first document to get started`;
   
   ngOnInit(): void {
     this.loadCompanies();

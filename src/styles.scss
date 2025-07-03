@@ -202,3 +202,178 @@ body {
     margin: -16px -16px 16px;
   }
 }
+
+/* RTL (Right-to-Left) Support for Arabic */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+
+  /* Fix for ng-zorro components in RTL */
+  .ant-layout-sider {
+    order: 1;
+  }
+
+  .ant-layout-content {
+    order: -1;
+  }
+
+  /* Navigation menu RTL */
+  .ant-menu-item,
+  .ant-menu-submenu-title {
+    text-align: right;
+    
+    .ant-menu-title-content {
+      text-align: right;
+    }
+  }
+
+  /* Form elements RTL */
+  .ant-form-item-label {
+    text-align: right;
+
+    > label {
+      text-align: right;
+    }
+  }
+
+  .ant-input,
+  .ant-select-selector,
+  .ant-picker {
+    text-align: right;
+  }
+
+  /* Button content RTL */
+  .ant-btn {
+    .anticon + span,
+    span + .anticon {
+      margin-left: 0;
+      margin-right: 8px;
+    }
+  }
+
+  /* Table RTL */
+  .ant-table {
+    .ant-table-thead > tr > th,
+    .ant-table-tbody > tr > td {
+      text-align: right;
+    }
+  }
+
+  /* Header RTL */
+  .app-header {
+    .header-title {
+      text-align: right;
+    }
+
+    .header-actions {
+      flex-direction: row-reverse;
+    }
+  }
+
+  /* Sidebar RTL */
+  .sidebar-logo {
+    text-align: right;
+    padding-right: 24px;
+    padding-left: 0;
+
+    a {
+      flex-direction: row-reverse;
+    }
+
+    .logo-icon {
+      margin-left: 12px;
+      margin-right: 0;
+    }
+  }
+
+  /* Card RTL */
+  .ant-card-head-title {
+    text-align: right;
+  }
+
+  .ant-card-extra {
+    float: left;
+  }
+
+  /* Dropdown RTL */
+  .ant-dropdown-menu {
+    text-align: right;
+  }
+
+  .user-dropdown {
+    flex-direction: row-reverse;
+  }
+
+  /* Form controls RTL */
+  .ant-input-group-addon:first-child,
+  .ant-input-group > .ant-input:first-child {
+    border-radius: 0 6px 6px 0;
+  }
+
+  .ant-input-group-addon:last-child,
+  .ant-input-group > .ant-input:last-child {
+    border-radius: 6px 0 0 6px;
+  }
+
+  /* Flex RTL adjustments */
+  .flex {
+    &.justify-between {
+      flex-direction: row-reverse;
+    }
+  }
+
+  /* Tag RTL */
+  .ant-tag {
+    margin-right: 0;
+    margin-left: 8px;
+  }
+
+  /* Language switcher RTL */
+  .ant-select-selection-item {
+    flex-direction: row-reverse;
+  }
+}
+
+/* Arabic font support */
+[lang="ar"] {
+  font-family: 'Segoe UI', 'Tahoma', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+  
+  /* Better Arabic text rendering */
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Transition for language switching */
+html {
+  transition: direction 0.3s ease;
+}
+
+body {
+  transition: text-align 0.3s ease;
+}
+
+/* Additional RTL spacing fixes */
+[dir="rtl"] {
+  .ant-space-item:not(:last-child) {
+    margin-right: 0;
+    margin-left: 8px;
+  }
+
+  .ant-pagination-item,
+  .ant-pagination-prev,
+  .ant-pagination-next {
+    margin-right: 0;
+    margin-left: 8px;
+  }
+
+  /* Grid RTL */
+  .ant-row {
+    direction: rtl;
+  }
+
+  .ant-col {
+    direction: ltr;
+    text-align: right;
+  }
+}

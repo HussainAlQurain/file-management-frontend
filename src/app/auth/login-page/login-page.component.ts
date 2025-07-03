@@ -29,10 +29,10 @@ import { SnackbarService } from '../../core/services/snackbar.service';
   ],
   template: `
     <div class="login-page min-h-screen flex items-center justify-center p-4 bg-gray-50">
-      <nz-card class="max-w-md w-full shadow-xl" nzTitle="Login" [nzBordered]="false">
+      <nz-card class="max-w-md w-full shadow-xl" [nzTitle]="loginTitle" [nzBordered]="false">
         <form nz-form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
           <nz-form-item>
-            <nz-form-label [nzRequired]="true">Username</nz-form-label>
+            <nz-form-label [nzRequired]="true" i18n="@@login.username.label">Username</nz-form-label>
             <nz-form-control [nzErrorTip]="usernameErrorTpl">
               <nz-input-group nzPrefixIcon="user">
                 <input 
@@ -40,18 +40,19 @@ import { SnackbarService } from '../../core/services/snackbar.service';
                   formControlName="username" 
                   type="text" 
                   autocomplete="username"
+                  i18n-placeholder="@@login.username.placeholder"
                   placeholder="Enter your username">
               </nz-input-group>
               <ng-template #usernameErrorTpl let-control>
                 @if (control.hasError('required')) {
-                  <span>Username is required</span>
+                  <span i18n="@@login.username.required">Username is required</span>
                 }
               </ng-template>
             </nz-form-control>
           </nz-form-item>
           
           <nz-form-item>
-            <nz-form-label [nzRequired]="true">Password</nz-form-label>
+            <nz-form-label [nzRequired]="true" i18n="@@login.password.label">Password</nz-form-label>
             <nz-form-control [nzErrorTip]="passwordErrorTpl">
               <nz-input-group nzPrefixIcon="lock" [nzSuffix]="suffixTemplate">
                 <input 
@@ -59,6 +60,7 @@ import { SnackbarService } from '../../core/services/snackbar.service';
                   formControlName="password" 
                   [type]="showPassword ? 'text' : 'password'" 
                   autocomplete="current-password"
+                  i18n-placeholder="@@login.password.placeholder"
                   placeholder="Enter your password">
               </nz-input-group>
               <ng-template #suffixTemplate>
@@ -70,7 +72,7 @@ import { SnackbarService } from '../../core/services/snackbar.service';
               </ng-template>
               <ng-template #passwordErrorTpl let-control>
                 @if (control.hasError('required')) {
-                  <span>Password is required</span>
+                  <span i18n="@@login.password.required">Password is required</span>
                 }
               </ng-template>
             </nz-form-control>
@@ -87,7 +89,7 @@ import { SnackbarService } from '../../core/services/snackbar.service';
                 [disabled]="loginForm.invalid"
                 class="w-full">
                 <nz-icon nzType="login" nzTheme="outline"></nz-icon>
-                Login
+                <span i18n="@@login.button">Login</span>
               </button>
             </nz-form-control>
           </nz-form-item>
@@ -121,6 +123,9 @@ export class LoginPageComponent {
   isLoading = false;
   showPassword = false;
   
+  // i18n strings
+  loginTitle = $localize`:@@login.title:Login`;
+  
   onSubmit(): void {
     if (this.loginForm.invalid) {
       return;
@@ -138,7 +143,8 @@ export class LoginPageComponent {
       },
       error: (error) => {
         this.isLoading = false;
-        this.snackbar.error(error.error?.message || 'Login failed. Please check your credentials.');
+        const errorMsg = $localize`:@@login.error:Login failed. Please check your credentials.`;
+        this.snackbar.error(error.error?.message || errorMsg);
       }
     });
   }
