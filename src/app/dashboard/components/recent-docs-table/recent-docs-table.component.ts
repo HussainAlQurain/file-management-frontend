@@ -57,8 +57,8 @@ import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
               <td>
                 <div class="document-info">
                   <nz-avatar 
-                    [nzIcon]="getDocumentIcon(document.resourceTypeName)"
-                    [style]="{ backgroundColor: getDocumentColor(document.resourceTypeName) }"
+                    [nzIcon]="getDocumentIcon(document.resourceTypeName ?? '')"
+                    [style]="{ backgroundColor: getDocumentColor(document.resourceTypeName ?? '') }"
                     nzSize="small">
                   </nz-avatar>
                   <div class="document-details">
@@ -74,14 +74,14 @@ import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
               
               <!-- Resource Type -->
               <td>
-                <nz-tag [nzColor]="getTypeColor(document.resourceTypeName)">
+                <nz-tag [nzColor]="getTypeColor(document.resourceTypeName ?? '')">
                   {{ document.resourceTypeName }}
                 </nz-tag>
               </td>
               
               <!-- Status -->
               <td>
-                <nz-tag [nzColor]="getStatusColor(document.status)">
+                <nz-tag [nzColor]="getStatusColor(document.status ?? '')">
                   {{ document.status }}
                 </nz-tag>
               </td>
