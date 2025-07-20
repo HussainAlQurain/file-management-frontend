@@ -42,6 +42,9 @@ body.rtl .ant-layout-has-sider {
 body.rtl .ant-layout-sider {
   position: relative;
   order: 1;
+  width: 200px !important;
+  max-width: 200px !important;
+  min-width: 200px !important;
 }
 
 body.rtl .ant-layout-content {
@@ -51,7 +54,7 @@ body.rtl .ant-layout-content {
 
 body.rtl .ant-layout-header {
   direction: rtl;
-  padding: 0 24px 0 50px;
+  padding: 0;
 }
 
 body.rtl .ant-menu-horizontal {
@@ -90,6 +93,7 @@ body.rtl .header-actions {
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-direction: row-reverse;
 }
 
 body.rtl .header-title {

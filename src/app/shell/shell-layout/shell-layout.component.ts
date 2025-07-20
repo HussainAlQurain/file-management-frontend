@@ -216,12 +216,12 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
       margin-left: 12px;
     }
 
-    .app-layout.rtl .header-trigger {
-      padding: 0 0 0 24px;
+    .app-layout.rtl .header-title {
+      text-align: center;
     }
 
-    .app-layout.rtl .header-actions {
-      flex-direction: row-reverse;
+    .app-layout.rtl .header-title h2 {
+      direction: rtl;
     }
 
     .menu-sidebar {
@@ -229,6 +229,9 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
       z-index: 10;
       min-height: 100%;
       box-shadow: 2px 0 8px rgba(0,0,0,0.03);
+      width: 200px;
+      max-width: 200px;
+      min-width: 200px;
     }
 
     .sidebar-logo {
@@ -259,13 +262,18 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
       margin: 0;
       color: #fff;
       font-weight: 600;
-      font-size: 18px;
+      font-size: 16px;
       vertical-align: middle;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
     }
 
     .app-header {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       padding: 0 24px;
       height: 64px;
       background: #fff;
@@ -278,7 +286,7 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
       font-size: 20px;
       cursor: pointer;
       transition: color 0.3s;
-      padding: 0 24px 0 0;
+      flex-shrink: 0;
     }
 
     .header-trigger:hover {
@@ -287,19 +295,26 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
 
     .header-title {
       flex: 1;
+      text-align: center;
+      min-width: 0;
+      padding: 0 16px;
     }
 
     .header-title h2 {
       margin: 0;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 500;
       color: rgba(0, 0, 0, 0.85);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .header-actions {
       display: flex;
       align-items: center;
       gap: 16px;
+      flex-shrink: 0;
     }
 
     .loading-indicator {
