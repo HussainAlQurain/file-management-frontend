@@ -2,8 +2,10 @@ import { Component, OnInit, inject, signal, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription, forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { TranslateModule } from '@ngx-translate/core';
 import { DocumentService } from '../../../core/services/document.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { TranslationService } from '../../../core/services/translation.service';
 
 // NG-ZORRO imports
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -22,18 +24,19 @@ interface Stats {
   standalone: true,
   imports: [
     CommonModule, 
+    TranslateModule,
     NzCardModule, 
     NzIconModule, 
     NzStatisticModule,
     NzGridModule
   ],
   template: `
-    <div nz-row [nzGutter]="[16, 16]" class="mb-8">
+    <div nz-row [nzGutter]="[16, 16]" class="mb-8" [class.rtl]="translationService.isRTL()">
       <!-- Total Documents -->
       <div nz-col [nzSpan]="8">
         <nz-card class="text-center stats-card">
           <nz-statistic 
-            nzTitle="Total Documents" 
+            [nzTitle]="'dashboard.stats.total_documents' | translate"
             [nzValue]="stats().totalDocuments"
             [nzValueStyle]="{ color: '#1890ff' }">
             <ng-template #nzPrefix>
@@ -47,7 +50,7 @@ interface Stats {
       <div nz-col [nzSpan]="8">
         <nz-card class="text-center stats-card">
           <nz-statistic 
-            nzTitle="Added Today" 
+            [nzTitle]="'dashboard.stats.added_today' | translate"
             [nzValue]="stats().documentsToday"
             [nzValueStyle]="{ color: '#52c41a' }">
             <ng-template #nzPrefix>
@@ -61,7 +64,7 @@ interface Stats {
       <div nz-col [nzSpan]="8">
         <nz-card class="text-center stats-card">
           <nz-statistic 
-            nzTitle="My Documents" 
+            [nzTitle]="'dashboard.stats.my_documents' | translate"
             [nzValue]="stats().myDocuments"
             [nzValueStyle]="{ color: '#722ed1' }">
             <ng-template #nzPrefix>
@@ -98,11 +101,34 @@ interface Stats {
       margin-right: 8px;
       font-size: 20px;
     }
+
+    /* RTL Support */
+    .rtl {
+      direction: rtl;
+    }
+
+    .rtl ::ng-deep .ant-statistic-title {
+      text-align: right;
+    }
+
+    .rtl ::ng-deep .ant-statistic-content {
+      text-align: right;
+    }
+
+    .rtl ::ng-deep .ant-statistic-content-prefix {
+      margin-right: 0;
+      margin-left: 8px;
+    }
+
+    .rtl ::ng-deep .ant-card-body {
+      text-align: right;
+    }
   `]
 })
 export class StatsCardsComponent implements OnInit, OnDestroy {
   private documentService = inject(DocumentService);
   private authService = inject(AuthService);
+  translationService = inject(TranslationService);
   private statsSubscription: Subscription | undefined;
 
   stats = signal<Stats>({

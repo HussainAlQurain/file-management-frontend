@@ -23,6 +23,7 @@ import { DocumentTableComponent } from '../../documents/components/document-tabl
 import { StatsCardsComponent } from '../components/stats-cards/stats-cards.component';
 import { ResourceTypeService } from '../../core/services/resource-type.service';
 import { CompanyService } from '../../core/services/company.service';
+import { TranslationService } from '../../core/services/translation.service';
 import { ResourceType } from '../../core/models/resource-type.model';
 import { Company } from '../../core/models/company.model';
 
@@ -48,14 +49,14 @@ import { Company } from '../../core/models/company.model';
     StatsCardsComponent
   ],
   template: `
-    <div class="dashboard p-6">
+    <div class="dashboard p-6" [class.rtl]="translationService.isRTL()">
       <!-- Page Header -->
-      <div class="flex justify-between items-center mb-6">
-        <div>
+      <div class="flex items-center mb-6" [ngClass]="translationService.isRTL() ? 'justify-between' : 'justify-between'">
+        <div [class.text-right]="translationService.isRTL()" [class.text-left]="!translationService.isRTL()" [class.order-2]="translationService.isRTL()" [class.order-1]="!translationService.isRTL()">
           <h1 class="text-3xl font-bold text-gray-900">{{ 'dashboard.title' | translate }}</h1>
           <p class="text-gray-600 mt-1">{{ 'dashboard.subtitle' | translate }}</p>
         </div>
-        <button nz-button nzType="primary" routerLink="/documents/new">
+        <button nz-button nzType="primary" routerLink="/documents/new" [class.order-1]="translationService.isRTL()" [class.order-2]="!translationService.isRTL()">
           <nz-icon nzType="plus"></nz-icon>
           <span>{{ 'dashboard.new_document' | translate }}</span>
         </button>
@@ -65,7 +66,7 @@ import { Company } from '../../core/models/company.model';
       <app-stats-cards></app-stats-cards>
 
       <!-- Recent Documents with Search and Filters -->
-      <nz-card [nzTitle]="recentDocumentsTitle" class="mb-6">
+      <nz-card [nzTitle]="'dashboard.recent_documents' | translate" class="mb-6">
         <ng-template #extra>
           <button nz-button nzType="link" routerLink="/documents">
             <span>{{ 'dashboard.view_all' | translate }}</span>
@@ -83,8 +84,7 @@ import { Company } from '../../core/models/company.model';
                 <input 
                   type="text" 
                   nz-input 
-                  i18n-placeholder="@@dashboard.search.placeholder"
-                  placeholder="Search documents..." 
+                  [placeholder]="'dashboard.search.placeholder' | translate"
                   [formControl]="searchControl">
               </nz-input-group>
               <ng-template #suffixIconSearch>
@@ -95,8 +95,7 @@ import { Company } from '../../core/models/company.model';
             <!-- Company Filter -->
             <div nz-col [nzSpan]="4">
               <nz-select 
-                i18n-nzPlaceHolder="@@dashboard.filter.company"
-                nzPlaceHolder="Company" 
+                [nzPlaceHolder]="'dashboard.filter.company' | translate"
                 nzAllowClear
                 [formControl]="companyControl"
                 style="width: 100%;">
@@ -111,8 +110,7 @@ import { Company } from '../../core/models/company.model';
             <!-- Resource Type Filter -->
             <div nz-col [nzSpan]="4">
               <nz-select 
-                i18n-nzPlaceHolder="@@dashboard.filter.document-type"
-                nzPlaceHolder="Document Type" 
+                [nzPlaceHolder]="'dashboard.filter.document_type' | translate"
                 nzAllowClear
                 [formControl]="resourceTypeControl"
                 style="width: 100%;">
@@ -127,30 +125,28 @@ import { Company } from '../../core/models/company.model';
             <!-- Status Filter -->
             <div nz-col [nzSpan]="4">
               <nz-select 
-                i18n-nzPlaceHolder="@@dashboard.filter.status"
-                nzPlaceHolder="Status" 
+                [nzPlaceHolder]="'dashboard.filter.status' | translate"
                 nzAllowClear
                 [formControl]="statusControl"
                 style="width: 100%;">
-                <nz-option [nzLabel]="statusActive" nzValue="ACTIVE"></nz-option>
-                <nz-option [nzLabel]="statusInactive" nzValue="INACTIVE"></nz-option>
-                <nz-option [nzLabel]="statusArchived" nzValue="ARCHIVED"></nz-option>
-                <nz-option [nzLabel]="statusDraft" nzValue="DRAFT"></nz-option>
+                <nz-option [nzLabel]="'status.active' | translate" nzValue="ACTIVE"></nz-option>
+                <nz-option [nzLabel]="'status.inactive' | translate" nzValue="INACTIVE"></nz-option>
+                <nz-option [nzLabel]="'status.archived' | translate" nzValue="ARCHIVED"></nz-option>
+                <nz-option [nzLabel]="'status.draft' | translate" nzValue="DRAFT"></nz-option>
               </nz-select>
             </div>
             
             <!-- Sort Options -->
             <div nz-col [nzSpan]="4">
               <nz-select 
-                i18n-nzPlaceHolder="@@dashboard.filter.sort"
-                nzPlaceHolder="Sort by" 
+                [nzPlaceHolder]="'dashboard.filter.sort' | translate"
                 [formControl]="sortControl"
                 style="width: 100%;">
-                <nz-option [nzLabel]="sortNewest" nzValue="createdAt,desc"></nz-option>
-                <nz-option [nzLabel]="sortOldest" nzValue="createdAt,asc"></nz-option>
-                <nz-option [nzLabel]="sortTitleAZ" nzValue="title,asc"></nz-option>
-                <nz-option [nzLabel]="sortTitleZA" nzValue="title,desc"></nz-option>
-                <nz-option [nzLabel]="sortRecentlyUpdated" nzValue="updatedAt,desc"></nz-option>
+                <nz-option [nzLabel]="'sort.newest' | translate" nzValue="createdAt,desc"></nz-option>
+                <nz-option [nzLabel]="'sort.oldest' | translate" nzValue="createdAt,asc"></nz-option>
+                <nz-option [nzLabel]="'sort.title_az' | translate" nzValue="title,asc"></nz-option>
+                <nz-option [nzLabel]="'sort.title_za' | translate" nzValue="title,desc"></nz-option>
+                <nz-option [nzLabel]="'sort.recently_updated' | translate" nzValue="updatedAt,desc"></nz-option>
               </nz-select>
             </div>
           </div>
@@ -161,21 +157,20 @@ import { Company } from '../../core/models/company.model';
               <nz-input-group nzCompact>
                 <input 
                   nz-input 
-                  i18n-placeholder="@@dashboard.search.tags.placeholder"
-                  placeholder="Search by tags (comma separated)..." 
+                  [placeholder]="'dashboard.search.tags.placeholder' | translate"
                   [formControl]="tagSearchControl"
                   style="width: 100%;">
               </nz-input-group>
-              <div class="tag-help-text">
-                <small class="text-gray-500" i18n="@@dashboard.search.tags.help">
-                  Enter tag names separated by commas. Example: finance, invoice, contract
+              <div class="tag-help-text" [class.text-right]="translationService.isRTL()">
+                <small class="text-gray-500">
+                  {{ 'dashboard.search.tags.help' | translate }}
                 </small>
               </div>
             </div>
             
             <!-- Selected Tags Display -->
             <div nz-col [nzSpan]="8" *ngIf="selectedTags().length > 0">
-              <div class="selected-tags">
+              <div class="selected-tags" [class.justify-end]="translationService.isRTL()">
                 <nz-tag 
                   *ngFor="let tag of selectedTags()" 
                   nzColor="blue" 
@@ -203,23 +198,23 @@ import { Company } from '../../core/models/company.model';
           </app-document-table>
           
           @if (documents().content.length === 0) {
-            <div class="text-center py-12">
+            <div class="text-center py-12" [class.text-right]="translationService.isRTL()">
               <nz-icon nzType="file-text" class="text-6xl text-gray-300 mb-4"></nz-icon>
               <h3 class="text-lg font-medium text-gray-900 mb-2">
-                {{ hasFilters() ? noMatchMessage : noDocumentsMessage }}
+                {{ hasFilters() ? ('dashboard.no_match' | translate) : ('dashboard.no_documents' | translate) }}
               </h3>
               <p class="text-gray-500 mb-4">
-                {{ hasFilters() ? tryAdjustingMessage : createFirstMessage }}
+                {{ hasFilters() ? ('dashboard.try_adjusting' | translate) : ('dashboard.create_first' | translate) }}
               </p>
               @if (!hasFilters()) {
                 <button nz-button nzType="primary" routerLink="/documents/new">
                   <nz-icon nzType="plus"></nz-icon>
-                  <span i18n="@@dashboard.create-document">Create Document</span>
+                  <span>{{ 'dashboard.create_document' | translate }}</span>
                 </button>
               } @else {
                 <button nz-button nzType="default" (click)="clearFilters()">
                   <nz-icon nzType="clear"></nz-icon>
-                  <span i18n="@@dashboard.clear-filters">Clear Filters</span>
+                  <span>{{ 'dashboard.clear_filters' | translate }}</span>
                 </button>
               }
             </div>
@@ -232,6 +227,22 @@ import { Company } from '../../core/models/company.model';
     .dashboard {
       min-height: 100vh;
       background-color: #f5f5f5;
+    }
+
+    .dashboard.rtl {
+      direction: rtl;
+    }
+
+    .dashboard.rtl .flex-row-reverse {
+      flex-direction: row-reverse;
+    }
+
+    .dashboard.rtl .text-right {
+      text-align: right;
+    }
+
+    .dashboard.rtl .justify-end {
+      justify-content: flex-end;
     }
 
     ::ng-deep .ant-card-head-title {
@@ -268,12 +279,30 @@ import { Company } from '../../core/models/company.model';
     .selected-tags nz-tag {
       margin: 0;
     }
+
+    /* RTL-specific styling */
+    .dashboard.rtl ::ng-deep .ant-card-extra {
+      float: left;
+    }
+
+    .dashboard.rtl ::ng-deep .ant-card-head-title {
+      text-align: right;
+    }
+
+    .dashboard.rtl ::ng-deep .ant-input {
+      text-align: right;
+    }
+
+    .dashboard.rtl ::ng-deep .ant-select-selection-item {
+      text-align: right;
+    }
   `]
 })
 export class DashboardPageComponent implements OnInit {
   private documentService = inject(DocumentService);
   private resourceTypeService = inject(ResourceTypeService);
   private companyService = inject(CompanyService);
+  translationService = inject(TranslationService);
   private destroyRef = inject(DestroyRef);
   
   documents = signal<{ content: Document[]; totalElements: number }>({ content: [], totalElements: 0 });
@@ -291,28 +320,6 @@ export class DashboardPageComponent implements OnInit {
   companyControl = new FormControl<number | null>(null);
   resourceTypeControl = new FormControl<number | null>(null);
   tagSearchControl = new FormControl('');
-  
-  // i18n strings
-  recentDocumentsTitle = $localize`:@@dashboard.recent-documents:Recent Documents`;
-  
-  // Status options
-  statusActive = $localize`:@@status.active:Active`;
-  statusInactive = $localize`:@@status.inactive:Inactive`;
-  statusArchived = $localize`:@@status.archived:Archived`;
-  statusDraft = $localize`:@@status.draft:Draft`;
-  
-  // Sort options
-  sortNewest = $localize`:@@sort.newest:Newest First`;
-  sortOldest = $localize`:@@sort.oldest:Oldest First`;
-  sortTitleAZ = $localize`:@@sort.title-az:Title A-Z`;
-  sortTitleZA = $localize`:@@sort.title-za:Title Z-A`;
-  sortRecentlyUpdated = $localize`:@@sort.recently-updated:Recently Updated`;
-  
-  // Messages
-  noMatchMessage = $localize`:@@dashboard.no-match:No documents match your search`;
-  noDocumentsMessage = $localize`:@@dashboard.no-documents:No documents yet`;
-  tryAdjustingMessage = $localize`:@@dashboard.try-adjusting:Try adjusting your search filters`;
-  createFirstMessage = $localize`:@@dashboard.create-first:Create your first document to get started`;
   
   ngOnInit(): void {
     this.loadCompanies();

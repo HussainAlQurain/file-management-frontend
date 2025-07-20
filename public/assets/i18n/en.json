@@ -18,6 +18,50 @@
       "users": "Users"
     }
   },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Welcome back! Here's what's happening with your documents.",
+    "new_document": "New Document",
+    "view_all": "View All",
+    "recent_documents": "Recent Documents",
+    "stats": {
+      "total_documents": "Total Documents",
+      "added_today": "Added Today",
+      "my_documents": "My Documents"
+    },
+    "search": {
+      "placeholder": "Search documents...",
+      "tags": {
+        "placeholder": "Search by tags (comma separated)...",
+        "help": "Enter tag names separated by commas. Example: finance, invoice, contract"
+      }
+    },
+    "filter": {
+      "company": "Company",
+      "document_type": "Document Type",
+      "status": "Status",
+      "sort": "Sort by"
+    },
+    "no_match": "No documents match your search",
+    "no_documents": "No documents yet",
+    "try_adjusting": "Try adjusting your search filters",
+    "create_first": "Create your first document to get started",
+    "create_document": "Create Document",
+    "clear_filters": "Clear Filters"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "archived": "Archived",
+    "draft": "Draft"
+  },
+  "sort": {
+    "newest": "Newest First",
+    "oldest": "Oldest First",
+    "title_az": "Title A-Z",
+    "title_za": "Title Z-A",
+    "recently_updated": "Recently Updated"
+  },
   "user": {
     "menu": {
       "profile": "My Profile",
@@ -32,12 +76,6 @@
   "footer": {
     "copyright": "Document Management System © 2025",
     "version": "v1.0.0"
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "subtitle": "Welcome back! Here's what's happening with your documents.",
-    "new_document": "New Document",
-    "view_all": "View All"
   },
   "login": {
     "username": {

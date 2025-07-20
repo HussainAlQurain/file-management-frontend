@@ -18,6 +18,50 @@
       "users": "المستخدمون"
     }
   },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "subtitle": "مرحباً بعودتك! إليك ما يحدث مع وثائقك.",
+    "new_document": "وثيقة جديدة",
+    "view_all": "عرض الكل",
+    "recent_documents": "الوثائق الحديثة",
+    "stats": {
+      "total_documents": "إجمالي الوثائق",
+      "added_today": "المضافة اليوم",
+      "my_documents": "وثائقي"
+    },
+    "search": {
+      "placeholder": "البحث في الوثائق...",
+      "tags": {
+        "placeholder": "البحث بالعلامات (مفصولة بفواصل)...",
+        "help": "أدخل أسماء العلامات مفصولة بفواصل. مثال: مالية، فاتورة، عقد"
+      }
+    },
+    "filter": {
+      "company": "الشركة",
+      "document_type": "نوع الوثيقة",
+      "status": "الحالة",
+      "sort": "ترتيب حسب"
+    },
+    "no_match": "لا توجد وثائق تطابق بحثك",
+    "no_documents": "لا توجد وثائق بعد",
+    "try_adjusting": "جرب تعديل مرشحات البحث",
+    "create_first": "أنشئ وثيقتك الأولى للبدء",
+    "create_document": "إنشاء وثيقة",
+    "clear_filters": "مسح المرشحات"
+  },
+  "status": {
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "archived": "مؤرشف",
+    "draft": "مسودة"
+  },
+  "sort": {
+    "newest": "الأحدث أولاً",
+    "oldest": "الأقدم أولاً",
+    "title_az": "العنوان أ-ي",
+    "title_za": "العنوان ي-أ",
+    "recently_updated": "المحدث مؤخراً"
+  },
   "user": {
     "menu": {
       "profile": "ملفي الشخصي",
@@ -32,12 +76,6 @@
   "footer": {
     "copyright": "نظام إدارة الوثائق © 2025",
     "version": "الإصدار 1.0.0"
-  },
-  "dashboard": {
-    "title": "لوحة التحكم",
-    "subtitle": "مرحباً بعودتك! إليك ما يحدث مع وثائقك.",
-    "new_document": "وثيقة جديدة",
-    "view_all": "عرض الكل"
   },
   "login": {
     "username": {
