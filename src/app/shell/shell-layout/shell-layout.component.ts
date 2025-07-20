@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
@@ -42,7 +42,7 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
     LanguageSwitcherComponent
   ],
   template: `
-    <nz-layout class="app-layout">
+    <nz-layout class="app-layout" [class.rtl]="translationService.isRTL()" [dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
       <!-- Sider -->
       <nz-sider 
         class="menu-sidebar"
@@ -191,6 +191,37 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
 
     .app-layout {
       height: 100%;
+    }
+
+    .app-layout.rtl {
+      direction: rtl;
+    }
+
+    .app-layout.rtl .menu-sidebar {
+      order: 2;
+    }
+
+    .app-layout.rtl .ant-layout {
+      order: 1;
+    }
+
+    /* RTL specific styles */
+    .app-layout.rtl .sidebar-logo {
+      padding-left: 0;
+      padding-right: 24px;
+    }
+
+    .app-layout.rtl .sidebar-logo .logo-icon {
+      margin-right: 0;
+      margin-left: 12px;
+    }
+
+    .app-layout.rtl .header-trigger {
+      padding: 0 0 0 24px;
+    }
+
+    .app-layout.rtl .header-actions {
+      flex-direction: row-reverse;
     }
 
     .menu-sidebar {

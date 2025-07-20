@@ -31,12 +31,27 @@ body.ltr {
 }
 
 /* RTL-specific fixes for NG-ZORRO components */
+body.rtl .ant-layout {
+  direction: rtl;
+}
+
+body.rtl .ant-layout-has-sider {
+  flex-direction: row-reverse;
+}
+
 body.rtl .ant-layout-sider {
+  position: relative;
   order: 1;
 }
 
 body.rtl .ant-layout-content {
   order: 0;
+  margin-left: 0;
+}
+
+body.rtl .ant-layout-header {
+  direction: rtl;
+  padding: 0 24px 0 50px;
 }
 
 body.rtl .ant-menu-horizontal {
@@ -45,6 +60,47 @@ body.rtl .ant-menu-horizontal {
 
 body.rtl .ant-dropdown-menu {
   text-align: right;
+}
+
+body.rtl .ant-menu-item {
+  text-align: right;
+}
+
+body.rtl .ant-menu-submenu-title {
+  text-align: right;
+}
+
+/* Fix for collapsed sidebar in RTL */
+body.rtl .ant-layout-sider-collapsed {
+  width: 80px !important;
+  max-width: 80px !important;
+  min-width: 80px !important;
+}
+
+/* Header actions alignment for RTL */
+body.rtl .app-header {
+  direction: rtl;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+body.rtl .header-actions {
+  order: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+body.rtl .header-title {
+  order: 2;
+  flex: 1;
+  text-align: center;
+  margin: 0 16px;
+}
+
+body.rtl .header-trigger {
+  order: 3;
 }
 
 /* Arabic font support */
