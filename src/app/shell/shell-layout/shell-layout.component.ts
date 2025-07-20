@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 
 // NG-ZORRO imports
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
@@ -16,6 +17,7 @@ import { NzDividerModule } from 'ng-zorro-antd/divider';
 
 import { AuthService } from '../../core/services/auth.service';
 import { LoadingService } from '../../core/services/loading.service';
+import { TranslationService } from '../../core/services/translation.service';
 import { HasRoleDirective } from '../../shared/directives/has-role.directive';
 import { LanguageSwitcherComponent } from '../../shared/components/language-switcher/language-switcher.component';
 
@@ -25,6 +27,7 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
   imports: [
     CommonModule, 
     RouterModule,
+    TranslateModule,
     NzLayoutModule,
     NzMenuModule,
     NzIconModule,
@@ -52,42 +55,42 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
         <div class="sidebar-logo">
           <a routerLink="/dashboard">
             <span nz-icon nzType="file-text" nzTheme="outline" class="logo-icon"></span>
-            <h1 *ngIf="!isCollapsed" i18n="@@app.title">DMS</h1>
+            <h1 *ngIf="!isCollapsed">{{ 'app.title' | translate }}</h1>
           </a>
         </div>
         
         <ul nz-menu nzMode="inline" [nzInlineCollapsed]="isCollapsed">
           <li nz-menu-item nzMatchRouter routerLink="/dashboard">
             <span nz-icon nzType="dashboard" nzTheme="outline"></span>
-            <span i18n="@@nav.dashboard">Dashboard</span>
+            <span>{{ 'nav.dashboard' | translate }}</span>
           </li>
           
           <li nz-menu-item nzMatchRouter routerLink="/documents">
             <span nz-icon nzType="file-text" nzTheme="outline"></span>
-            <span i18n="@@nav.documents">Documents</span>
+            <span>{{ 'nav.documents' | translate }}</span>
           </li>
           
           <li nz-menu-item nzMatchRouter routerLink="/documents/browse">
             <span nz-icon nzType="apartment" nzTheme="outline"></span>
-            <span i18n="@@nav.browse.company">Browse by Company</span>
+            <span>{{ 'nav.browse.company' | translate }}</span>
           </li>
           
           <!-- Admin Section -->
           <ng-container *appHasRole="'SYS_ADMIN'">
             <li nz-menu-divider></li>
-            <li nz-submenu nzIcon="setting" [nzTitle]="adminTitle">
+                        <li nz-submenu [nzTitle]="'nav.admin.title' | translate" nzIcon="setting">
               <ul>
                 <li nz-menu-item nzMatchRouter routerLink="/companies">
                   <span nz-icon nzType="bank" nzTheme="outline"></span>
-                  <span i18n="@@nav.admin.companies">Companies</span>
+                  <span>{{ 'nav.admin.companies' | translate }}</span>
                 </li>
                 <li nz-menu-item nzMatchRouter routerLink="/resource-types">
                   <span nz-icon nzType="folder" nzTheme="outline"></span>
-                  <span i18n="@@nav.admin.resource-types">Resource Types</span>
+                  <span>{{ 'nav.admin.resource_types' | translate }}</span>
                 </li>
                 <li nz-menu-item nzMatchRouter routerLink="/users">
                   <span nz-icon nzType="team" nzTheme="outline"></span>
-                  <span i18n="@@nav.admin.users">Users</span>
+                  <span>{{ 'nav.admin.users' | translate }}</span>
                 </li>
               </ul>
             </li>
@@ -104,7 +107,7 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
             </span>
             
             <div class="header-title">
-              <h2 i18n="@@app.header.title">Document Management System</h2>
+              <h2>{{ 'app.header.title' | translate }}</h2>
             </div>
             
             <div class="header-actions">
@@ -144,16 +147,16 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
                   <li nz-menu-divider></li>
                   <li nz-menu-item routerLink="/profile">
                     <span nz-icon nzType="user" nzTheme="outline"></span>
-                    <span i18n="@@user.menu.profile">My Profile</span>
+                    <span>{{ 'user.menu.profile' | translate }}</span>
                   </li>
                   <li nz-menu-item routerLink="/profile/change-password">
                     <span nz-icon nzType="lock" nzTheme="outline"></span>
-                    <span i18n="@@user.menu.change-password">Change Password</span>
+                    <span>{{ 'user.menu.change_password' | translate }}</span>
                   </li>
                   <li nz-menu-divider></li>
                   <li nz-menu-item (click)="logout()">
                     <span nz-icon nzType="logout" nzTheme="outline"></span>
-                    <span i18n="@@user.menu.logout">Logout</span>
+                    <span>{{ 'user.menu.logout' | translate }}</span>
                   </li>
                 </ul>
               </nz-dropdown-menu>
@@ -171,8 +174,8 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
         <!-- Footer -->
         <nz-footer>
           <div class="footer-content">
-            <span i18n="@@footer.copyright">Document Management System © 2025</span>
-            <span class="version" i18n="@@footer.version">v1.0.0</span>
+            <span>{{ 'footer.copyright' | translate }}</span>
+            <span class="version">{{ 'footer.version' | translate }}</span>
           </div>
         </nz-footer>
       </nz-layout>
@@ -387,12 +390,10 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
 export class ShellLayoutComponent {
   authService = inject(AuthService);
   loadingService = inject(LoadingService);
+  translationService = inject(TranslationService);
   router = inject(Router);
   
   isCollapsed = false;
-  
-  // i18n strings
-  adminTitle = $localize`:@@nav.admin.title:Admin`;
   
   getUserInitial(): string {
     const user = this.authService.currentUserSignal();
@@ -405,9 +406,9 @@ export class ShellLayoutComponent {
   getUserRole(): string {
     const user = this.authService.currentUserSignal();
     if (user?.roles?.includes('SYS_ADMIN')) {
-      return $localize`:@@user.role.admin:System Admin`;
+      return this.translationService.getTranslation('user.role.admin');
     }
-    return $localize`:@@user.role.user:User`;
+    return this.translationService.getTranslation('user.role.user');
   }
   
   logout(): void {

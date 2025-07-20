@@ -2,7 +2,7 @@
   window["env"] = window["env"] || {};
   
   // Test configuration with your EC2 IP
-  window["env"]["apiUrl"] = "http://16.24.170.37:8080/api";
+  window["env"]["apiUrl"] = "http://localhost:8080/api";
   window["env"]["appName"] = "Document Management System";
   window["env"]["version"] = "1.0.0";
   window["env"]["test"] = "This is working!";

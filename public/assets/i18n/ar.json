@@ -1,0 +1,88 @@
+{
+  "app": {
+    "title": "نظام إدارة الوثائق",
+    "header": {
+      "title": "نظام إدارة الوثائق"
+    }
+  },
+  "nav": {
+    "dashboard": "لوحة التحكم",
+    "documents": "الوثائق",
+    "browse": {
+      "company": "تصفح حسب الشركة"
+    },
+    "admin": {
+      "title": "الإدارة",
+      "companies": "الشركات",
+      "resource_types": "أنواع الموارد",
+      "users": "المستخدمون"
+    }
+  },
+  "user": {
+    "menu": {
+      "profile": "ملفي الشخصي",
+      "change_password": "تغيير كلمة المرور",
+      "logout": "تسجيل الخروج"
+    },
+    "role": {
+      "admin": "مدير النظام",
+      "user": "مستخدم"
+    }
+  },
+  "footer": {
+    "copyright": "نظام إدارة الوثائق © 2025",
+    "version": "الإصدار 1.0.0"
+  },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "subtitle": "مرحباً بعودتك! إليك ما يحدث مع وثائقك.",
+    "new_document": "وثيقة جديدة",
+    "view_all": "عرض الكل"
+  },
+  "login": {
+    "username": {
+      "label": "اسم المستخدم",
+      "placeholder": "أدخل اسم المستخدم",
+      "required": "اسم المستخدم مطلوب"
+    },
+    "password": {
+      "label": "كلمة المرور",
+      "placeholder": "أدخل كلمة المرور",
+      "required": "كلمة المرور مطلوبة"
+    },
+    "button": "تسجيل الدخول"
+  },
+  "documents": {
+    "title": "الوثائق",
+    "search": "البحث في الوثائق...",
+    "filters": "المرشحات",
+    "no_results": "لم يتم العثور على وثائق",
+    "actions": {
+      "view": "عرض",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "download": "تحميل"
+    }
+  },
+  "common": {
+    "loading": "جاري التحميل...",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "view": "عرض",
+    "search": "بحث",
+    "filter": "تصفية",
+    "clear": "مسح",
+    "submit": "إرسال",
+    "back": "العودة",
+    "next": "التالي",
+    "previous": "السابق",
+    "close": "إغلاق",
+    "download": "تحميل",
+    "upload": "رفع",
+    "refresh": "تحديث",
+    "apply": "تطبيق",
+    "reset": "إعادة تعيين"
+  }
+}

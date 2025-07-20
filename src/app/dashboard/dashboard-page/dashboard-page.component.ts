@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -32,6 +33,7 @@ import { Company } from '../../core/models/company.model';
     CommonModule,
     RouterModule,
     ReactiveFormsModule,
+    TranslateModule,
     NzCardModule,
     NzIconModule,
     NzButtonModule,
@@ -50,12 +52,12 @@ import { Company } from '../../core/models/company.model';
       <!-- Page Header -->
       <div class="flex justify-between items-center mb-6">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900" i18n="@@dashboard.title">Dashboard</h1>
-          <p class="text-gray-600 mt-1" i18n="@@dashboard.subtitle">Welcome back! Here's what's happening with your documents.</p>
+          <h1 class="text-3xl font-bold text-gray-900">{{ 'dashboard.title' | translate }}</h1>
+          <p class="text-gray-600 mt-1">{{ 'dashboard.subtitle' | translate }}</p>
         </div>
         <button nz-button nzType="primary" routerLink="/documents/new">
           <nz-icon nzType="plus"></nz-icon>
-          <span i18n="@@dashboard.new-document">New Document</span>
+          <span>{{ 'dashboard.new_document' | translate }}</span>
         </button>
       </div>
 
@@ -66,7 +68,7 @@ import { Company } from '../../core/models/company.model';
       <nz-card [nzTitle]="recentDocumentsTitle" class="mb-6">
         <ng-template #extra>
           <button nz-button nzType="link" routerLink="/documents">
-            <span i18n="@@dashboard.view-all">View All</span>
+            <span>{{ 'dashboard.view_all' | translate }}</span>
             <nz-icon nzType="arrow-right"></nz-icon>
           </button>
         </ng-template>

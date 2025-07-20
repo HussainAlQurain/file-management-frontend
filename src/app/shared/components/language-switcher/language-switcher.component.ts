@@ -1,16 +1,11 @@
-import { Component, LOCALE_ID, Inject } from '@angular/core';
-import { CommonModule, DOCUMENT } from '@angular/common';
+import { Component, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 
-interface Language {
-  code: string;
-  name: string;
-  nativeName: string;
-  flag: string;
-  dir: 'ltr' | 'rtl';
-}
+import { TranslationService, Language } from '../../../core/services/translation.service';
 
 @Component({
   selector: 'app-language-switcher',
@@ -19,11 +14,12 @@ interface Language {
     CommonModule,
     NzSelectModule,
     NzIconModule,
-    FormsModule
+    FormsModule,
+    TranslateModule
   ],
   template: `
     <nz-select 
-      [ngModel]="currentLanguage"
+      [ngModel]="currentLanguage()"
       (ngModelChange)="onLanguageChange($event)"
       [nzSize]="'default'"
       style="width: 120px;">
@@ -48,52 +44,22 @@ interface Language {
   `]
 })
 export class LanguageSwitcherComponent {
-  languages: Language[] = [
-    {
-      code: 'en',
-      name: 'English',
-      nativeName: 'English',
-      flag: '🇺🇸',
-      dir: 'ltr'
-    },
-    {
-      code: 'ar',
-      name: 'Arabic',
-      nativeName: 'العربية',
-      flag: '🇸🇦',
-      dir: 'rtl'
-    }
-  ];
+  private translationService = inject(TranslationService);
 
-  currentLanguage: string;
+  // Get languages from the translation service
+  languages = this.translationService.languages;
+  
+  // Get current language as a signal
+  currentLanguage = signal<string>(this.translationService.getCurrentLanguage());
 
-  constructor(
-    @Inject(LOCALE_ID) private locale: string,
-    @Inject(DOCUMENT) private document: Document
-  ) {
-    this.currentLanguage = this.locale;
+  constructor() {
+    // Subscribe to language changes to update the current language signal
+    this.translationService.languageChange$.subscribe(language => {
+      this.currentLanguage.set(language.code);
+    });
   }
 
   onLanguageChange(langCode: string): void {
-    const selectedLang = this.languages.find(lang => lang.code === langCode);
-    if (!selectedLang) return;
-
-    // Set document direction and lang attribute
-    this.document.documentElement.dir = selectedLang.dir;
-    this.document.documentElement.lang = langCode;
-    
-    // For production apps, you would navigate to the localized version
-    // For now, we'll reload the page to apply the new locale
-    const baseHref = langCode === 'en' ? '/' : `/${langCode}/`;
-    
-    // In a real implementation, you would have different routes for each language
-    // For development, we can show a message about language switching
-    console.log(`Language changed to: ${selectedLang.name} (${selectedLang.nativeName})`);
-    console.log(`Direction: ${selectedLang.dir}`);
-    console.log(`Base href would be: ${baseHref}`);
-    
-    // For now, just update the document attributes
-    // In production, you would redirect to the appropriate language URL
-    this.currentLanguage = langCode;
+    this.translationService.setLanguage(langCode);
   }
 } 

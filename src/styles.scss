@@ -19,6 +19,39 @@ body {
   color: #000000d9;
 }
 
+/* RTL Support */
+body.rtl {
+  direction: rtl;
+  text-align: right;
+}
+
+body.ltr {
+  direction: ltr;
+  text-align: left;
+}
+
+/* RTL-specific fixes for NG-ZORRO components */
+body.rtl .ant-layout-sider {
+  order: 1;
+}
+
+body.rtl .ant-layout-content {
+  order: 0;
+}
+
+body.rtl .ant-menu-horizontal {
+  float: right;
+}
+
+body.rtl .ant-dropdown-menu {
+  text-align: right;
+}
+
+/* Arabic font support */
+body.rtl {
+  font-family: 'Arial', 'Tahoma', 'Microsoft Sans Serif', sans-serif;
+}
+
 /* NG-ZORRO Theme Customization */
 :root {
   --ant-primary-color: #1890ff;

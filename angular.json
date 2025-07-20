@@ -13,15 +13,6 @@
       "root": "",
       "sourceRoot": "src",
       "prefix": "app",
-      "i18n": {
-        "sourceLocale": "en",
-        "locales": {
-          "ar": {
-            "translation": "src/locale/messages.ar.xlf",
-            "baseHref": "/ar/"
-          }
-        }
-      },
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:application",
@@ -67,23 +58,6 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
-            },
-            "ar": {
-              "outputPath": "dist/dms/ar/",
-              "localize": ["ar"],
-              "budgets": [
-                {
-                  "type": "initial",
-                  "maximumWarning": "2MB",
-                  "maximumError": "5MB"
-                },
-                {
-                  "type": "anyComponentStyle",
-                  "maximumWarning": "10kB",
-                  "maximumError": "20kB"
-                }
-              ],
-              "outputHashing": "all"
             }
           },
           "defaultConfiguration": "production"
@@ -96,9 +70,6 @@
             },
             "development": {
               "buildTarget": "dms:build:development"
-            },
-            "ar": {
-              "buildTarget": "dms:build:ar"
             }
           },
           "defaultConfiguration": "development"
@@ -133,5 +104,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": false
   }
 }
