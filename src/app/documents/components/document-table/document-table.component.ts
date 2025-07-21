@@ -1,6 +1,7 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 
 // NG-ZORRO imports
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -16,6 +17,7 @@ import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzAvatarModule } from 'ng-zorro-antd/avatar';
 
 import { Document } from '../../../core/models/document.model';
+import { TranslationService } from '../../../core/services/translation.service';
 
 export interface PageEvent {
   pageIndex: number;
@@ -28,6 +30,7 @@ export interface PageEvent {
   imports: [
     CommonModule,
     RouterModule,
+    TranslateModule,
     NzTableModule,
     NzButtonModule,
     NzIconModule,
@@ -41,8 +44,8 @@ export interface PageEvent {
     NzAvatarModule
   ],
   template: `
-    <div class="document-table">
-      <nz-spin [nzSpinning]="loading" nzTip="Loading documents...">
+    <div class="document-table" [class.rtl]="translationService.isRTL()">
+      <nz-spin [nzSpinning]="loading" [nzTip]="'documents.table.loading' | translate">
         <nz-table 
           #documentsTable
           [nzData]="documents" 
@@ -61,14 +64,14 @@ export interface PageEvent {
           
           <thead>
             <tr>
-              <th nzWidth="28%">Title</th>
-              <th nzWidth="13%">Resource Code</th>
-              <th nzWidth="10%">Type</th>
-              <th nzWidth="12%">Tags</th>
-              <th nzWidth="8%">Status</th>
-              <th nzWidth="9%">Owner</th>
-              <th nzWidth="8%">File Type</th>
-              <th nzWidth="12%" nzAlign="center">Actions</th>
+              <th nzWidth="28%">{{ 'documents.table.title' | translate }}</th>
+              <th nzWidth="13%">{{ 'documents.table.resource_code' | translate }}</th>
+              <th nzWidth="10%">{{ 'documents.table.type' | translate }}</th>
+              <th nzWidth="12%">{{ 'documents.table.tags' | translate }}</th>
+              <th nzWidth="8%">{{ 'documents.table.status' | translate }}</th>
+              <th nzWidth="9%">{{ 'documents.table.owner' | translate }}</th>
+              <th nzWidth="8%">{{ 'documents.table.file_type' | translate }}</th>
+              <th nzWidth="12%" nzAlign="center">{{ 'documents.table.actions' | translate }}</th>
             </tr>
           </thead>
           
@@ -92,13 +95,13 @@ export interface PageEvent {
                         nzType="arrow-right"
                         nzTheme="outline"
                         class="text-gray-400 mr-1"
-                        [nz-tooltip]="'Child of: ' + document.parent.title">
+                        [nz-tooltip]="('documents.table.child_of' | translate) + ': ' + document.parent.title">
                       </nz-icon>
                       <nz-badge 
                         *ngIf="document.children && document.children.length > 0"
                         [nzCount]="document.children.length" 
                         nzSize="small"
-                        [nz-tooltip]="'Has ' + document.children.length + ' child document(s)'">
+                        [nz-tooltip]="('documents.table.has_children' | translate) + ' ' + document.children.length + ' ' + ('documents.table.child_documents' | translate)">
                         <nz-icon nzType="folder" nzTheme="outline" class="text-blue-500 mr-1"></nz-icon>
                       </nz-badge>
                       <a [routerLink]="['/documents', document.id]" 
@@ -156,7 +159,7 @@ export interface PageEvent {
               
               <!-- Owner -->
               <td>
-                <span class="text-gray-700">{{ document.owner?.username || document.owner?.email || 'System' }}</span>
+                <span class="text-gray-700">{{ document.owner?.username || document.owner?.email || ('documents.table.system' | translate) }}</span>
               </td>
               
               <!-- File Type -->
@@ -189,25 +192,25 @@ export interface PageEvent {
                     <li nz-menu-item>
                       <a [routerLink]="['/documents', document.id]">
                         <nz-icon nzType="eye" nzTheme="outline"></nz-icon>
-                        <span>View</span>
+                        <span>{{ 'documents.actions.view' | translate }}</span>
                       </a>
                     </li>
                     <li nz-menu-item>
                       <a [routerLink]="['/documents', document.id, 'edit']">
                         <nz-icon nzType="edit" nzTheme="outline"></nz-icon>
-                        <span>Edit</span>
+                        <span>{{ 'documents.actions.edit' | translate }}</span>
                       </a>
                     </li>
                     <li nz-menu-item>
                       <a [routerLink]="['/documents', document.id, 'acl']">
                         <nz-icon nzType="safety" nzTheme="outline"></nz-icon>
-                        <span>Manage Access</span>
+                        <span>{{ 'documents.actions.manage_access' | translate }}</span>
                       </a>
                     </li>
                     <li nz-menu-divider></li>
                     <li nz-menu-item nzDanger (click)="onDelete(document)">
                       <nz-icon nzType="delete" nzTheme="outline"></nz-icon>
-                      <span>Delete</span>
+                      <span>{{ 'documents.actions.delete' | translate }}</span>
                     </li>
                   </ul>
                 </nz-dropdown-menu>
@@ -220,13 +223,13 @@ export interface PageEvent {
         <nz-empty 
           *ngIf="!loading && documents.length === 0"
           nzNotFoundImage="simple" 
-          [nzNotFoundContent]="'No documents found'"
+          [nzNotFoundContent]="'documents.table.no_documents' | translate"
           style="margin: 40px 0;">
           <ng-template #nzNotFoundContent>
-            <div class="text-center">
+            <div class="text-center" [class.text-right]="translationService.isRTL()">
               <nz-icon nzType="folder-open" class="text-5xl text-gray-300 mb-4"></nz-icon>
-              <h3 class="text-lg font-medium text-gray-900 mb-2">No documents found</h3>
-              <p class="text-gray-500">Try adjusting your filters or create a new document</p>
+              <h3 class="text-lg font-medium text-gray-900 mb-2">{{ 'documents.table.no_documents_title' | translate }}</h3>
+              <p class="text-gray-500">{{ 'documents.table.no_documents_subtitle' | translate }}</p>
             </div>
           </ng-template>
         </nz-empty>
@@ -330,6 +333,8 @@ export interface PageEvent {
   `]
 })
 export class DocumentTableComponent {
+  translationService = inject(TranslationService);
+  
   @Input() documents: Document[] = [];
   @Input() loading = false;
   @Input() totalItems = 0;

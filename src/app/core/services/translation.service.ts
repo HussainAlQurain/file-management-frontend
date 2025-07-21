@@ -56,7 +56,20 @@ export class TranslationService {
     
     // Load saved language preference or default to 'en'
     const savedLang = localStorage.getItem('preferred-language') || 'en';
-    this.setLanguage(savedLang);
+    
+    // Initialize with default language first
+    this.translateService.use('en').subscribe({
+      next: () => {
+        console.log('Default language (en) loaded successfully');
+        // Then set the preferred language if different
+        if (savedLang !== 'en') {
+          this.setLanguage(savedLang);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading default language:', error);
+      }
+    });
 
     // Effect to update document properties when language changes
     effect(() => {
@@ -76,21 +89,26 @@ export class TranslationService {
     }
 
     // Update Angular translate service
-    this.translateService.use(langCode);
-    
-    // Update ng-zorro locale
-    this.nzI18nService.setLocale(language.nzLocale);
-    
-    // Update current language signal
-    this.currentLanguage.set(language);
-    
-    // Emit language change
-    this.languageChange$.next(language);
-    
-    // Save preference
-    localStorage.setItem('preferred-language', langCode);
-    
-    console.log(`Language changed to: ${language.name} (${language.nativeName})`);
+    this.translateService.use(langCode).subscribe({
+      next: () => {
+        console.log(`Language changed to: ${language.name} (${language.nativeName})`);
+        
+        // Update ng-zorro locale
+        this.nzI18nService.setLocale(language.nzLocale);
+        
+        // Update current language signal
+        this.currentLanguage.set(language);
+        
+        // Emit language change
+        this.languageChange$.next(language);
+        
+        // Save preference
+        localStorage.setItem('preferred-language', langCode);
+      },
+      error: (error) => {
+        console.error(`Error loading language ${langCode}:`, error);
+      }
+    });
   }
 
   /**

@@ -22,8 +22,8 @@ bootstrapApplication(AppComponent, {
           deps: [HttpClient],
         },
         defaultLanguage: 'en',
+        useDefaultLang: true,
       })
     ),
-    TranslateService
   ]
 }).catch((err) => console.error(err));

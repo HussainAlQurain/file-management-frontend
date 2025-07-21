@@ -13,15 +13,11 @@ import { TranslationService } from './core/services/translation.service';
 export class AppComponent implements OnInit {
   title = 'Document Management System';
   
-  private translateService = inject(TranslateService);
   private translationService = inject(TranslationService);
   
   ngOnInit() {
-    // Initialize translation service
-    this.translateService.setDefaultLang('en');
-    this.translateService.use('en');
-    
-    // Initialize our custom translation service (this will load saved language preference)
-    // The service constructor already handles initialization
+    // The TranslationService constructor already handles all initialization
+    // including setting default language and loading saved preferences
+    console.log('App component initialized');
   }
 }

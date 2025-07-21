@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { NzTableModule, NzTableQueryParams } from 'ng-zorro-antd/table';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -16,6 +17,7 @@ import { UserService } from '../../../core/services/user.service';
 import { User } from '../../../core/models/auth.model';
 import { Page } from '../../../core/models/document.model';
 import { SnackbarService } from '../../../core/services/snackbar.service';
+import { TranslationService } from '../../../core/services/translation.service';
 
 @Component({
   selector: 'app-user-list-page',
@@ -23,6 +25,7 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
   imports: [
     CommonModule,
     RouterModule,
+    TranslateModule,
     NzTableModule,
     NzButtonModule,
     NzIconModule,
@@ -33,16 +36,16 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
     NzDropDownModule
   ],
   template: `
-    <div class="p-6">
+    <div class="p-6" [class.rtl]="translationService.isRTL()" [dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
       <!-- Page Header -->
-      <div class="flex justify-between items-center mb-6">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-900">User Management</h1>
-          <p class="text-gray-600 mt-1">Manage system users and their roles</p>
+      <div class="flex justify-between items-center mb-6" [class]="translationService.isRTL() ? 'flex-row-reverse' : 'flex-row'">
+        <div [class]="translationService.isRTL() ? 'text-right' : 'text-left'">
+          <h1 class="text-3xl font-bold text-gray-900">{{ 'admin.users.title' | translate }}</h1>
+          <p class="text-gray-600 mt-1">{{ 'admin.users.subtitle' | translate }}</p>
         </div>
         <button nz-button nzType="primary" routerLink="new">
           <nz-icon nzType="user-add"></nz-icon>
-          Create User
+          {{ 'admin.users.create_user' | translate }}
         </button>
       </div>
 
@@ -62,12 +65,12 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
           (nzQueryParams)="onQueryParamsChange($event)">
           <thead>
             <tr>
-              <th nzWidth="80px" nzSortKey="id">ID</th>
-              <th nzSortKey="username">Username</th>
-              <th nzSortKey="email">Email</th>
-              <th>Roles</th>
-              <th nzWidth="180px" nzSortKey="createdAt">Created At</th>
-              <th nzWidth="140px" nzAlign="center">Actions</th>
+              <th nzWidth="80px" nzSortKey="id">{{ 'admin.users.table.id' | translate }}</th>
+              <th nzSortKey="username">{{ 'admin.users.table.username' | translate }}</th>
+              <th nzSortKey="email">{{ 'admin.users.table.email' | translate }}</th>
+              <th>{{ 'admin.users.table.roles' | translate }}</th>
+              <th nzWidth="180px" nzSortKey="createdAt">{{ 'admin.users.table.created_at' | translate }}</th>
+              <th nzWidth="140px" nzAlign="center">{{ 'admin.users.table.actions' | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -80,7 +83,8 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
                   <nz-icon 
                     nzType="user" 
                     [class]="getUserIcon(user.roles)"
-                    class="mr-2">
+                    [class.mr-2]="!translationService.isRTL()"
+                    [class.ml-2]="translationService.isRTL()">
                   </nz-icon>
                   <span class="font-medium">{{ user.username }}</span>
                 </div>
@@ -92,8 +96,8 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
                 <div class="flex gap-1 flex-wrap">
                   @for (role of user.roles; track role) {
                     <nz-tag [nzColor]="getRoleColor(role)">
-                      <nz-icon [nzType]="getRoleIcon(role)" class="mr-1"></nz-icon>
-                      {{ role }}
+                      <nz-icon [nzType]="getRoleIcon(role)" [class.mr-1]="!translationService.isRTL()" [class.ml-1]="translationService.isRTL()"></nz-icon>
+                      {{ 'admin.users.roles.' + role | translate }}
                     </nz-tag>
                   }
                 </div>
@@ -115,16 +119,16 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
                     <ul nz-menu>
                       <li nz-menu-item [routerLink]="[user.id]">
                         <nz-icon nzType="edit" nzTheme="outline"></nz-icon>
-                        Edit User
+                        {{ 'admin.users.actions.edit' | translate }}
                       </li>
                       <li nz-menu-item (click)="onResetPassword(user)">
                         <nz-icon nzType="key" nzTheme="outline"></nz-icon>
-                        Reset Password
+                        {{ 'admin.users.actions.reset_password' | translate }}
                       </li>
                       <li nz-menu-divider></li>
                       <li nz-menu-item (click)="onDeleteUser(user)" class="text-red-500">
                         <nz-icon nzType="delete" nzTheme="outline"></nz-icon>
-                        Delete User
+                        {{ 'admin.users.actions.delete' | translate }}
                       </li>
                     </ul>
                   </nz-dropdown-menu>
@@ -138,11 +142,11 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
         @if (users().length === 0 && !isLoading()) {
           <nz-empty 
             nzNotFoundImage="simple" 
-            nzNotFoundContent="No users found">
+            [nzNotFoundContent]="'admin.users.empty.message' | translate">
             <div nz-empty-footer>
               <button nz-button nzType="primary" routerLink="new">
                 <nz-icon nzType="user-add"></nz-icon>
-                Create First User
+                {{ 'admin.users.empty.create_first' | translate }}
               </button>
             </div>
           </nz-empty>
@@ -161,6 +165,7 @@ export class UserListPageComponent implements OnInit {
   private router = inject(Router);
   private snackbar = inject(SnackbarService);
   private modal = inject(NzModalService);
+  protected translationService = inject(TranslationService);
 
   isLoading = signal(true);
   usersPage: WritableSignal<Page<User> | null> = signal(null);

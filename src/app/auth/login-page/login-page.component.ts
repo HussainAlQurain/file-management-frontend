@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -12,6 +13,7 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 
 import { AuthService } from '../../core/services/auth.service';
 import { SnackbarService } from '../../core/services/snackbar.service';
+import { TranslationService } from '../../core/services/translation.service';
 
 @Component({
   selector: 'app-login-page',
@@ -20,6 +22,7 @@ import { SnackbarService } from '../../core/services/snackbar.service';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    TranslateModule,
     NzCardModule,
     NzFormModule,
     NzInputModule,
@@ -28,11 +31,11 @@ import { SnackbarService } from '../../core/services/snackbar.service';
     NzSpinModule
   ],
   template: `
-    <div class="login-page min-h-screen flex items-center justify-center p-4 bg-gray-50">
-      <nz-card class="max-w-md w-full shadow-xl" [nzTitle]="loginTitle" [nzBordered]="false">
+    <div class="login-page min-h-screen flex items-center justify-center p-4 bg-gray-50" [class.rtl]="translationService.isRTL()" [dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
+      <nz-card class="max-w-md w-full shadow-xl" [nzTitle]="'auth.login.title' | translate" [nzBordered]="false">
         <form nz-form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
           <nz-form-item>
-            <nz-form-label [nzRequired]="true" i18n="@@login.username.label">Username</nz-form-label>
+            <nz-form-label [nzRequired]="true">{{ 'auth.login.username' | translate }}</nz-form-label>
             <nz-form-control [nzErrorTip]="usernameErrorTpl">
               <nz-input-group nzPrefixIcon="user">
                 <input 
@@ -40,19 +43,18 @@ import { SnackbarService } from '../../core/services/snackbar.service';
                   formControlName="username" 
                   type="text" 
                   autocomplete="username"
-                  i18n-placeholder="@@login.username.placeholder"
-                  placeholder="Enter your username">
+                  [placeholder]="'auth.login.username_placeholder' | translate">
               </nz-input-group>
               <ng-template #usernameErrorTpl let-control>
                 @if (control.hasError('required')) {
-                  <span i18n="@@login.username.required">Username is required</span>
+                  <span>{{ 'auth.login.username_required' | translate }}</span>
                 }
               </ng-template>
             </nz-form-control>
           </nz-form-item>
           
           <nz-form-item>
-            <nz-form-label [nzRequired]="true" i18n="@@login.password.label">Password</nz-form-label>
+            <nz-form-label [nzRequired]="true">{{ 'auth.login.password' | translate }}</nz-form-label>
             <nz-form-control [nzErrorTip]="passwordErrorTpl">
               <nz-input-group nzPrefixIcon="lock" [nzSuffix]="suffixTemplate">
                 <input 
@@ -60,8 +62,7 @@ import { SnackbarService } from '../../core/services/snackbar.service';
                   formControlName="password" 
                   [type]="showPassword ? 'text' : 'password'" 
                   autocomplete="current-password"
-                  i18n-placeholder="@@login.password.placeholder"
-                  placeholder="Enter your password">
+                  [placeholder]="'auth.login.password_placeholder' | translate">
               </nz-input-group>
               <ng-template #suffixTemplate>
                 <nz-icon 
@@ -72,7 +73,7 @@ import { SnackbarService } from '../../core/services/snackbar.service';
               </ng-template>
               <ng-template #passwordErrorTpl let-control>
                 @if (control.hasError('required')) {
-                  <span i18n="@@login.password.required">Password is required</span>
+                  <span>{{ 'auth.login.password_required' | translate }}</span>
                 }
               </ng-template>
             </nz-form-control>
@@ -89,7 +90,7 @@ import { SnackbarService } from '../../core/services/snackbar.service';
                 [disabled]="loginForm.invalid"
                 class="w-full">
                 <nz-icon nzType="login" nzTheme="outline"></nz-icon>
-                <span i18n="@@login.button">Login</span>
+                <span>{{ 'auth.login.button' | translate }}</span>
               </button>
             </nz-form-control>
           </nz-form-item>
@@ -114,6 +115,7 @@ export class LoginPageComponent {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private snackbar = inject(SnackbarService);
+  protected translationService = inject(TranslationService);
   
   loginForm: FormGroup = this.fb.group({
     username: ['', [Validators.required]],
@@ -122,9 +124,6 @@ export class LoginPageComponent {
   
   isLoading = false;
   showPassword = false;
-  
-  // i18n strings
-  loginTitle = $localize`:@@login.title:Login`;
   
   onSubmit(): void {
     if (this.loginForm.invalid) {
