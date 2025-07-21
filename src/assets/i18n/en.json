@@ -79,6 +79,13 @@
     "subtitle": "Welcome back! Here's what's happening with your documents.",
     "new_document": "New Document",
     "recent_documents": "Recent Documents",
+    "view_all": "View All",
+    "no_match": "No matching documents found",
+    "no_documents": "No documents yet",
+    "try_adjusting": "Try adjusting your filters or search terms",
+    "create_first": "Create your first document to get started",
+    "create_document": "Create Document",
+    "clear_filters": "Clear Filters",
     "stats": {
       "total_documents": "Total Documents",
       "added_today": "Added Today",
@@ -86,32 +93,31 @@
     },
     "search": {
       "placeholder": "Search documents...",
-      "tags_placeholder": "Search by tags (comma separated)...",
-      "help_text": "Enter tag names separated by commas. Example: finance, invoice, contract"
+      "tags": {
+        "placeholder": "Search by tags (comma separated)...",
+        "help": "Enter tag names separated by commas. Example: finance, invoice, contract"
+      }
     },
     "filter": {
       "company": "Company",
       "document_type": "Document Type",
       "status": "Status",
-      "sort_by": "Sort By"
-    },
-    "sort": {
-      "newest_first": "Newest First",
-      "oldest_first": "Oldest First",
-      "title_asc": "Title (A-Z)",
-      "title_desc": "Title (Z-A)"
-    },
-    "status": {
-      "draft": "Draft",
-      "active": "Active",
-      "archived": "Archived",
-      "pending": "Pending"
-    },
-    "empty": {
-      "title": "No documents yet",
-      "subtitle": "Create your first document to get started",
-      "action": "Create Document"
+      "sort": "Sort By"
     }
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "archived": "Archived",
+    "draft": "Draft",
+    "pending": "Pending"
+  },
+  "sort": {
+    "newest": "Newest First",
+    "oldest": "Oldest First",
+    "title_az": "Title (A-Z)",
+    "title_za": "Title (Z-A)",
+    "recently_updated": "Recently Updated"
   },
   "documents": {
     "table": {

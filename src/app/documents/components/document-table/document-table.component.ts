@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, OnInit, ChangeDetectorRef, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 // NG-ZORRO imports
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -332,8 +333,10 @@ export interface PageEvent {
     }
   `]
 })
-export class DocumentTableComponent {
+export class DocumentTableComponent implements OnInit {
   translationService = inject(TranslationService);
+  private cdr = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
   
   @Input() documents: Document[] = [];
   @Input() loading = false;
@@ -344,6 +347,16 @@ export class DocumentTableComponent {
   @Output() page = new EventEmitter<PageEvent>();
   @Output() delete = new EventEmitter<number>();
   @Output() view = new EventEmitter<number>();
+
+  ngOnInit(): void {
+    // Subscribe to language changes to trigger change detection
+    this.translationService.languageChange$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        // Force change detection when language changes
+        this.cdr.detectChanges();
+      });
+  }
   
   onPageIndexChange(pageIndex: number): void {
     this.page.emit({
