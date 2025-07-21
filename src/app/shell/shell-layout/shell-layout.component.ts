@@ -187,10 +187,16 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
       text-rendering: optimizeLegibility;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
     }
 
     .app-layout {
       height: 100%;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
     }
 
     .app-layout.rtl {
@@ -371,11 +377,18 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
     nz-content {
       margin: 24px;
       min-height: 280px;
+      overflow-x: hidden;
+      width: calc(100% - 48px);
+      max-width: calc(100% - 48px);
+      box-sizing: border-box;
     }
 
     .inner-content {
       background: transparent;
       min-height: calc(100vh - 64px - 24px - 24px - 64px);
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
     }
 
     nz-footer {

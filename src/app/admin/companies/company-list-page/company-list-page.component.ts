@@ -33,19 +33,20 @@ import { TranslationService } from '../../../core/services/translation.service';
     NzSpinModule,
     NzModalModule,
     NzDropDownModule,
-    NzEmptyModule
+    NzEmptyModule,
+    TranslateModule
   ],
   template: `
-    <div class="p-6">
+    <div class="p-6" [class.rtl]="translationService.isRTL()">
       <!-- Page Header -->
       <div class="flex justify-between items-center mb-6">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">Company Management</h1>
-          <p class="text-gray-600 mt-1">Manage companies and their configurations</p>
+          <h1 class="text-3xl font-bold text-gray-900">{{ 'admin.companies.title' | translate }}</h1>
+          <p class="text-gray-600 mt-1">{{ 'admin.companies.subtitle' | translate }}</p>
         </div>
         <button nz-button nzType="primary" routerLink="new">
           <nz-icon nzType="plus"></nz-icon>
-          Create Company
+          {{ 'admin.companies.create' | translate }}
         </button>
       </div>
 
@@ -60,11 +61,11 @@ import { TranslationService } from '../../../core/services/translation.service';
           [nzSize]="'middle'">
           <thead>
             <tr>
-              <th nzWidth="80px">ID</th>
-              <th>Name</th>
-              <th>Description</th>
-              <th nzWidth="180px">Created At</th>
-              <th nzWidth="120px" nzAlign="center">Actions</th>
+              <th nzWidth="80px">{{ 'admin.companies.table.id' | translate }}</th>
+              <th>{{ 'admin.companies.table.name' | translate }}</th>
+              <th>{{ 'admin.companies.table.description' | translate }}</th>
+              <th nzWidth="180px">{{ 'admin.companies.table.created_at' | translate }}</th>
+              <th nzWidth="120px" nzAlign="center">{{ 'admin.companies.table.actions' | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -83,7 +84,7 @@ import { TranslationService } from '../../../core/services/translation.service';
                 </div>
               </td>
               <td>
-                <span class="text-gray-600">{{ company.description || 'N/A' }}</span>
+                <span class="text-gray-600">{{ company.description || ('common.not_available' | translate) }}</span>
               </td>
               <td>
                 <span class="text-sm text-gray-500">{{ company.createdAt | date:'MMM dd, yyyy' }}</span>
@@ -147,6 +148,7 @@ export class CompanyListPageComponent implements OnInit {
   private companyService = inject(CompanyService);
   private modal = inject(NzModalService);
   private snackbar = inject(SnackbarService);
+  translationService = inject(TranslationService);
 
   isLoading = signal(false);
   companies = signal<Company[]>([]);

@@ -18,6 +18,49 @@
       "users": "Users"
     }
   },
+  "admin": {
+    "users": {
+      "title": "User Management",
+      "subtitle": "Manage system users and their roles",
+      "create_user": "Create User",
+      "table": {
+        "id": "ID",
+        "username": "Username",
+        "email": "Email",
+        "roles": "Roles",
+        "created_at": "Created At",
+        "actions": "Actions"
+      },
+      "roles": {
+        "admin": "Administrator",
+        "user": "User",
+        "manager": "Manager"
+      },
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete",
+        "view": "View Details"
+      }
+    },
+    "companies": {
+      "title": "Company Management",
+      "subtitle": "Manage companies and their configurations",
+      "create": "Create Company",
+      "table": {
+        "id": "ID",
+        "name": "Name",
+        "description": "Description",
+        "created_at": "Created At",
+        "actions": "Actions"
+      },
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete",
+        "access": "Manage Access",
+        "view": "View Details"
+      }
+    }
+  },
   "dashboard": {
     "title": "Dashboard",
     "subtitle": "Welcome back! Here's what's happening with your documents.",
@@ -95,17 +138,100 @@
     "search": "Search documents...",
     "filters": "Filters",
     "no_results": "No documents found",
+    "table": {
+      "loading": "Loading documents...",
+      "title": "Title",
+      "resource_code": "Resource Code",
+      "type": "Type",
+      "tags": "Tags",
+      "status": "Status",
+      "owner": "Owner",
+      "file_type": "File Type",
+      "actions": "Actions",
+      "child_of": "Child of",
+      "has_children": "Has",
+      "child_documents": "child document(s)",
+      "system": "System",
+      "no_documents": "No documents found",
+      "no_documents_title": "No documents found",
+      "no_documents_subtitle": "Try adjusting your filters or create a new document"
+    },
     "actions": {
       "view": "View",
       "edit": "Edit",
       "delete": "Delete",
-      "download": "Download"
+      "download": "Download",
+      "manage_access": "Manage Access"
+    },
+    "create": {
+      "title": "Create New Document",
+      "subtitle": "Follow the steps to create a new document",
+      "steps": {
+        "company": "Select Company",
+        "type": "Document Type",
+        "details": "Document Details",
+        "upload": "Upload File"
+      },
+      "step1": {
+        "title": "Select Company",
+        "description": "Choose the company this document belongs to",
+        "company": "Company",
+        "company_required": "Please select a company",
+        "company_placeholder": "Select a company"
+      },
+      "step2": {
+        "title": "Select Document Type",
+        "description": "Choose the type of document you want to create",
+        "type": "Document Type",
+        "type_required": "Please select a document type",
+        "type_placeholder": "Select a document type",
+        "no_types": "No document types available for this company"
+      },
+      "step3": {
+        "title": "Document Details",
+        "description": "Fill in the document information",
+        "basic_info": "Basic Information",
+        "doc_title": "Title",
+        "title_required": "Please enter a title",
+        "title_placeholder": "Enter document title",
+        "doc_description": "Description",
+        "description_placeholder": "Enter document description",
+        "tags": "Tags",
+        "tags_placeholder": "Add tags (comma separated)",
+        "custom_fields": "Custom Fields",
+        "parent_document": "Parent Document",
+        "parent_placeholder": "Search for parent document",
+        "no_parent": "No parent document"
+      },
+      "step4": {
+        "title": "Upload File",
+        "description": "Upload the document file",
+        "file": "File",
+        "file_required": "Please upload a file",
+        "upload_text": "Click or drag file to this area to upload",
+        "upload_hint": "Support for a single upload",
+        "uploading": "Uploading...",
+        "upload_success": "File uploaded successfully",
+        "upload_error": "Upload failed"
+      },
+      "buttons": {
+        "next": "Next",
+        "previous": "Previous",
+        "create": "Create Document",
+        "cancel": "Cancel"
+      },
+      "messages": {
+        "creating": "Creating document...",
+        "success": "Document created successfully",
+        "error": "Failed to create document"
+      }
     }
   },
   "common": {
     "loading": "Loading...",
     "save": "Save",
     "cancel": "Cancel",
+    "confirm": "Confirm",
     "delete": "Delete",
     "edit": "Edit",
     "view": "View",
@@ -121,6 +247,7 @@
     "upload": "Upload",
     "refresh": "Refresh",
     "apply": "Apply",
-    "reset": "Reset"
+    "reset": "Reset",
+    "not_available": "N/A"
   }
 }

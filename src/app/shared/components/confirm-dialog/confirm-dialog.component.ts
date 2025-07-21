@@ -1,10 +1,12 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NZ_MODAL_DATA, NzModalRef } from 'ng-zorro-antd/modal';
+import { TranslationService } from '../../../core/services/translation.service';
 
 export interface ConfirmDialogData {
   title: string;
@@ -19,12 +21,13 @@ export interface ConfirmDialogData {
   standalone: true,
   imports: [
     CommonModule,
+    TranslateModule,
     NzModalModule,
     NzButtonModule,
     NzIconModule
   ],
   template: `
-    <div class="confirm-dialog p-2">
+    <div class="confirm-dialog p-2" [class.rtl]="translationService.isRTL()">
       <div class="flex items-start mb-4">
         <nz-icon 
           [nzType]="getIcon()" 
@@ -42,7 +45,7 @@ export interface ConfirmDialogData {
           nz-button 
           nzType="default" 
           (click)="onCancel()">
-          {{ data.cancelText || 'Cancel' }}
+          {{ data.cancelText || ('common.cancel' | translate) }}
         </button>
         <button 
           nz-button 
@@ -50,7 +53,7 @@ export interface ConfirmDialogData {
           [nzDanger]="data.type === 'error'"
           (click)="onConfirm()">
           <nz-icon [nzType]="getConfirmIcon()"></nz-icon>
-          {{ data.confirmText || 'Confirm' }}
+          {{ data.confirmText || ('common.confirm' | translate) }}
         </button>
       </div>
     </div>
@@ -62,6 +65,8 @@ export interface ConfirmDialogData {
   `]
 })
 export class ConfirmDialogComponent {
+  translationService = inject(TranslationService);
+  
   constructor(
     private modal: NzModalRef,
     @Inject(NZ_MODAL_DATA) public data: ConfirmDialogData

@@ -18,6 +18,49 @@
       "users": "المستخدمون"
     }
   },
+  "admin": {
+    "users": {
+      "title": "إدارة المستخدمين",
+      "subtitle": "إدارة مستخدمي النظام وأدوارهم",
+      "create_user": "إنشاء مستخدم",
+      "table": {
+        "id": "المعرف",
+        "username": "اسم المستخدم",
+        "email": "البريد الإلكتروني",
+        "roles": "الأدوار",
+        "created_at": "تاريخ الإنشاء",
+        "actions": "الإجراءات"
+      },
+      "roles": {
+        "admin": "مدير النظام",
+        "user": "مستخدم",
+        "manager": "مدير"
+      },
+      "actions": {
+        "edit": "تحرير",
+        "delete": "حذف",
+        "view": "عرض التفاصيل"
+      }
+    },
+    "companies": {
+      "title": "إدارة الشركات",
+      "subtitle": "إدارة الشركات وإعداداتها",
+      "create": "إنشاء شركة",
+      "table": {
+        "id": "المعرف",
+        "name": "الاسم",
+        "description": "الوصف",
+        "created_at": "تاريخ الإنشاء",
+        "actions": "الإجراءات"
+      },
+      "actions": {
+        "edit": "تحرير",
+        "delete": "حذف",
+        "access": "إدارة الوصول",
+        "view": "عرض التفاصيل"
+      }
+    }
+  },
   "dashboard": {
     "title": "لوحة التحكم",
     "subtitle": "مرحباً بعودتك! إليك ما يحدث مع وثائقك.",
@@ -95,17 +138,100 @@
     "search": "البحث في الوثائق...",
     "filters": "المرشحات",
     "no_results": "لم يتم العثور على وثائق",
+    "table": {
+      "loading": "جاري تحميل الوثائق...",
+      "title": "العنوان",
+      "resource_code": "رمز المورد",
+      "type": "النوع",
+      "tags": "العلامات",
+      "status": "الحالة",
+      "owner": "المالك",
+      "file_type": "نوع الملف",
+      "actions": "الإجراءات",
+      "child_of": "طفل لـ",
+      "has_children": "يحتوي على",
+      "child_documents": "وثيقة فرعية",
+      "system": "النظام",
+      "no_documents": "لا توجد وثائق",
+      "no_documents_title": "لا توجد وثائق",
+      "no_documents_subtitle": "جرب تعديل المرشحات أو إنشاء وثيقة جديدة"
+    },
     "actions": {
       "view": "عرض",
       "edit": "تعديل",
       "delete": "حذف",
-      "download": "تحميل"
+      "download": "تحميل",
+      "manage_access": "إدارة الوصول"
+    },
+    "create": {
+      "title": "إنشاء وثيقة جديدة",
+      "subtitle": "اتبع الخطوات لإنشاء وثيقة جديدة",
+      "steps": {
+        "company": "اختيار الشركة",
+        "type": "نوع الوثيقة",
+        "details": "تفاصيل الوثيقة",
+        "upload": "رفع الملف"
+      },
+      "step1": {
+        "title": "اختيار الشركة",
+        "description": "اختر الشركة التي تنتمي إليها هذه الوثيقة",
+        "company": "الشركة",
+        "company_required": "يرجى اختيار شركة",
+        "company_placeholder": "اختر شركة"
+      },
+      "step2": {
+        "title": "اختيار نوع الوثيقة",
+        "description": "اختر نوع الوثيقة التي تريد إنشاؤها",
+        "type": "نوع الوثيقة",
+        "type_required": "يرجى اختيار نوع الوثيقة",
+        "type_placeholder": "اختر نوع الوثيقة",
+        "no_types": "لا توجد أنواع وثائق متاحة لهذه الشركة"
+      },
+      "step3": {
+        "title": "تفاصيل الوثيقة",
+        "description": "املأ معلومات الوثيقة",
+        "basic_info": "المعلومات الأساسية",
+        "doc_title": "العنوان",
+        "title_required": "يرجى إدخال عنوان",
+        "title_placeholder": "أدخل عنوان الوثيقة",
+        "doc_description": "الوصف",
+        "description_placeholder": "أدخل وصف الوثيقة",
+        "tags": "العلامات",
+        "tags_placeholder": "أضف علامات (مفصولة بفواصل)",
+        "custom_fields": "الحقول المخصصة",
+        "parent_document": "الوثيقة الأصل",
+        "parent_placeholder": "ابحث عن الوثيقة الأصل",
+        "no_parent": "لا توجد وثيقة أصل"
+      },
+      "step4": {
+        "title": "رفع الملف",
+        "description": "ارفع ملف الوثيقة",
+        "file": "الملف",
+        "file_required": "يرجى رفع ملف",
+        "upload_text": "انقر أو اسحب الملف إلى هذه المنطقة للرفع",
+        "upload_hint": "دعم لرفع ملف واحد",
+        "uploading": "جاري الرفع...",
+        "upload_success": "تم رفع الملف بنجاح",
+        "upload_error": "فشل في رفع الملف"
+      },
+      "buttons": {
+        "next": "التالي",
+        "previous": "السابق",
+        "create": "إنشاء الوثيقة",
+        "cancel": "إلغاء"
+      },
+      "messages": {
+        "creating": "جاري إنشاء الوثيقة...",
+        "success": "تم إنشاء الوثيقة بنجاح",
+        "error": "فشل في إنشاء الوثيقة"
+      }
     }
   },
   "common": {
     "loading": "جاري التحميل...",
     "save": "حفظ",
     "cancel": "إلغاء",
+    "confirm": "تأكيد",
     "delete": "حذف",
     "edit": "تعديل",
     "view": "عرض",
@@ -121,6 +247,7 @@
     "upload": "رفع",
     "refresh": "تحديث",
     "apply": "تطبيق",
-    "reset": "إعادة تعيين"
+    "reset": "إعادة تعيين",
+    "not_available": "غير متوفر"
   }
 }

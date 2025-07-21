@@ -5,6 +5,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { HttpEvent, HttpEventType } from '@angular/common/http';
 import { debounceTime, distinctUntilChanged, switchMap, tap, catchError, map } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
 
 // NG-ZORRO imports
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -33,6 +34,7 @@ import { ResourceTypeService } from '../../core/services/resource-type.service';
 import { CompanyService } from '../../core/services/company.service';
 import { DocumentService } from '../../core/services/document.service';
 import { SnackbarService } from '../../core/services/snackbar.service';
+import { TranslationService } from '../../core/services/translation.service';
 import { ResourceType, FieldDefinitionDto, FieldType } from '../../core/models/resource-type.model';
 import { Company } from '../../core/models/company.model';
 import { Document, CreateDocumentDto } from '../../core/models/document.model';
@@ -43,6 +45,7 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    TranslateModule,
     NzFormModule,
     NzInputModule,
     NzSelectModule,
@@ -65,37 +68,37 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
     NzPageHeaderModule
   ],
   template: `
-    <div class="create-document-container">
+    <div class="create-document-container" [class.rtl]="translationService.isRTL()">
       <!-- Page Header -->
       <nz-page-header 
         nzBackIcon
         (nzBack)="navigateBack()"
-        nzTitle="Create New Document"
-        nzSubtitle="Follow the steps to create a new document">
+        [nzTitle]="'documents.create.title' | translate"
+        [nzSubtitle]="'documents.create.subtitle' | translate">
       </nz-page-header>
 
       <nz-card>
         <nz-steps [nzCurrent]="currentStep" nzSize="small">
-          <nz-step nzTitle="Select Company"></nz-step>
-          <nz-step nzTitle="Document Type"></nz-step>
-          <nz-step nzTitle="Document Details"></nz-step>
-          <nz-step nzTitle="Upload File"></nz-step>
+          <nz-step [nzTitle]="'documents.create.steps.company' | translate"></nz-step>
+          <nz-step [nzTitle]="'documents.create.steps.type' | translate"></nz-step>
+          <nz-step [nzTitle]="'documents.create.steps.details' | translate"></nz-step>
+          <nz-step [nzTitle]="'documents.create.steps.upload' | translate"></nz-step>
         </nz-steps>
         
         <div class="steps-content">
         <!-- Step 1: Select Company -->
           <div *ngIf="currentStep === 0" class="step-container">
             <form nz-form [formGroup]="companyForm" nzLayout="vertical">
-              <h3 nz-typography>Select Company</h3>
-              <p nz-typography nzType="secondary">Choose the company this document belongs to</p>
+              <h3 nz-typography>{{ 'documents.create.step1.title' | translate }}</h3>
+              <p nz-typography nzType="secondary">{{ 'documents.create.step1.description' | translate }}</p>
               
               <nz-form-item>
-                <nz-form-label nzRequired>Company</nz-form-label>
-                <nz-form-control nzErrorTip="Please select a company">
+                <nz-form-label nzRequired>{{ 'documents.create.step1.company' | translate }}</nz-form-label>
+                <nz-form-control [nzErrorTip]="'documents.create.step1.company_required' | translate">
                   <nz-select 
                     formControlName="companyId" 
                     nzShowSearch
-                    nzPlaceHolder="Select a company"
+                    [nzPlaceHolder]="'documents.create.step1.company_placeholder' | translate"
                     nzSize="large"
                     (ngModelChange)="onCompanyChange($event)">
                     <nz-option 
@@ -547,6 +550,7 @@ export class DocumentCreatePageComponent implements OnInit, OnDestroy {
   private documentService = inject(DocumentService);
   private snackbar = inject(SnackbarService);
   private message = inject(NzMessageService);
+  translationService = inject(TranslationService);
 
   FieldType = FieldType;
 

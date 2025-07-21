@@ -51,12 +51,12 @@ import { Company } from '../../core/models/company.model';
   template: `
     <div class="dashboard p-6" [class.rtl]="translationService.isRTL()">
       <!-- Page Header -->
-      <div class="flex items-center mb-6" [ngClass]="translationService.isRTL() ? 'justify-between' : 'justify-between'">
-        <div [class.text-right]="translationService.isRTL()" [class.text-left]="!translationService.isRTL()" [class.order-2]="translationService.isRTL()" [class.order-1]="!translationService.isRTL()">
+      <div class="flex items-center justify-between mb-6" [class.flex-row-reverse]="translationService.isRTL()">
+        <div [class.text-right]="translationService.isRTL()" [class.text-left]="!translationService.isRTL()">
           <h1 class="text-3xl font-bold text-gray-900">{{ 'dashboard.title' | translate }}</h1>
           <p class="text-gray-600 mt-1">{{ 'dashboard.subtitle' | translate }}</p>
         </div>
-        <button nz-button nzType="primary" routerLink="/documents/new" [class.order-1]="translationService.isRTL()" [class.order-2]="!translationService.isRTL()">
+        <button nz-button nzType="primary" routerLink="/documents/new" class="flex-shrink-0">
           <nz-icon nzType="plus"></nz-icon>
           <span>{{ 'dashboard.new_document' | translate }}</span>
         </button>
@@ -75,11 +75,11 @@ import { Company } from '../../core/models/company.model';
         </ng-template>
         
         <!-- Search and Filter Controls -->
-        <div class="mb-4">
+        <div class="mb-4 search-filters">
           <!-- First Row - Main Search and Quick Filters -->
-          <div nz-row [nzGutter]="[16, 16]" class="mb-3">
+          <div nz-row [nzGutter]="[8, 8]" class="mb-3">
             <!-- Search Input -->
-            <div nz-col [nzSpan]="8">
+            <div nz-col [nzXs]="24" [nzSm]="12" [nzMd]="8" [nzLg]="8">
               <nz-input-group nzSearch [nzSuffix]="suffixIconSearch">
                 <input 
                   type="text" 
@@ -93,7 +93,7 @@ import { Company } from '../../core/models/company.model';
             </div>
             
             <!-- Company Filter -->
-            <div nz-col [nzSpan]="4">
+            <div nz-col [nzXs]="12" [nzSm]="6" [nzMd]="4" [nzLg]="4">
               <nz-select 
                 [nzPlaceHolder]="'dashboard.filter.company' | translate"
                 nzAllowClear
@@ -108,7 +108,7 @@ import { Company } from '../../core/models/company.model';
             </div>
             
             <!-- Resource Type Filter -->
-            <div nz-col [nzSpan]="4">
+            <div nz-col [nzXs]="12" [nzSm]="6" [nzMd]="4" [nzLg]="4">
               <nz-select 
                 [nzPlaceHolder]="'dashboard.filter.document_type' | translate"
                 nzAllowClear
@@ -123,7 +123,7 @@ import { Company } from '../../core/models/company.model';
             </div>
             
             <!-- Status Filter -->
-            <div nz-col [nzSpan]="4">
+            <div nz-col [nzXs]="12" [nzSm]="6" [nzMd]="4" [nzLg]="4">
               <nz-select 
                 [nzPlaceHolder]="'dashboard.filter.status' | translate"
                 nzAllowClear
@@ -137,7 +137,7 @@ import { Company } from '../../core/models/company.model';
             </div>
             
             <!-- Sort Options -->
-            <div nz-col [nzSpan]="4">
+            <div nz-col [nzXs]="12" [nzSm]="6" [nzMd]="4" [nzLg]="4">
               <nz-select 
                 [nzPlaceHolder]="'dashboard.filter.sort' | translate"
                 [formControl]="sortControl"
@@ -152,8 +152,8 @@ import { Company } from '../../core/models/company.model';
           </div>
           
           <!-- Second Row - Tag Search -->
-          <div nz-row [nzGutter]="[16, 16]">
-            <div nz-col [nzSpan]="16">
+          <div nz-row [nzGutter]="[8, 8]">
+            <div nz-col [nzXs]="24" [nzSm]="16" [nzMd]="16" [nzLg]="16">
               <nz-input-group nzCompact>
                 <input 
                   nz-input 
@@ -169,7 +169,7 @@ import { Company } from '../../core/models/company.model';
             </div>
             
             <!-- Selected Tags Display -->
-            <div nz-col [nzSpan]="8" *ngIf="selectedTags().length > 0">
+            <div nz-col [nzXs]="24" [nzSm]="8" [nzMd]="8" [nzLg]="8" *ngIf="selectedTags().length > 0">
               <div class="selected-tags" [class.justify-end]="translationService.isRTL()">
                 <nz-tag 
                   *ngFor="let tag of selectedTags()" 
@@ -227,6 +227,9 @@ import { Company } from '../../core/models/company.model';
     .dashboard {
       min-height: 100vh;
       background-color: #f5f5f5;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
     }
 
     .dashboard.rtl {
@@ -295,6 +298,38 @@ import { Company } from '../../core/models/company.model';
 
     .dashboard.rtl ::ng-deep .ant-select-selection-item {
       text-align: right;
+    }
+
+    /* Prevent horizontal overflow */
+    ::ng-deep .ant-row {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    ::ng-deep .ant-col {
+      min-width: 0;
+    }
+
+    /* Fix for grid system overflow */
+    .search-filters .ant-row {
+      margin-left: -8px;
+      margin-right: -8px;
+    }
+
+    .search-filters .ant-col {
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+
+    /* RTL grid fixes */
+    .dashboard.rtl .search-filters .ant-row {
+      margin-left: -8px;
+      margin-right: -8px;
+    }
+
+    .dashboard.rtl .search-filters .ant-col {
+      padding-left: 8px;
+      padding-right: 8px;
     }
   `]
 })

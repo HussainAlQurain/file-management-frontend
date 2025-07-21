@@ -241,6 +241,29 @@ export interface PageEvent {
     .document-table {
       background: #fff;
       border-radius: 8px;
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    .document-table.rtl {
+      direction: rtl;
+    }
+
+    /* Prevent table overflow */
+    ::ng-deep .ant-table {
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    ::ng-deep .ant-table-container {
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    ::ng-deep .ant-table-content {
+      overflow-x: auto;
+      max-width: 100%;
     }
 
     .document-row {
