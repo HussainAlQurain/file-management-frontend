@@ -135,16 +135,39 @@
   },
   "documents": {
     "title": "Documents",
-    "search": "Search documents...",
-    "filters": "Filters",
+    "subtitle": "Manage and browse all documents",
+    "bulk_import": "Bulk Import",
+    "new_document": "New Document",
     "no_results": "No documents found",
+    "stats": {
+      "total_documents": "Total Documents",
+      "current_page": "Current Page"
+    },
+    "search": {
+      "placeholder": "Search by title or resource code..."
+    },
+    "filters": {
+      "title": "Filter Documents",
+      "company": "Company",
+      "all_companies": "All companies",
+      "document_type": "Document Type",
+      "all_types": "All types",
+      "status": "Status",
+      "all_statuses": "All statuses",
+      "date_range": "Date Range",
+      "apply": "Apply Filters",
+      "reset": "Reset Filters",
+      "bulk_import": "Bulk Import Documents"
+    },
     "table": {
       "loading": "Loading documents...",
       "title": "Title",
       "resource_code": "Resource Code",
       "type": "Type",
+      "company": "Company",
       "tags": "Tags",
       "status": "Status",
+      "created": "Created",
       "owner": "Owner",
       "file_type": "File Type",
       "actions": "Actions",
@@ -161,7 +184,9 @@
       "edit": "Edit",
       "delete": "Delete",
       "download": "Download",
-      "manage_access": "Manage Access"
+      "manage_access": "Manage Access",
+      "manage_acl": "Manage ACL",
+      "archive": "Archive"
     },
     "create": {
       "title": "Create New Document",

@@ -1,8 +1,9 @@
-import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, signal, DestroyRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormGroup, FormBuilder } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslateModule } from '@ngx-translate/core';
 
 // NG-ZORRO imports
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -31,6 +32,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { DocumentService } from '../../core/services/document.service';
 import { ResourceTypeService } from '../../core/services/resource-type.service';
 import { CompanyService } from '../../core/services/company.service';
+import { TranslationService } from '../../core/services/translation.service';
 import { Document, DocQuery, Page } from '../../core/models/document.model';
 import { ResourceType } from '../../core/models/resource-type.model';
 import { Company } from '../../core/models/company.model';
@@ -43,6 +45,7 @@ import { Company } from '../../core/models/company.model';
     RouterModule,
     FormsModule,
     ReactiveFormsModule,
+    TranslateModule,
     NzCardModule,
     NzButtonModule,
     NzIconModule,
@@ -66,44 +69,44 @@ import { Company } from '../../core/models/company.model';
     NzTypographyModule
   ],
   template: `
-    <div class="document-list-container">
+    <div class="document-list-container" [class.rtl]="translationService.isRTL()">
       <!-- Page Header -->
       <nz-page-header
         class="site-page-header"
-        nzTitle="Documents"
-        nzSubtitle="Manage and browse all documents">
+        [nzTitle]="'documents.title' | translate"
+        [nzSubtitle]="'documents.subtitle' | translate">
         <nz-page-header-extra>
-          <nz-space>
+          <nz-space [nzDirection]="translationService.isRTL() ? 'horizontal' : 'horizontal'">
             <button *nzSpaceItem nz-button nzType="default" (click)="showFilters = true">
               <span nz-icon nzType="filter" nzTheme="outline"></span>
-              Filters
+              {{ 'documents.filters' | translate }}
               <nz-badge *ngIf="activeFiltersCount > 0" [nzCount]="activeFiltersCount"></nz-badge>
             </button>
             <button *nzSpaceItem nz-button nzType="default" routerLink="/documents/bulk-import">
               <span nz-icon nzType="cloud-upload" nzTheme="outline"></span>
-              Bulk Import
+              {{ 'documents.bulk_import' | translate }}
             </button>
             <button *nzSpaceItem nz-button nzType="primary" routerLink="/documents/new">
               <span nz-icon nzType="plus" nzTheme="outline"></span>
-          New Document
-        </button>
+              {{ 'documents.new_document' | translate }}
+            </button>
           </nz-space>
         </nz-page-header-extra>
         <nz-page-header-content>
           <div nz-row [nzGutter]="24">
             <div nz-col [nzSpan]="6">
-              <nz-statistic nzTitle="Total Documents" [nzValue]="documents().totalElements"></nz-statistic>
+              <nz-statistic [nzTitle]="'documents.stats.total_documents' | translate" [nzValue]="documents().totalElements"></nz-statistic>
             </div>
             <div nz-col [nzSpan]="6">
-              <nz-statistic nzTitle="Current Page" [nzValue]="(documents().number + 1) + ' / ' + documents().totalPages"></nz-statistic>
+              <nz-statistic [nzTitle]="'documents.stats.current_page' | translate" [nzValue]="(documents().number + 1) + ' / ' + documents().totalPages"></nz-statistic>
             </div>
             <div nz-col [nzSpan]="12">
-              <div class="search-box">
+              <div class="search-box" [class.search-box-rtl]="translationService.isRTL()">
                 <nz-input-group [nzSuffix]="suffixIconSearch" nzSize="large">
                   <input 
                     type="text" 
                     nz-input 
-                    placeholder="Search by title or resource code..." 
+                    [placeholder]="'documents.search.placeholder' | translate"
                     [(ngModel)]="searchQuery"
                     (keyup.enter)="onSearch()"
                     (ngModelChange)="onSearchChange($event)" />
@@ -121,51 +124,51 @@ import { Company } from '../../core/models/company.model';
       <nz-drawer
         [nzClosable]="true"
         [nzVisible]="showFilters"
-        nzPlacement="left"
-        nzTitle="Filter Documents"
+        [nzPlacement]="translationService.isRTL() ? 'right' : 'left'"
+        [nzTitle]="'documents.filters.title' | translate"
         [nzWidth]="320"
         (nzOnClose)="showFilters = false">
         <ng-container *nzDrawerContent>
           <form nz-form [formGroup]="filterForm" nzLayout="vertical">
             <nz-form-item>
-              <nz-form-label>Company</nz-form-label>
+              <nz-form-label>{{ 'documents.filters.company' | translate }}</nz-form-label>
               <nz-form-control>
                 <nz-select 
                   formControlName="companyId" 
                   nzShowSearch 
                   nzAllowClear
-                  nzPlaceHolder="All companies">
+                  [nzPlaceHolder]="'documents.filters.all_companies' | translate">
                   <nz-option *ngFor="let company of companies" [nzValue]="company.id" [nzLabel]="company.name"></nz-option>
                 </nz-select>
               </nz-form-control>
             </nz-form-item>
 
             <nz-form-item>
-              <nz-form-label>Document Type</nz-form-label>
+              <nz-form-label>{{ 'documents.filters.document_type' | translate }}</nz-form-label>
               <nz-form-control>
                 <nz-select 
                   formControlName="resourceTypeId" 
                   nzShowSearch 
                   nzAllowClear
-                  nzPlaceHolder="All types">
+                  [nzPlaceHolder]="'documents.filters.all_types' | translate">
                   <nz-option *ngFor="let type of resourceTypes()" [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
                 </nz-select>
               </nz-form-control>
             </nz-form-item>
 
             <nz-form-item>
-              <nz-form-label>Status</nz-form-label>
+              <nz-form-label>{{ 'documents.filters.status' | translate }}</nz-form-label>
               <nz-form-control>
-                <nz-select formControlName="status" nzAllowClear nzPlaceHolder="All statuses">
-                  <nz-option nzValue="ACTIVE" nzLabel="Active"></nz-option>
-                  <nz-option nzValue="INACTIVE" nzLabel="Inactive"></nz-option>
-                  <nz-option nzValue="ARCHIVED" nzLabel="Archived"></nz-option>
+                <nz-select formControlName="status" nzAllowClear [nzPlaceHolder]="'documents.filters.all_statuses' | translate">
+                  <nz-option nzValue="ACTIVE" [nzLabel]="'status.active' | translate"></nz-option>
+                  <nz-option nzValue="INACTIVE" [nzLabel]="'status.inactive' | translate"></nz-option>
+                  <nz-option nzValue="ARCHIVED" [nzLabel]="'status.archived' | translate"></nz-option>
                 </nz-select>
               </nz-form-control>
             </nz-form-item>
 
             <nz-form-item>
-              <nz-form-label>Date Range</nz-form-label>
+              <nz-form-label>{{ 'documents.filters.date_range' | translate }}</nz-form-label>
               <nz-form-control>
                 <nz-range-picker 
                   formControlName="dateRange"
@@ -180,11 +183,11 @@ import { Company } from '../../core/models/company.model';
             <nz-space nzDirection="vertical" style="width: 100%;">
               <button *nzSpaceItem nz-button nzType="primary" nzBlock (click)="applyFilters()">
                 <span nz-icon nzType="search" nzTheme="outline"></span>
-                Apply Filters
+                {{ 'documents.filters.apply' | translate }}
               </button>
               <button *nzSpaceItem nz-button nzType="default" nzBlock (click)="resetFilters()">
                 <span nz-icon nzType="reload" nzTheme="outline"></span>
-                Reset Filters
+                {{ 'documents.filters.reset' | translate }}
               </button>
               <nz-divider></nz-divider>
               <button 
@@ -195,7 +198,7 @@ import { Company } from '../../core/models/company.model';
                 [routerLink]="['/documents/bulk-import']"
                 [queryParams]="getBulkImportParams()">
                 <span nz-icon nzType="cloud-upload" nzTheme="outline"></span>
-                Bulk Import Documents
+                {{ 'documents.filters.bulk_import' | translate }}
               </button>
             </nz-space>
           </form>
@@ -216,19 +219,19 @@ import { Company } from '../../core/models/company.model';
           [nzPageSizeOptions]="[10, 20, 50, 100]"
           (nzPageSizeChange)="onPageSizeChange($event)"
           (nzPageIndexChange)="onPageIndexChange($event)"
-          [nzScroll]="{ x: '1200px' }">
+          [nzScroll]="{ x: 'max-content' }">
           
           <thead>
             <tr>
               <th nzWidth="50px"></th>
-              <th nzColumnKey="title" [nzSortFn]="true" nzWidth="250px">Title</th>
-              <th nzColumnKey="resourceCode" [nzSortFn]="true" nzWidth="150px">Resource Code</th>
-              <th nzWidth="150px">Type</th>
-              <th nzWidth="150px">Company</th>
-              <th nzColumnKey="status" [nzSortFn]="true" nzWidth="100px">Status</th>
-              <th nzColumnKey="createdAt" [nzSortFn]="true" nzWidth="150px">Created</th>
-              <th nzWidth="150px">Owner</th>
-              <th nzWidth="120px" nzRight>Actions</th>
+              <th nzColumnKey="title" [nzSortFn]="true" nzWidth="25%">{{ 'documents.table.title' | translate }}</th>
+              <th nzColumnKey="resourceCode" [nzSortFn]="true" nzWidth="15%">{{ 'documents.table.resource_code' | translate }}</th>
+              <th nzWidth="12%">{{ 'documents.table.type' | translate }}</th>
+              <th nzWidth="12%">{{ 'documents.table.company' | translate }}</th>
+              <th nzColumnKey="status" [nzSortFn]="true" nzWidth="10%">{{ 'documents.table.status' | translate }}</th>
+              <th nzColumnKey="createdAt" [nzSortFn]="true" nzWidth="12%">{{ 'documents.table.created' | translate }}</th>
+              <th nzWidth="10%">{{ 'documents.table.owner' | translate }}</th>
+              <th nzWidth="120px" nzAlign="center">{{ 'documents.table.actions' | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -250,23 +253,26 @@ import { Company } from '../../core/models/company.model';
               </td>
               <td>
                 <span *ngIf="doc.resourceType">{{ doc.resourceType.name }}</span>
+                <span *ngIf="!doc.resourceType" class="text-gray-400">{{ 'common.not_available' | translate }}</span>
               </td>
               <td>
                 <span *ngIf="doc.company">{{ doc.company.name }}</span>
+                <span *ngIf="!doc.company" class="text-gray-400">{{ 'common.not_available' | translate }}</span>
               </td>
               <td>
-                <nz-tag [nzColor]="getStatusColor(doc.status)">{{ doc.status }}</nz-tag>
+                <nz-tag [nzColor]="getStatusColor(doc.status)">{{ ('status.' + (doc.status?.toLowerCase() || 'unknown')) | translate }}</nz-tag>
               </td>
               <td>{{ doc.createdAt | date:'short' }}</td>
               <td>
                 <span *ngIf="doc.owner">{{ doc.owner.username }}</span>
+                <span *ngIf="!doc.owner" class="text-gray-400">{{ 'common.not_available' | translate }}</span>
               </td>
               <td>
                 <nz-space>
-                  <a *nzSpaceItem nz-button nzType="link" nzSize="small" [routerLink]="['/documents', doc.id]" nz-tooltip nzTooltipTitle="View">
+                  <a *nzSpaceItem nz-button nzType="link" nzSize="small" [routerLink]="['/documents', doc.id]" nz-tooltip [nzTooltipTitle]="'documents.actions.view' | translate">
                     <span nz-icon nzType="eye" nzTheme="outline"></span>
                   </a>
-                  <a *nzSpaceItem nz-button nzType="link" nzSize="small" [routerLink]="['/documents', doc.id, 'edit']" nz-tooltip nzTooltipTitle="Edit">
+                  <a *nzSpaceItem nz-button nzType="link" nzSize="small" [routerLink]="['/documents', doc.id, 'edit']" nz-tooltip [nzTooltipTitle]="'documents.actions.edit' | translate">
                     <span nz-icon nzType="edit" nzTheme="outline"></span>
                   </a>
                   <a *nzSpaceItem 
@@ -279,16 +285,16 @@ import { Company } from '../../core/models/company.model';
                     <ul nz-menu>
                       <li nz-menu-item [routerLink]="['/documents', doc.id, 'acl']">
                         <span nz-icon nzType="safety" nzTheme="outline"></span>
-                        Manage ACL
+                        {{ 'documents.actions.manage_acl' | translate }}
                       </li>
                       <li nz-menu-item *ngIf="doc.storageKey" (click)="downloadDocument(doc)">
                         <span nz-icon nzType="download" nzTheme="outline"></span>
-                        Download
+                        {{ 'documents.actions.download' | translate }}
                       </li>
                       <li nz-menu-divider></li>
                       <li nz-menu-item nzDanger (click)="archiveDocument(doc)">
                         <span nz-icon nzType="delete" nzTheme="outline"></span>
-                        Archive
+                        {{ 'documents.actions.archive' | translate }}
                       </li>
                     </ul>
                   </nz-dropdown-menu>
@@ -303,17 +309,30 @@ import { Company } from '../../core/models/company.model';
   styles: [`
     .document-list-container {
       padding: 0;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    .document-list-container.rtl {
+      direction: rtl;
     }
 
     .site-page-header {
       background: #fff;
       margin: -24px -24px 24px;
       padding: 16px 24px;
+      overflow-x: hidden;
     }
 
     .search-box {
       max-width: 400px;
       margin-left: auto;
+    }
+
+    .search-box-rtl {
+      margin-left: 0;
+      margin-right: auto;
     }
 
     .document-link {
@@ -325,19 +344,89 @@ import { Company } from '../../core/models/company.model';
       text-decoration: underline;
     }
 
+    /* Prevent table overflow */
     ::ng-deep .ant-table-wrapper {
-      .ant-table-cell {
-        vertical-align: middle;
-      }
+      overflow-x: auto;
+      max-width: 100%;
     }
 
+    ::ng-deep .ant-table {
+      min-width: 100%;
+      width: 100%;
+    }
+
+    ::ng-deep .ant-table-container {
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    ::ng-deep .ant-table-content {
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    ::ng-deep .ant-table-wrapper .ant-table-cell {
+      vertical-align: middle;
+      padding: 12px 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* RTL table fixes */
+    .document-list-container.rtl ::ng-deep .ant-table-thead > tr > th {
+      text-align: right;
+    }
+
+    .document-list-container.rtl ::ng-deep .ant-table-tbody > tr > td {
+      text-align: right;
+    }
+
+    .document-list-container.rtl ::ng-deep .ant-table-cell {
+      text-align: right;
+    }
+
+    .document-list-container.rtl ::ng-deep .ant-space {
+      direction: ltr;
+    }
+
+    /* Page header responsive */
     ::ng-deep .ant-page-header-heading-extra {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     ::ng-deep .ant-statistic-content {
       font-size: 20px;
+    }
+
+    /* Card overflow fix */
+    ::ng-deep .ant-card {
+      overflow: hidden;
+    }
+
+    ::ng-deep .ant-card-body {
+      overflow-x: auto;
+      padding: 24px;
+    }
+
+    /* Responsive table */
+    @media (max-width: 768px) {
+      .search-box {
+        max-width: 100%;
+        margin: 0;
+      }
+      
+      ::ng-deep .ant-page-header-content .ant-row > .ant-col {
+        margin-bottom: 16px;
+      }
+      
+      ::ng-deep .ant-table-wrapper .ant-table-cell {
+        padding: 8px 4px;
+        font-size: 12px;
+      }
     }
   `],
   providers: [NzMessageService]
@@ -350,6 +439,9 @@ export class DocumentListPageComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private route = inject(ActivatedRoute);
   private message = inject(NzMessageService);
+  private cdr = inject(ChangeDetectorRef);
+  
+  translationService = inject(TranslationService);
   
   documents = signal<Page<Document>>({
     content: [],
@@ -395,6 +487,13 @@ export class DocumentListPageComponent implements OnInit {
   }
   
     ngOnInit(): void {
+    // Subscribe to language changes for proper translations
+    this.translationService.languageChange$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.cdr.detectChanges();
+      });
+      
     this.loadResourceTypes();
     this.loadCompanies();
     this.initializeFromQueryParams();

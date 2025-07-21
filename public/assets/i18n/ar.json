@@ -135,16 +135,39 @@
   },
   "documents": {
     "title": "الوثائق",
-    "search": "البحث في الوثائق...",
-    "filters": "المرشحات",
+    "subtitle": "إدارة وتصفح جميع الوثائق",
+    "bulk_import": "استيراد مجمع",
+    "new_document": "وثيقة جديدة",
     "no_results": "لم يتم العثور على وثائق",
+    "stats": {
+      "total_documents": "إجمالي الوثائق",
+      "current_page": "الصفحة الحالية"
+    },
+    "search": {
+      "placeholder": "البحث بالعنوان أو رمز المورد..."
+    },
+    "filters": {
+      "title": "تصفية الوثائق",
+      "company": "الشركة",
+      "all_companies": "جميع الشركات",
+      "document_type": "نوع الوثيقة",
+      "all_types": "جميع الأنواع",
+      "status": "الحالة",
+      "all_statuses": "جميع الحالات",
+      "date_range": "النطاق الزمني",
+      "apply": "تطبيق المرشحات",
+      "reset": "إعادة تعيين المرشحات",
+      "bulk_import": "استيراد الوثائق مجمعة"
+    },
     "table": {
       "loading": "جاري تحميل الوثائق...",
       "title": "العنوان",
       "resource_code": "رمز المورد",
       "type": "النوع",
+      "company": "الشركة",
       "tags": "العلامات",
       "status": "الحالة",
+      "created": "تاريخ الإنشاء",
       "owner": "المالك",
       "file_type": "نوع الملف",
       "actions": "الإجراءات",
@@ -161,7 +184,9 @@
       "edit": "تعديل",
       "delete": "حذف",
       "download": "تحميل",
-      "manage_access": "إدارة الوصول"
+      "manage_access": "إدارة الوصول",
+      "manage_acl": "إدارة صلاحيات الوصول",
+      "archive": "أرشفة"
     },
     "create": {
       "title": "إنشاء وثيقة جديدة",
