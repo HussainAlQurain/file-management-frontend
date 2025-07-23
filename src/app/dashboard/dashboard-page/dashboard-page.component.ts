@@ -51,15 +51,17 @@ import { Company } from '../../core/models/company.model';
   template: `
     <div class="dashboard p-6" [class.rtl]="translationService.isRTL()">
       <!-- Page Header -->
-      <div class="flex items-center justify-between mb-6" [class.flex-row-reverse]="translationService.isRTL()">
-        <div [class.text-right]="translationService.isRTL()" [class.text-left]="!translationService.isRTL()">
-          <h1 class="text-3xl font-bold text-gray-900">{{ 'dashboard.title' | translate }}</h1>
-          <p class="text-gray-600 mt-1">{{ 'dashboard.subtitle' | translate }}</p>
+      <div class="page-header-container mb-6">
+        <div class="header-content" [class.rtl-header]="translationService.isRTL()">
+          <div class="header-text" [class.rtl-text]="translationService.isRTL()">
+            <h1 class="text-3xl font-bold text-gray-900">{{ 'dashboard.title' | translate }}</h1>
+            <p class="text-gray-600 mt-1">{{ 'dashboard.subtitle' | translate }}</p>
+          </div>
+          <button nz-button nzType="primary" routerLink="/documents/new" class="header-button">
+            <nz-icon nzType="plus"></nz-icon>
+            <span>{{ 'dashboard.new_document' | translate }}</span>
+          </button>
         </div>
-        <button nz-button nzType="primary" routerLink="/documents/new" class="flex-shrink-0">
-          <nz-icon nzType="plus"></nz-icon>
-          <span>{{ 'dashboard.new_document' | translate }}</span>
-        </button>
       </div>
 
       <!-- Statistics Cards -->
@@ -172,7 +174,7 @@ import { Company } from '../../core/models/company.model';
             
             <!-- Selected Tags Display -->
             <div nz-col [nzSpan]="8" *ngIf="selectedTags().length > 0">
-              <div class="selected-tags" [class.justify-end]="translationService.isRTL()">
+              <div class="selected-tags" [class.rtl-tags]="translationService.isRTL()">
                 <nz-tag 
                   *ngFor="let tag of selectedTags()" 
                   nzColor="blue" 
@@ -200,21 +202,21 @@ import { Company } from '../../core/models/company.model';
           </app-document-table>
           
           @if (documents().content.length === 0) {
-            <div class="text-center py-12" [class.text-right]="translationService.isRTL()">
-              <nz-icon nzType="file-text" class="text-6xl text-gray-300 mb-4"></nz-icon>
-              <h3 class="text-lg font-medium text-gray-900 mb-2">
+            <div class="empty-state-container" [class.rtl-empty-state]="translationService.isRTL()">
+              <nz-icon nzType="file-text" class="empty-state-icon"></nz-icon>
+              <h3 class="empty-state-title">
                 {{ hasFilters() ? ('dashboard.no_match' | translate) : ('dashboard.no_documents' | translate) }}
               </h3>
-              <p class="text-gray-500 mb-4">
+              <p class="empty-state-description">
                 {{ hasFilters() ? ('dashboard.try_adjusting' | translate) : ('dashboard.create_first' | translate) }}
               </p>
               @if (!hasFilters()) {
-                <button nz-button nzType="primary" routerLink="/documents/new">
+                <button nz-button nzType="primary" routerLink="/documents/new" class="empty-state-button">
                   <nz-icon nzType="plus"></nz-icon>
                   <span>{{ 'dashboard.create_document' | translate }}</span>
                 </button>
               } @else {
-                <button nz-button nzType="default" (click)="clearFilters()">
+                <button nz-button nzType="default" (click)="clearFilters()" class="empty-state-button">
                   <nz-icon nzType="clear"></nz-icon>
                   <span>{{ 'dashboard.clear_filters' | translate }}</span>
                 </button>
@@ -238,16 +240,94 @@ import { Company } from '../../core/models/company.model';
       direction: rtl;
     }
 
-    .dashboard.rtl .flex-row-reverse {
-      flex-direction: row-reverse;
+    /* Page Header Styling */
+    .page-header-container {
+      width: 100%;
     }
 
-    .dashboard.rtl .text-right {
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .header-content.rtl-header {
+      direction: rtl;
+    }
+
+    .header-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .header-text.rtl-text {
       text-align: right;
+      direction: rtl;
     }
 
-    .dashboard.rtl .justify-end {
-      justify-content: flex-end;
+    .header-text.rtl-text h1,
+    .header-text.rtl-text p {
+      text-align: right;
+      direction: rtl;
+    }
+
+    .header-button {
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    /* Ensure proper spacing in RTL */
+    .dashboard.rtl .header-content {
+      gap: 16px;
+    }
+
+    /* Empty State Styling */
+    .empty-state-container {
+      text-align: center;
+      padding: 48px 0;
+      direction: ltr;
+    }
+
+    .empty-state-container.rtl-empty-state {
+      text-align: center;
+      direction: ltr; /* Keep LTR for centering, but ensure text renders in RTL */
+    }
+
+    .empty-state-container.rtl-empty-state .empty-state-title,
+    .empty-state-container.rtl-empty-state .empty-state-description {
+      direction: rtl;
+      unicode-bidi: embed;
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      color: #d9d9d9;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .empty-state-title {
+      font-size: 1.125rem;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.85);
+      margin-bottom: 8px;
+      margin-top: 0;
+    }
+
+    .empty-state-description {
+      color: rgba(0, 0, 0, 0.45);
+      margin-bottom: 16px;
+      margin-top: 0;
+    }
+
+    .empty-state-button {
+      margin-top: 8px;
+      display: inline-block;
+    }
+
+    .empty-state-container.rtl-empty-state .empty-state-button {
+      direction: ltr; /* Buttons should remain LTR for proper icon/text layout */
     }
 
     ::ng-deep .ant-card-head-title {
@@ -272,6 +352,12 @@ import { Company } from '../../core/models/company.model';
       flex-wrap: wrap;
       gap: 4px;
       align-items: center;
+      justify-content: flex-start;
+    }
+
+    .selected-tags.rtl-tags {
+      justify-content: flex-end;
+      direction: rtl;
     }
 
     .selected-tags nz-tag {
@@ -285,14 +371,63 @@ import { Company } from '../../core/models/company.model';
 
     .dashboard.rtl ::ng-deep .ant-card-head-title {
       text-align: right;
+      direction: rtl;
     }
 
     .dashboard.rtl ::ng-deep .ant-input {
       text-align: right;
+      direction: rtl;
     }
 
     .dashboard.rtl ::ng-deep .ant-select-selection-item {
       text-align: right;
+      direction: rtl;
+    }
+
+    .dashboard.rtl ::ng-deep .ant-select-selection-placeholder {
+      text-align: right;
+      direction: rtl;
+    }
+
+    /* RTL Button styling */
+    .dashboard.rtl ::ng-deep .ant-btn {
+      direction: rtl;
+    }
+
+    .dashboard.rtl ::ng-deep .ant-btn .anticon + span {
+      margin-left: 0;
+      margin-right: 8px;
+    }
+
+    .dashboard.rtl ::ng-deep .ant-btn span + .anticon {
+      margin-right: 0;
+      margin-left: 8px;
+    }
+
+    /* RTL Tag help text */
+    .dashboard.rtl .tag-help-text {
+      text-align: right;
+      direction: rtl;
+    }
+
+    /* RTL Table headers */
+    .dashboard.rtl ::ng-deep .ant-table-thead > tr > th {
+      text-align: right;
+      direction: rtl;
+    }
+
+    .dashboard.rtl ::ng-deep .ant-table-tbody > tr > td {
+      text-align: right;
+      direction: rtl;
+    }
+
+    /* RTL Empty table state */
+    .dashboard.rtl ::ng-deep .ant-empty {
+      direction: ltr;
+    }
+
+    .dashboard.rtl ::ng-deep .ant-empty-description {
+      direction: rtl;
     }
 
     /* Prevent horizontal overflow */
@@ -318,6 +453,15 @@ import { Company } from '../../core/models/company.model';
     /* RTL support for stats wrapper */
     .dashboard.rtl .stats-cards-wrapper {
       direction: rtl;
+    }
+
+    /* Ensure proper RTL layout for all grid columns */
+    .dashboard.rtl ::ng-deep .ant-row {
+      direction: rtl;
+    }
+
+    .dashboard.rtl ::ng-deep .ant-col {
+      direction: ltr;
     }
   `]
 })
