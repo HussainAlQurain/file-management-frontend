@@ -440,13 +440,6 @@ body.rtl {
     border-radius: 6px 0 0 6px;
   }
 
-  /* Flex RTL adjustments */
-  .flex {
-    &.justify-between {
-      flex-direction: row-reverse;
-    }
-  }
-
   /* Tag RTL */
   .ant-tag {
     margin-right: 0;
@@ -522,15 +515,7 @@ body {
     margin-left: 8px;
   }
 
-  /* Grid RTL */
-  .ant-row {
-    direction: rtl;
-  }
-
-  .ant-col {
-    direction: ltr;
-    text-align: right;
-  }
+  /* Grid RTL - Only apply when actually in RTL mode */
 }
 
 /* Tailwind RTL utility classes */

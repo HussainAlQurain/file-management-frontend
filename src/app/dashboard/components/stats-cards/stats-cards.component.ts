@@ -31,7 +31,7 @@ interface Stats {
     NzGridModule
   ],
   template: `
-    <div nz-row [nzGutter]="[16, 16]" class="mb-8" [class.rtl]="translationService.isRTL()">
+    <div nz-row [nzGutter]="[16, 16]" [class.rtl]="translationService.isRTL()">
       <!-- Total Documents -->
       <div nz-col [nzSpan]="8">
         <nz-card class="text-center stats-card">

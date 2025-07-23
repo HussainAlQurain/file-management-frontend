@@ -63,7 +63,9 @@ import { Company } from '../../core/models/company.model';
       </div>
 
       <!-- Statistics Cards -->
-      <app-stats-cards></app-stats-cards>
+      <div class="stats-cards-wrapper mb-6">
+        <app-stats-cards></app-stats-cards>
+      </div>
 
       <!-- Recent Documents with Search and Filters -->
       <nz-card [nzTitle]="'dashboard.recent_documents' | translate" class="mb-6">
@@ -75,11 +77,11 @@ import { Company } from '../../core/models/company.model';
         </ng-template>
         
         <!-- Search and Filter Controls -->
-        <div class="mb-4 search-filters">
+        <div class="mb-4">
           <!-- First Row - Main Search and Quick Filters -->
-          <div nz-row [nzGutter]="[8, 8]" class="mb-3">
+          <div nz-row [nzGutter]="[16, 16]" class="mb-3">
             <!-- Search Input -->
-            <div nz-col [nzXs]="24" [nzSm]="12" [nzMd]="8" [nzLg]="8">
+            <div nz-col [nzSpan]="8">
               <nz-input-group nzSearch [nzSuffix]="suffixIconSearch">
                 <input 
                   type="text" 
@@ -93,7 +95,7 @@ import { Company } from '../../core/models/company.model';
             </div>
             
             <!-- Company Filter -->
-            <div nz-col [nzXs]="12" [nzSm]="6" [nzMd]="4" [nzLg]="4">
+            <div nz-col [nzSpan]="4">
               <nz-select 
                 [nzPlaceHolder]="'dashboard.filter.company' | translate"
                 nzAllowClear
@@ -108,7 +110,7 @@ import { Company } from '../../core/models/company.model';
             </div>
             
             <!-- Resource Type Filter -->
-            <div nz-col [nzXs]="12" [nzSm]="6" [nzMd]="4" [nzLg]="4">
+            <div nz-col [nzSpan]="4">
               <nz-select 
                 [nzPlaceHolder]="'dashboard.filter.document_type' | translate"
                 nzAllowClear
@@ -123,7 +125,7 @@ import { Company } from '../../core/models/company.model';
             </div>
             
             <!-- Status Filter -->
-            <div nz-col [nzXs]="12" [nzSm]="6" [nzMd]="4" [nzLg]="4">
+            <div nz-col [nzSpan]="4">
               <nz-select 
                 [nzPlaceHolder]="'dashboard.filter.status' | translate"
                 nzAllowClear
@@ -137,7 +139,7 @@ import { Company } from '../../core/models/company.model';
             </div>
             
             <!-- Sort Options -->
-            <div nz-col [nzXs]="12" [nzSm]="6" [nzMd]="4" [nzLg]="4">
+            <div nz-col [nzSpan]="4">
               <nz-select 
                 [nzPlaceHolder]="'dashboard.filter.sort' | translate"
                 [formControl]="sortControl"
@@ -152,8 +154,8 @@ import { Company } from '../../core/models/company.model';
           </div>
           
           <!-- Second Row - Tag Search -->
-          <div nz-row [nzGutter]="[8, 8]">
-            <div nz-col [nzXs]="24" [nzSm]="16" [nzMd]="16" [nzLg]="16">
+          <div nz-row [nzGutter]="[16, 16]">
+            <div nz-col [nzSpan]="16">
               <nz-input-group nzCompact>
                 <input 
                   nz-input 
@@ -169,7 +171,7 @@ import { Company } from '../../core/models/company.model';
             </div>
             
             <!-- Selected Tags Display -->
-            <div nz-col [nzXs]="24" [nzSm]="8" [nzMd]="8" [nzLg]="8" *ngIf="selectedTags().length > 0">
+            <div nz-col [nzSpan]="8" *ngIf="selectedTags().length > 0">
               <div class="selected-tags" [class.justify-end]="translationService.isRTL()">
                 <nz-tag 
                   *ngFor="let tag of selectedTags()" 
@@ -261,13 +263,6 @@ import { Company } from '../../core/models/company.model';
       border-radius: 6px;
     }
 
-    .search-filters {
-      background: #fafafa;
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 16px;
-    }
-
     .tag-help-text {
       margin-top: 4px;
     }
@@ -310,26 +305,19 @@ import { Company } from '../../core/models/company.model';
       min-width: 0;
     }
 
-    /* Fix for grid system overflow */
-    .search-filters .ant-row {
-      margin-left: -8px;
-      margin-right: -8px;
+    /* Stats cards wrapper to match nz-card container behavior */
+    .stats-cards-wrapper {
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      border-radius: 8px;
+      padding: 24px;
+      position: relative;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02);
     }
 
-    .search-filters .ant-col {
-      padding-left: 8px;
-      padding-right: 8px;
-    }
-
-    /* RTL grid fixes */
-    .dashboard.rtl .search-filters .ant-row {
-      margin-left: -8px;
-      margin-right: -8px;
-    }
-
-    .dashboard.rtl .search-filters .ant-col {
-      padding-left: 8px;
-      padding-right: 8px;
+    /* RTL support for stats wrapper */
+    .dashboard.rtl .stats-cards-wrapper {
+      direction: rtl;
     }
   `]
 })
