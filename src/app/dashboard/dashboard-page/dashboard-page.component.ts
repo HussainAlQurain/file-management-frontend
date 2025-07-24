@@ -49,28 +49,33 @@ import { Company } from '../../core/models/company.model';
     StatsCardsComponent
   ],
   template: `
-    <div class="dashboard p-6" [class.rtl]="translationService.isRTL()">
+    <div class="dashboard" [class.rtl]="translationService.isRTL()">
       <!-- Page Header -->
-      <div class="page-header-container mb-6">
-        <div class="header-content" [class.rtl-header]="translationService.isRTL()">
-          <div class="header-text" [class.rtl-text]="translationService.isRTL()">
-            <h1 class="text-3xl font-bold text-gray-900">{{ 'dashboard.title' | translate }}</h1>
-            <p class="text-gray-600 mt-1">{{ 'dashboard.subtitle' | translate }}</p>
+      <div class="page-header-wrapper">
+        <div class="page-header-content">
+          <!-- Title and Actions Row -->
+          <div class="header-top">
+            <div class="header-title-section" [class.rtl-header]="translationService.isRTL()">
+              <h1 class="page-title">{{ 'dashboard.title' | translate }}</h1>
+              <p class="page-subtitle">{{ 'dashboard.subtitle' | translate }}</p>
+            </div>
+            <div class="header-actions" [class.rtl-actions]="translationService.isRTL()">
+              <button nz-button nzType="primary" routerLink="/documents/new" class="action-button">
+                <nz-icon nzType="plus" nzTheme="outline"></nz-icon>
+                <span>{{ 'dashboard.new_document' | translate }}</span>
+              </button>
+            </div>
           </div>
-          <button nz-button nzType="primary" routerLink="/documents/new" class="header-button">
-            <nz-icon nzType="plus"></nz-icon>
-            <span>{{ 'dashboard.new_document' | translate }}</span>
-          </button>
+          
+          <!-- Statistics Row -->
+          <div class="stats-section">
+            <app-stats-cards></app-stats-cards>
+          </div>
         </div>
       </div>
 
-      <!-- Statistics Cards -->
-      <div class="stats-cards-wrapper mb-6">
-        <app-stats-cards></app-stats-cards>
-      </div>
-
       <!-- Recent Documents with Search and Filters -->
-      <nz-card [nzTitle]="'dashboard.recent_documents' | translate" class="mb-6">
+      <nz-card [nzTitle]="'dashboard.recent_documents' | translate" class="recent-documents-card">
         <ng-template #extra>
           <button nz-button nzType="link" routerLink="/documents">
             <span>{{ 'dashboard.view_all' | translate }}</span>
@@ -79,9 +84,9 @@ import { Company } from '../../core/models/company.model';
         </ng-template>
         
         <!-- Search and Filter Controls -->
-        <div class="mb-4">
+        <div class="search-filters-section">
           <!-- First Row - Main Search and Quick Filters -->
-          <div nz-row [nzGutter]="[16, 16]" class="mb-3">
+                      <div nz-row [nzGutter]="[16, 16]" class="filter-row">
             <!-- Search Input -->
             <div nz-col [nzSpan]="8">
               <nz-input-group nzSearch [nzSuffix]="suffixIconSearch">
@@ -188,7 +193,7 @@ import { Company } from '../../core/models/company.model';
         </div>
         
         @if (isLoading()) {
-          <div class="flex justify-center items-center py-12">
+          <div class="loading-container">
             <nz-spin nzSize="large"></nz-spin>
           </div>
         } @else {
@@ -229,57 +234,143 @@ import { Company } from '../../core/models/company.model';
   `,
   styles: [`
     .dashboard {
-      min-height: 100vh;
-      background-color: #f5f5f5;
       width: 100%;
       max-width: 100%;
-      overflow-x: hidden;
+      overflow: hidden;
+      background-color: #f5f5f5;
+      min-height: 100vh;
     }
 
     .dashboard.rtl {
       direction: rtl;
     }
 
-    /* Page Header Styling */
-    .page-header-container {
-      width: 100%;
+    /* Page Header Redesign */
+    .page-header-wrapper {
+      background: #fff;
+      border-bottom: 1px solid #e8e8e8;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      margin-bottom: 24px;
     }
 
-    .header-content {
+    .page-header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    /* Header Top Row */
+    .header-top {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      width: 100%;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      gap: 16px;
     }
 
-    .header-content.rtl-header {
-      direction: rtl;
-    }
-
-    .header-text {
+    .header-title-section {
       flex: 1;
       min-width: 0;
     }
 
-    .header-text.rtl-text {
+    .header-title-section.rtl-header {
       text-align: right;
-      direction: rtl;
     }
 
-    .header-text.rtl-text h1,
-    .header-text.rtl-text p {
-      text-align: right;
-      direction: rtl;
+    .page-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: rgba(0, 0, 0, 0.85);
+      margin: 0 0 4px 0;
+      line-height: 1.3;
     }
 
-    .header-button {
+    .page-subtitle {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.45);
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    .header-actions {
       flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .header-actions.rtl-actions {
+      direction: ltr; /* Keep button internal layout LTR */
+    }
+
+    .action-button {
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 6px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
       white-space: nowrap;
     }
 
-    /* Ensure proper spacing in RTL */
-    .dashboard.rtl .header-content {
-      gap: 16px;
+    /* Statistics Section */
+    .stats-section {
+      width: 100%;
+    }
+
+    /* Recent Documents Card */
+    .recent-documents-card {
+      margin: 0;
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+      box-shadow: none;
+      border-top: 1px solid #e8e8e8;
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    /* Card Title Styling */
+    ::ng-deep .recent-documents-card .ant-card-head {
+      background: #fafafa;
+      border-bottom: 1px solid #e8e8e8;
+      padding: 16px 24px;
+    }
+
+    ::ng-deep .recent-documents-card .ant-card-head-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: rgba(0, 0, 0, 0.85);
+    }
+
+    ::ng-deep .recent-documents-card .ant-card-body {
+      padding: 0;
+    }
+
+    /* RTL Support */
+    .dashboard.rtl .page-title,
+    .dashboard.rtl .page-subtitle {
+      text-align: right;
+      direction: rtl;
+    }
+
+    .dashboard.rtl .action-button {
+      direction: ltr; /* Keep button layout LTR for consistent icon/text positioning */
+    }
+
+    .dashboard.rtl ::ng-deep .ant-btn .anticon + span {
+      margin-left: 8px;
+      margin-right: 0;
+    }
+
+    .dashboard.rtl ::ng-deep .ant-card-head-title {
+      text-align: right;
+      direction: rtl;
+    }
+
+    .dashboard.rtl ::ng-deep .ant-card-extra {
+      float: left;
     }
 
     /* Empty State Styling */
@@ -454,28 +545,84 @@ import { Company } from '../../core/models/company.model';
       min-width: 0;
     }
 
-    /* Stats cards wrapper to match nz-card container behavior */
-    .stats-cards-wrapper {
-      background: #fff;
-      border: 1px solid #f0f0f0;
-      border-radius: 8px;
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .page-header-content {
+        padding: 16px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header-top {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+      }
+      
+      .header-actions {
+        justify-content: center;
+      }
+      
+      .action-button {
+        justify-content: center;
+        min-width: 160px;
+      }
+      
+      .page-header-content {
+        padding: 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .page-title {
+        font-size: 20px;
+      }
+      
+      .action-button {
+        width: 100%;
+      }
+    }
+
+    /* Document Table Styling within Dashboard */
+    ::ng-deep .dashboard .ant-table-wrapper {
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    ::ng-deep .dashboard .ant-table {
+      width: 100%;
+      max-width: 100%;
+      table-layout: fixed;
+    }
+
+    ::ng-deep .dashboard .ant-table th,
+    ::ng-deep .dashboard .ant-table td {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Search and Filters Section */
+    .search-filters-section {
       padding: 24px;
-      position: relative;
-      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+      background: #fff;
     }
 
-    /* RTL support for stats wrapper */
-    .dashboard.rtl .stats-cards-wrapper {
-      direction: rtl;
+    .filter-row {
+      margin-bottom: 16px;
     }
 
-    /* Ensure proper RTL layout for all grid columns */
-    .dashboard.rtl ::ng-deep .ant-row {
-      direction: rtl;
+    .filter-row:last-child {
+      margin-bottom: 0;
     }
 
-    .dashboard.rtl ::ng-deep .ant-col {
-      direction: ltr;
+    /* Loading State */
+    .loading-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 48px 0;
     }
   `]
 })
