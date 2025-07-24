@@ -39,7 +39,12 @@
       "actions": {
         "edit": "Edit",
         "delete": "Delete",
-        "view": "View Details"
+        "view": "View Details",
+        "reset_password": "Reset Password"
+      },
+      "empty": {
+        "message": "No users found",
+        "create_first": "Create First User"
       }
     },
     "companies": {
@@ -54,10 +59,20 @@
         "actions": "Actions"
       },
       "actions": {
-        "edit": "Edit",
+        "edit": "Edit Company",
         "delete": "Delete",
-        "access": "Manage Access",
+        "access": "Manage ACLs",
         "view": "View Details"
+      },
+      "empty": {
+        "message": "No companies found",
+        "create_first": "Create First Company"
+      },
+      "delete": {
+        "title": "Delete Company",
+        "content": "Are you sure you want to delete \"{name}\"? This action cannot be undone and will affect all related resource types.",
+        "ok": "Delete",
+        "cancel": "Cancel"
       }
     }
   },
