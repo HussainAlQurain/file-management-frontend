@@ -74,6 +74,41 @@
         "ok": "Delete",
         "cancel": "Cancel"
       }
+    },
+    "resource_types": {
+      "title": "Resource Type Management",
+      "subtitle": "Manage document types and their field definitions",
+      "create": "Create Resource Type",
+      "table": {
+        "id": "ID",
+        "code": "Code",
+        "name": "Name",
+        "company": "Company",
+        "description": "Description",
+        "fields": "Fields",
+        "created_at": "Created At",
+        "actions": "Actions"
+      },
+      "actions": {
+        "edit": "Edit Resource Type",
+        "delete": "Delete Resource Type",
+        "view": "View Details"
+      },
+      "empty": {
+        "message": "No resource types found",
+        "create_first": "Create First Resource Type"
+      },
+      "delete": {
+        "title": "Delete Resource Type",
+        "content": "Are you sure you want to delete resource type \"{code}\"? This action cannot be undone and might affect existing documents using this type.",
+        "ok": "Delete",
+        "cancel": "Cancel"
+      },
+      "fields": {
+        "count": "{count} field",
+        "count_plural": "{count} fields",
+        "none": "No fields"
+      }
     }
   },
   "dashboard": {
