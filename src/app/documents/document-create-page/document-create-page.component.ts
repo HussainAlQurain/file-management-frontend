@@ -5,7 +5,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { HttpEvent, HttpEventType } from '@angular/common/http';
 import { debounceTime, distinctUntilChanged, switchMap, tap, catchError, map } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 // NG-ZORRO imports
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -34,7 +34,6 @@ import { ResourceTypeService } from '../../core/services/resource-type.service';
 import { CompanyService } from '../../core/services/company.service';
 import { DocumentService } from '../../core/services/document.service';
 import { SnackbarService } from '../../core/services/snackbar.service';
-import { TranslationService } from '../../core/services/translation.service';
 import { ResourceType, FieldDefinitionDto, FieldType } from '../../core/models/resource-type.model';
 import { Company } from '../../core/models/company.model';
 import { Document, CreateDocumentDto } from '../../core/models/document.model';
@@ -68,14 +67,24 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
     NzPageHeaderModule
   ],
   template: `
-    <div class="create-document-container" [class.rtl]="translationService.isRTL()">
+    <div class="create-document-container">
       <!-- Page Header -->
-      <nz-page-header 
-        nzBackIcon
-        (nzBack)="navigateBack()"
-        [nzTitle]="'documents.create.title' | translate"
-        [nzSubtitle]="'documents.create.subtitle' | translate">
-      </nz-page-header>
+      <div class="page-header-wrapper">
+        <div class="page-header-content">
+          <div class="header-top">
+            <div class="header-title-section">
+              <h1 class="page-title">{{ 'documents.create.title' | translate }}</h1>
+              <p class="page-subtitle">{{ 'documents.create.subtitle' | translate }}</p>
+            </div>
+            <div class="header-actions">
+              <button nz-button nzType="default" (click)="navigateBack()" class="action-button secondary">
+                <nz-icon nzType="arrow-left" nzTheme="outline"></nz-icon>
+                <span>{{ 'common.back' | translate }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <nz-card>
         <nz-steps [nzCurrent]="currentStep" nzSize="small">
@@ -550,7 +559,7 @@ export class DocumentCreatePageComponent implements OnInit, OnDestroy {
   private documentService = inject(DocumentService);
   private snackbar = inject(SnackbarService);
   private message = inject(NzMessageService);
-  translationService = inject(TranslationService);
+  private translateService = inject(TranslateService);
 
   FieldType = FieldType;
 

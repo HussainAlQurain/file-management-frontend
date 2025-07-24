@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -13,7 +13,6 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 
 import { AuthService } from '../../core/services/auth.service';
 import { SnackbarService } from '../../core/services/snackbar.service';
-import { TranslationService } from '../../core/services/translation.service';
 
 @Component({
   selector: 'app-login-page',
@@ -31,7 +30,7 @@ import { TranslationService } from '../../core/services/translation.service';
     NzSpinModule
   ],
   template: `
-    <div class="login-page min-h-screen flex items-center justify-center p-4 bg-gray-50" [class.rtl]="translationService.isRTL()" [dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
+    <div class="login-page min-h-screen flex items-center justify-center p-4 bg-gray-50">
       <nz-card class="max-w-md w-full shadow-xl" [nzTitle]="'auth.login.title' | translate" [nzBordered]="false">
         <form nz-form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
           <nz-form-item>
@@ -115,7 +114,7 @@ export class LoginPageComponent {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private snackbar = inject(SnackbarService);
-  protected translationService = inject(TranslationService);
+  private translateService = inject(TranslateService);
   
   loginForm: FormGroup = this.fb.group({
     username: ['', [Validators.required]],
@@ -142,7 +141,7 @@ export class LoginPageComponent {
       },
       error: (error) => {
         this.isLoading = false;
-        const errorMsg = $localize`:@@login.error:Login failed. Please check your credentials.`;
+        const errorMsg = this.translateService.instant('auth.login.error');
         this.snackbar.error(error.error?.message || errorMsg);
       }
     });

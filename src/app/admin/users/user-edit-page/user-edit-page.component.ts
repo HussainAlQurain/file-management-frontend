@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { switchMap } from 'rxjs/operators';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
@@ -13,8 +14,6 @@ import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzResultModule } from 'ng-zorro-antd/result';
 import { NzGridModule } from 'ng-zorro-antd/grid';
-import { NzPageHeaderModule } from 'ng-zorro-antd/page-header';
-import { NzBreadCrumbModule } from 'ng-zorro-antd/breadcrumb';
 
 import { UserService } from '../../../core/services/user.service';
 import { SnackbarService } from '../../../core/services/snackbar.service';
@@ -29,6 +28,7 @@ import { AuthService } from '../../../core/services/auth.service';
     CommonModule,
     RouterModule,
     ReactiveFormsModule,
+    TranslateModule,
     NzFormModule,
     NzInputModule,
     NzSelectModule,
@@ -37,61 +37,60 @@ import { AuthService } from '../../../core/services/auth.service';
     NzCardModule,
     NzSpinModule,
     NzResultModule,
-    NzGridModule,
-    NzPageHeaderModule,
-    NzBreadCrumbModule
+    NzGridModule
   ],
   template: `
-    <div class="p-6">
+    <div class="user-edit-container">
       <!-- Page Header -->
-      <nz-page-header class="mb-6" [nzGhost]="false">
-        <nz-breadcrumb nz-page-header-breadcrumb>
-          <nz-breadcrumb-item>
-            <a routerLink="../../">Users</a>
-          </nz-breadcrumb-item>
-          <nz-breadcrumb-item>Edit User</nz-breadcrumb-item>
-        </nz-breadcrumb>
-        
-        <nz-page-header-title>Edit User</nz-page-header-title>
-        <nz-page-header-subtitle>{{ userForm.get('username')?.value || 'Loading...' }}</nz-page-header-subtitle>
-        
-        <nz-page-header-extra>
-          <button nz-button nzType="default" routerLink="../../">
-            <nz-icon nzType="arrow-left"></nz-icon>
-            Back to Users
-          </button>
-        </nz-page-header-extra>
-      </nz-page-header>
+      <div class="page-header-wrapper">
+        <div class="page-header-content">
+          <!-- Title and Actions Row -->
+          <div class="header-top">
+            <div class="header-title-section">
+              <h1 class="page-title">{{ 'admin.users.edit.title' | translate }}</h1>
+              <p class="page-subtitle">{{ userForm.get('username')?.value || ('admin.users.edit.loading' | translate) }}</p>
+            </div>
+            <div class="header-actions">
+              <button nz-button nzType="default" routerLink="../../" class="action-button secondary">
+                <nz-icon nzType="arrow-left" nzTheme="outline"></nz-icon>
+                <span>{{ 'admin.users.edit.back' | translate }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       @if (isLoadingUser()) {
-        <div class="flex justify-center items-center py-20">
-          <nz-spin nzSize="large" nzTip="Loading user..."></nz-spin>
+        <div class="loading-container">
+          <nz-spin nzSize="large" [nzTip]="'admin.users.edit.loading' | translate"></nz-spin>
         </div>
       } @else if (!userForm.value.id && !isLoadingUser()) {
-        <nz-result 
-          nzStatus="404" 
-          nzTitle="User Not Found" 
-          nzSubTitle="The user you are trying to edit does not exist or could not be loaded.">
-          <div nz-result-extra>
-            <button nz-button nzType="primary" routerLink="../../">
-              <nz-icon nzType="arrow-left"></nz-icon>
-              Back to Users
-            </button>
-          </div>
-        </nz-result>
+        <div class="not-found-container">
+          <nz-result 
+            nzStatus="404" 
+            [nzTitle]="'admin.users.edit.not_found' | translate"
+            [nzSubTitle]="'admin.users.edit.not_found_subtitle' | translate">
+            <div nz-result-extra>
+              <button nz-button nzType="primary" routerLink="../../" class="back-button">
+                <nz-icon nzType="arrow-left"></nz-icon>
+                <span>{{ 'admin.users.edit.back' | translate }}</span>
+              </button>
+            </div>
+          </nz-result>
+        </div>
       } @else {
         <!-- User Form -->
-        <nz-card nzTitle="User Information">
+        <nz-card class="form-card" [nzTitle]="'admin.users.create.form.title' | translate">
           <form nz-form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="space-y-6">
             <div nz-row [nzGutter]="[16, 16]">
               <div nz-col [nzSpan]="12">
                 <nz-form-item>
-                  <nz-form-label [nzRequired]="true">Username</nz-form-label>
+                  <nz-form-label [nzRequired]="true">{{ 'admin.users.create.form.username' | translate }}</nz-form-label>
                   <nz-form-control [nzErrorTip]="usernameErrorTpl">
-                    <input nz-input formControlName="username" placeholder="Enter username">
+                    <input nz-input formControlName="username" [placeholder]="'admin.users.create.form.username_placeholder' | translate">
                     <ng-template #usernameErrorTpl let-control>
                       @if (control.hasError('required')) {
-                        <span>Username is required</span>
+                        <span>{{ 'admin.users.create.form.username_required' | translate }}</span>
                       } @else if (control.hasError('minlength')) {
                         <span>Username must be at least 3 characters long</span>
                       }
@@ -102,14 +101,14 @@ import { AuthService } from '../../../core/services/auth.service';
               
               <div nz-col [nzSpan]="12">
                 <nz-form-item>
-                  <nz-form-label [nzRequired]="true">Email</nz-form-label>
+                  <nz-form-label [nzRequired]="true">{{ 'admin.users.create.form.email' | translate }}</nz-form-label>
                   <nz-form-control [nzErrorTip]="emailErrorTpl">
-                    <input nz-input type="email" formControlName="email" placeholder="Enter email address">
+                    <input nz-input type="email" formControlName="email" [placeholder]="'admin.users.create.form.email_placeholder' | translate">
                     <ng-template #emailErrorTpl let-control>
                       @if (control.hasError('required')) {
-                        <span>Email is required</span>
+                        <span>{{ 'admin.users.create.form.email_required' | translate }}</span>
                       } @else if (control.hasError('email')) {
-                        <span>Please enter a valid email address</span>
+                        <span>{{ 'admin.users.create.form.email_invalid' | translate }}</span>
                       }
                     </ng-template>
                   </nz-form-control>
@@ -118,16 +117,16 @@ import { AuthService } from '../../../core/services/auth.service';
               
               <div nz-col [nzSpan]="24">
                 <nz-form-item>
-                  <nz-form-label [nzRequired]="true">Roles</nz-form-label>
-                  <nz-form-control [nzErrorTip]="'At least one role is required'">
+                  <nz-form-label [nzRequired]="true">{{ 'admin.users.create.form.roles' | translate }}</nz-form-label>
+                  <nz-form-control [nzErrorTip]="'admin.users.create.form.roles_required' | translate">
                     <nz-select 
                       formControlName="roles" 
                       nzMode="multiple" 
-                      nzPlaceHolder="Select user roles">
+                      [nzPlaceHolder]="'admin.users.create.form.roles_placeholder' | translate">
                       @for (role of userRoles; track role) {
-                        <nz-option [nzValue]="role" [nzLabel]="role">
-                          <nz-icon [nzType]="getRoleIcon(role)" class="mr-2"></nz-icon>
-                          {{ role }}
+                        <nz-option [nzValue]="role" [nzLabel]="'admin.users.roles.' + role | translate">
+                          <nz-icon [nzType]="getRoleIcon(role)" class="role-icon"></nz-icon>
+                          <span>{{ 'admin.users.roles.' + role | translate }}</span>
                         </nz-option>
                       }
                     </nz-select>
@@ -137,19 +136,20 @@ import { AuthService } from '../../../core/services/auth.service';
             </div>
 
             <!-- Form Actions -->
-            <div class="flex justify-end gap-3 pt-6 border-t">
-              <button nz-button nzType="default" routerLink="../../">
+            <div class="form-actions">
+              <button nz-button nzType="default" routerLink="../../" class="cancel-button">
                 <nz-icon nzType="close"></nz-icon>
-                Cancel
+                <span>{{ 'admin.users.create.form.cancel' | translate }}</span>
               </button>
               <button 
                 nz-button 
                 nzType="primary" 
                 [nzLoading]="isSubmitting()"
                 [disabled]="userForm.invalid || !userForm.dirty"
-                type="submit">
+                type="submit"
+                class="submit-button">
                 <nz-icon nzType="save"></nz-icon>
-                Save Changes
+                <span>{{ 'admin.users.create.form.save' | translate }}</span>
               </button>
             </div>
           </form>
@@ -158,9 +158,255 @@ import { AuthService } from '../../../core/services/auth.service';
     </div>
   `,
   styles: [`
-    nz-page-header {
-      border: 1px solid #d9d9d9;
+    .user-edit-container {
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+      background-color: #f5f5f5;
+      min-height: 100vh;
+    }
+
+    /* Page Header Redesign */
+    .page-header-wrapper {
+      background: #fff;
+      border-bottom: 1px solid #e8e8e8;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      margin-bottom: 24px;
+    }
+
+    .page-header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    /* Header Top Row */
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .header-title-section {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: rgba(0, 0, 0, 0.85);
+      margin: 0 0 4px 0;
+      line-height: 1.3;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.45);
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    .header-actions {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .action-button {
+      height: 36px;
+      padding: 0 16px;
       border-radius: 6px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .action-button.secondary {
+      background: #fff;
+      border: 1px solid #d9d9d9;
+      color: rgba(0, 0, 0, 0.65);
+    }
+
+    .action-button.secondary:hover {
+      border-color: #40a9ff;
+      color: #40a9ff;
+    }
+
+    /* Loading Container */
+    .loading-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 80px 24px;
+      background: #fff;
+      border-radius: 8px;
+      margin: 0 24px;
+    }
+
+    /* Not Found Container */
+    .not-found-container {
+      background: #fff;
+      border-radius: 8px;
+      margin: 0 24px;
+    }
+
+    .back-button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Form Card */
+    .form-card {
+      max-width: 800px;
+      margin: 0 auto 24px auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    ::ng-deep .form-card .ant-card-head {
+      background: #fafafa;
+      border-bottom: 1px solid #e8e8e8;
+    }
+
+    ::ng-deep .form-card .ant-card-head-title {
+      font-weight: 600;
+      color: rgba(0, 0, 0, 0.85);
+    }
+
+    ::ng-deep .form-card .ant-card-body {
+      padding: 24px;
+    }
+
+    /* Form Styling */
+    ::ng-deep .ant-form-item-label > label {
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.85);
+    }
+
+    ::ng-deep .ant-input,
+    ::ng-deep .ant-select-selector {
+      border-radius: 6px;
+    }
+
+    ::ng-deep .ant-input:focus,
+    ::ng-deep .ant-select-focused .ant-select-selector {
+      border-color: #40a9ff;
+      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    }
+
+    .role-icon {
+      margin-right: 8px;
+      font-size: 14px;
+    }
+
+    /* Form Actions */
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding-top: 24px;
+      border-top: 1px solid #e8e8e8;
+      margin-top: 24px;
+    }
+
+    .cancel-button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 6px;
+    }
+
+    .submit-button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .page-header-content {
+        padding: 16px;
+      }
+      
+      .form-card {
+        margin: 0 16px 24px 16px;
+        max-width: none;
+      }
+
+      .loading-container,
+      .not-found-container {
+        margin: 0 16px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header-top {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+      }
+      
+      .header-actions {
+        justify-content: center;
+      }
+      
+      .action-button {
+        justify-content: center;
+        min-width: 160px;
+      }
+      
+      .page-header-content {
+        padding: 12px;
+      }
+
+      .form-card {
+        margin: 0 12px 24px 12px;
+      }
+
+      .loading-container,
+      .not-found-container {
+        margin: 0 12px;
+      }
+
+      ::ng-deep .form-card .ant-card-body {
+        padding: 16px;
+      }
+
+      ::ng-deep .ant-col {
+        margin-bottom: 16px;
+      }
+
+      .form-actions {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .cancel-button,
+      .submit-button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .page-title {
+        font-size: 20px;
+      }
+      
+      .action-button {
+        width: 100%;
+      }
     }
   `]
 })
@@ -171,6 +417,7 @@ export class UserEditPageComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private authService = inject(AuthService);
+  private translateService = inject(TranslateService);
 
   userId = signal<number | null>(null);
   isSubmitting = signal(false);
@@ -220,8 +467,8 @@ export class UserEditPageComponent implements OnInit {
       return;
     }
     if (!this.userForm.dirty) {
-        this.snackbar.info('No changes detected.');
-        return;
+      this.snackbar.info(this.translateService.instant('admin.users.edit.messages.no_changes'));
+      return;
     }
 
     this.isSubmitting.set(true);
@@ -241,28 +488,28 @@ export class UserEditPageComponent implements OnInit {
     this.userService.patch(currentUserId, userData).subscribe({
       next: (updatedUser) => {
         this.isSubmitting.set(false);
-        this.snackbar.success(`User ${updatedUser.username} updated successfully!`);
-        this.userForm.markAsPristine(); // Reset dirty state after successful save
+        const successMessage = this.translateService.instant('admin.users.edit.messages.success').replace('{username}', updatedUser.username);
+        this.snackbar.success(successMessage);
+        this.userForm.markAsPristine();
 
         // If the updated user is the current user and the username changed, force logout
         const currentUser = this.authService.currentUserSignal();
         if (currentUser && currentUser.id === updatedUser.id && currentUser.username !== updatedUser.username) {
-          this.snackbar.info('Your username has changed. Please log in again.');
+          const changeMessage = this.translateService.instant('admin.users.edit.messages.username_changed');
+          this.snackbar.info(changeMessage);
           setTimeout(() => this.authService.logout(), 1500);
         }
-        // Optionally navigate away or refresh data if needed
-        // this.router.navigate(['/users']); 
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        // Handle duplicate username/email error from backend
         const msg = err?.error?.message || err?.message || '';
         if (msg.includes('Username already exists')) {
-          this.snackbar.error('This username is already taken. Please choose another.');
+          this.snackbar.error(this.translateService.instant('admin.users.edit.messages.username_taken'));
         } else if (msg.includes('Email already exists')) {
-          this.snackbar.error('This email is already in use. Please use a different email.');
+          this.snackbar.error(this.translateService.instant('admin.users.edit.messages.email_taken'));
         } else {
-          this.snackbar.error('Failed to update user: ' + msg);
+          const errorMessage = this.translateService.instant('admin.users.edit.messages.error') + ': ' + msg;
+          this.snackbar.error(errorMessage);
         }
       }
     });

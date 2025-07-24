@@ -1,4 +1,32 @@
 {
+  "auth": {
+    "login": {
+      "title": "Sign In",
+      "username": "Username",
+      "username_placeholder": "Enter your username",
+      "username_required": "Username is required",
+      "password": "Password",
+      "password_placeholder": "Enter your password",
+      "password_required": "Password is required",
+      "button": "Sign In",
+      "error": "Login failed. Please check your credentials."
+    }
+  },
+  "user": {
+    "role": {
+      "admin": "Administrator",
+      "user": "User"
+    },
+    "menu": {
+      "profile": "Profile",
+      "change_password": "Change Password",
+      "logout": "Logout"
+    }
+  },
+  "footer": {
+    "copyright": "© 2024 Document Management System",
+    "version": "Version 1.0.0"
+  },
   "app": {
     "title": "DMS",
     "header": {
@@ -32,9 +60,10 @@
         "actions": "Actions"
       },
       "roles": {
-        "admin": "Administrator",
-        "user": "User",
-        "manager": "Manager"
+        "SYS_ADMIN": "System Administrator",
+        "ADMIN": "Administrator", 
+        "USER": "User",
+        "MANAGER": "Manager"
       },
       "actions": {
         "edit": "Edit",
@@ -45,6 +74,55 @@
       "empty": {
         "message": "No users found",
         "create_first": "Create First User"
+      },
+      "create": {
+        "title": "Create New User",
+        "subtitle": "Add a new user to the system",
+        "back": "Back to Users",
+        "form": {
+          "title": "User Information",
+          "username": "Username",
+          "username_placeholder": "Enter username",
+          "username_required": "Username is required",
+          "email": "Email",
+          "email_placeholder": "Enter email address",
+          "email_required": "Email is required",
+          "email_invalid": "Please enter a valid email address",
+          "full_name": "Full Name",
+          "full_name_placeholder": "Enter full name (optional)",
+          "password": "Password",
+          "password_placeholder": "Enter password",
+          "password_required": "Password is required",
+          "password_min": "Password must be at least 6 characters long",
+          "roles": "Roles",
+          "roles_placeholder": "Select user roles",
+          "roles_required": "At least one role is required",
+          "cancel": "Cancel",
+          "create": "Create User",
+          "save": "Save Changes"
+        },
+        "messages": {
+          "creating": "Creating user...",
+          "success": "User {username} created successfully!",
+          "error": "Failed to create user"
+        }
+      },
+      "edit": {
+        "title": "Edit User",
+        "subtitle": "Update user information",
+        "back": "Back to Users",
+        "loading": "Loading user...",
+        "not_found": "User Not Found",
+        "not_found_subtitle": "The user you are trying to edit does not exist or could not be loaded.",
+        "messages": {
+          "saving": "Saving changes...",
+          "success": "User {username} updated successfully!",
+          "error": "Failed to update user",
+          "no_changes": "No changes detected.",
+          "username_taken": "This username is already taken. Please choose another.",
+          "email_taken": "This email is already in use. Please use a different email.",
+          "username_changed": "Your username has changed. Please log in again."
+        }
       }
     },
     "companies": {

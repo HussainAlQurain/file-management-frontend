@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 // NG-ZORRO imports
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
@@ -17,7 +17,6 @@ import { NzDividerModule } from 'ng-zorro-antd/divider';
 
 import { AuthService } from '../../core/services/auth.service';
 import { LoadingService } from '../../core/services/loading.service';
-import { TranslationService } from '../../core/services/translation.service';
 import { HasRoleDirective } from '../../shared/directives/has-role.directive';
 import { LanguageSwitcherComponent } from '../../shared/components/language-switcher/language-switcher.component';
 
@@ -42,7 +41,7 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
     LanguageSwitcherComponent
   ],
   template: `
-    <nz-layout class="app-layout" [class.rtl]="translationService.isRTL()" [dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
+    <nz-layout class="app-layout">
       <!-- Sider -->
       <nz-sider 
         class="menu-sidebar"
@@ -449,7 +448,7 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
 export class ShellLayoutComponent {
   authService = inject(AuthService);
   loadingService = inject(LoadingService);
-  translationService = inject(TranslationService);
+  translateService = inject(TranslateService);
   router = inject(Router);
   
   isCollapsed = false;
@@ -465,9 +464,9 @@ export class ShellLayoutComponent {
   getUserRole(): string {
     const user = this.authService.currentUserSignal();
     if (user?.roles?.includes('SYS_ADMIN')) {
-      return this.translationService.getTranslation('user.role.admin');
+      return this.translateService.instant('user.role.admin');
     }
-    return this.translationService.getTranslation('user.role.user');
+    return this.translateService.instant('user.role.user');
   }
   
   logout(): void {
