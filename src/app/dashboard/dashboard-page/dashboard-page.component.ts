@@ -291,13 +291,16 @@ import { Company } from '../../core/models/company.model';
 
     .empty-state-container.rtl-empty-state {
       text-align: center;
-      direction: ltr; /* Keep LTR for centering, but ensure text renders in RTL */
+      direction: ltr; /* Keep LTL for centering layout */
     }
 
     .empty-state-container.rtl-empty-state .empty-state-title,
     .empty-state-container.rtl-empty-state .empty-state-description {
       direction: rtl;
       unicode-bidi: embed;
+      text-align: center !important;
+      display: block;
+      width: 100%;
     }
 
     .empty-state-icon {
@@ -424,10 +427,21 @@ import { Company } from '../../core/models/company.model';
     /* RTL Empty table state */
     .dashboard.rtl ::ng-deep .ant-empty {
       direction: ltr;
+      text-align: center;
     }
 
     .dashboard.rtl ::ng-deep .ant-empty-description {
       direction: rtl;
+      text-align: center !important;
+      display: block;
+      width: 100%;
+    }
+
+    /* Additional RTL centering for all empty states */
+    .dashboard.rtl ::ng-deep .ant-empty-image,
+    .dashboard.rtl ::ng-deep .ant-empty-image svg {
+      margin: 0 auto;
+      display: block;
     }
 
     /* Prevent horizontal overflow */
