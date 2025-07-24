@@ -252,6 +252,19 @@
       }
     }
   },
+  "company_structure": {
+    "title": "Company Structure",
+    "subtitle": "Browse and manage documents by company and resource type",
+    "browse_all": "Browse All Documents",
+    "loading": "Loading companies...",
+    "no_companies": "No companies found",
+    "contact_admin": "Contact your administrator to set up companies and document types",
+    "document_types": "Available Document Types",
+    "no_types": "No document types available",
+    "view_documents": "Click to view documents",
+    "view_all": "View All Documents",
+    "create_document": "Create Document"
+  },
   "common": {
     "loading": "Loading...",
     "save": "Save",
