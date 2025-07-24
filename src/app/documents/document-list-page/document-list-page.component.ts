@@ -23,8 +23,7 @@ import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { NzBadgeModule } from 'ng-zorro-antd/badge';
 import { NzDrawerModule } from 'ng-zorro-antd/drawer';
-import { NzPageHeaderModule } from 'ng-zorro-antd/page-header';
-import { NzStatisticModule } from 'ng-zorro-antd/statistic';
+
 import { NzAvatarModule } from 'ng-zorro-antd/avatar';
 import { NzTypographyModule } from 'ng-zorro-antd/typography';
 import { NzMessageService } from 'ng-zorro-antd/message';
@@ -63,62 +62,69 @@ import { Company } from '../../core/models/company.model';
     NzToolTipModule,
     NzBadgeModule,
     NzDrawerModule,
-    NzPageHeaderModule,
-    NzStatisticModule,
     NzAvatarModule,
     NzTypographyModule
   ],
   template: `
     <div class="document-list-container" [class.rtl]="translationService.isRTL()">
       <!-- Page Header -->
-      <nz-page-header
-        class="site-page-header"
-        [nzTitle]="'documents.title' | translate"
-        [nzSubtitle]="'documents.subtitle' | translate">
-        <nz-page-header-extra>
-          <nz-space [nzDirection]="translationService.isRTL() ? 'horizontal' : 'horizontal'">
-            <button *nzSpaceItem nz-button nzType="default" (click)="showFilters = true">
-              <span nz-icon nzType="filter" nzTheme="outline"></span>
-              {{ 'documents.filters' | translate }}
-              <nz-badge *ngIf="activeFiltersCount > 0" [nzCount]="activeFiltersCount"></nz-badge>
-            </button>
-            <button *nzSpaceItem nz-button nzType="default" routerLink="/documents/bulk-import">
-              <span nz-icon nzType="cloud-upload" nzTheme="outline"></span>
-              {{ 'documents.bulk_import' | translate }}
-            </button>
-            <button *nzSpaceItem nz-button nzType="primary" routerLink="/documents/new">
-              <span nz-icon nzType="plus" nzTheme="outline"></span>
-              {{ 'documents.new_document' | translate }}
-            </button>
-          </nz-space>
-        </nz-page-header-extra>
-        <nz-page-header-content>
-          <div nz-row [nzGutter]="24">
-            <div nz-col [nzSpan]="6">
-              <nz-statistic [nzTitle]="'documents.stats.total_documents' | translate" [nzValue]="documents().totalElements"></nz-statistic>
+      <div class="page-header-wrapper">
+        <div class="page-header-content">
+          <!-- Title and Actions Row -->
+          <div class="header-top">
+            <div class="header-title-section" [class.rtl-header]="translationService.isRTL()">
+              <h1 class="page-title">{{ 'documents.title' | translate }}</h1>
+              <p class="page-subtitle">{{ 'documents.subtitle' | translate }}</p>
             </div>
-            <div nz-col [nzSpan]="6">
-              <nz-statistic [nzTitle]="'documents.stats.current_page' | translate" [nzValue]="(documents().number + 1) + ' / ' + documents().totalPages"></nz-statistic>
-            </div>
-            <div nz-col [nzSpan]="12">
-              <div class="search-box" [class.search-box-rtl]="translationService.isRTL()">
-                <nz-input-group [nzSuffix]="suffixIconSearch" nzSize="large">
-                  <input 
-                    type="text" 
-                    nz-input 
-                    [placeholder]="'documents.search.placeholder' | translate"
-                    [(ngModel)]="searchQuery"
-                    (keyup.enter)="onSearch()"
-                    (ngModelChange)="onSearchChange($event)" />
-                </nz-input-group>
-                <ng-template #suffixIconSearch>
-                  <span nz-icon nzType="search" (click)="onSearch()"></span>
-                </ng-template>
-              </div>
+            <div class="header-actions" [class.rtl-actions]="translationService.isRTL()">
+              <nz-space nzSize="middle">
+                <button *nzSpaceItem nz-button nzType="default" (click)="showFilters = true" class="action-button">
+                  <nz-icon nzType="filter" nzTheme="outline"></nz-icon>
+                  <span>{{ 'documents.filters.title' | translate }}</span>
+                                     <nz-badge *ngIf="activeFiltersCount > 0" [nzCount]="activeFiltersCount" [nzOffset]="[10, 0]"></nz-badge>
+                </button>
+                <button *nzSpaceItem nz-button nzType="default" routerLink="/documents/bulk-import" class="action-button">
+                  <nz-icon nzType="cloud-upload" nzTheme="outline"></nz-icon>
+                  <span>{{ 'documents.bulk_import' | translate }}</span>
+                </button>
+                <button *nzSpaceItem nz-button nzType="primary" routerLink="/documents/new" class="action-button">
+                  <nz-icon nzType="plus" nzTheme="outline"></nz-icon>
+                  <span>{{ 'documents.new_document' | translate }}</span>
+                </button>
+              </nz-space>
             </div>
           </div>
-        </nz-page-header-content>
-      </nz-page-header>
+          
+          <!-- Statistics and Search Row -->
+          <div class="header-bottom">
+            <div class="stats-section" [class.rtl-stats]="translationService.isRTL()">
+              <div class="stat-item">
+                <div class="stat-value">{{ documents().totalElements }}</div>
+                <div class="stat-label">{{ 'documents.stats.total_documents' | translate }}</div>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-item">
+                <div class="stat-value">{{ (documents().number + 1) + ' / ' + documents().totalPages }}</div>
+                <div class="stat-label">{{ 'documents.stats.current_page' | translate }}</div>
+              </div>
+            </div>
+            <div class="search-section" [class.rtl-search]="translationService.isRTL()">
+              <nz-input-group [nzSuffix]="suffixIconSearch" nzSize="large" class="search-input">
+                <input 
+                  type="text" 
+                  nz-input 
+                  [placeholder]="'documents.search.placeholder' | translate"
+                  [(ngModel)]="searchQuery"
+                  (keyup.enter)="onSearch()"
+                  (ngModelChange)="onSearchChange($event)" />
+              </nz-input-group>
+              <ng-template #suffixIconSearch>
+                <nz-icon nzType="search" class="search-icon" (click)="onSearch()"></nz-icon>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Filter Drawer -->
       <nz-drawer
@@ -206,7 +212,7 @@ import { Company } from '../../core/models/company.model';
       </nz-drawer>
 
       <!-- Documents Table -->
-      <nz-card>
+      <nz-card class="documents-card">
         <nz-table
           #documentTable
           [nzData]="documents().content"
@@ -218,35 +224,34 @@ import { Company } from '../../core/models/company.model';
           [nzShowSizeChanger]="true"
           [nzPageSizeOptions]="[10, 20, 50, 100]"
           (nzPageSizeChange)="onPageSizeChange($event)"
-          (nzPageIndexChange)="onPageIndexChange($event)"
-          [nzScroll]="{ x: 'max-content' }">
+          (nzPageIndexChange)="onPageIndexChange($event)">
           
           <thead>
             <tr>
-              <th nzWidth="50px"></th>
-              <th nzColumnKey="title" [nzSortFn]="true" nzWidth="25%">{{ 'documents.table.title' | translate }}</th>
+              <th nzColumnKey="title" [nzSortFn]="true" nzWidth="30%">{{ 'documents.table.title' | translate }}</th>
               <th nzColumnKey="resourceCode" [nzSortFn]="true" nzWidth="15%">{{ 'documents.table.resource_code' | translate }}</th>
               <th nzWidth="12%">{{ 'documents.table.type' | translate }}</th>
               <th nzWidth="12%">{{ 'documents.table.company' | translate }}</th>
               <th nzColumnKey="status" [nzSortFn]="true" nzWidth="10%">{{ 'documents.table.status' | translate }}</th>
-              <th nzColumnKey="createdAt" [nzSortFn]="true" nzWidth="12%">{{ 'documents.table.created' | translate }}</th>
-              <th nzWidth="10%">{{ 'documents.table.owner' | translate }}</th>
-              <th nzWidth="120px" nzAlign="center">{{ 'documents.table.actions' | translate }}</th>
+              <th nzColumnKey="createdAt" [nzSortFn]="true" nzWidth="13%">{{ 'documents.table.created' | translate }}</th>
+              <th nzWidth="8%">{{ 'documents.table.owner' | translate }}</th>
+              <th nzWidth="100px" nzAlign="center">{{ 'documents.table.actions' | translate }}</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let doc of documentTable.data">
               <td>
-                <nz-avatar 
-                  nzIcon="file-text" 
-                  [nzSize]="32"
-                  [style.background-color]="getDocumentTypeColor(doc.resourceType?.code)">
-                </nz-avatar>
-              </td>
-              <td>
-                <a [routerLink]="['/documents', doc.id]" class="document-link">
-                  <span nz-typography nzEllipsis nz-tooltip [nzTooltipTitle]="doc.title">{{ doc.title }}</span>
-                </a>
+                <div class="title-cell">
+                  <nz-avatar 
+                    nzIcon="file-text" 
+                    [nzSize]="24"
+                    [style.background-color]="getDocumentTypeColor(doc.resourceType?.code)"
+                    class="doc-avatar">
+                  </nz-avatar>
+                  <a [routerLink]="['/documents', doc.id]" class="document-link">
+                    <span nz-typography nzEllipsis nz-tooltip [nzTooltipTitle]="doc.title">{{ doc.title }}</span>
+                  </a>
+                </div>
               </td>
               <td>
                 <nz-tag>{{ doc.resourceCode }}</nz-tag>
@@ -311,28 +316,163 @@ import { Company } from '../../core/models/company.model';
       padding: 0;
       width: 100%;
       max-width: 100%;
-      overflow-x: hidden;
+      overflow: hidden;
+      background-color: #f5f5f5;
+      min-height: 100vh;
     }
 
     .document-list-container.rtl {
       direction: rtl;
     }
 
-    .site-page-header {
+    /* Page Header Redesign */
+    .page-header-wrapper {
       background: #fff;
-      margin: -24px -24px 24px;
-      padding: 16px 24px;
-      overflow-x: hidden;
+      border-bottom: 1px solid #e8e8e8;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      margin-bottom: 24px;
     }
 
-    .search-box {
+    .page-header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    /* Header Top Row */
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      gap: 16px;
+    }
+
+    .header-title-section {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .header-title-section.rtl-header {
+      text-align: right;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: rgba(0, 0, 0, 0.85);
+      margin: 0 0 4px 0;
+      line-height: 1.3;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.45);
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    .header-actions {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .header-actions.rtl-actions {
+      direction: ltr; /* Keep button internal layout LTR */
+    }
+
+    .action-button {
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 6px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    /* Header Bottom Row */
+    .header-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .stats-section {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .stats-section.rtl-stats {
+      direction: ltr; /* Keep numbers LTR for consistency */
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1890ff;
+      line-height: 1.2;
+      margin-bottom: 2px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.45);
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .stat-divider {
+      width: 1px;
+      height: 32px;
+      background-color: #e8e8e8;
+    }
+
+    .search-section {
+      flex: 1;
       max-width: 400px;
       margin-left: auto;
     }
 
-    .search-box-rtl {
+    .search-section.rtl-search {
       margin-left: 0;
       margin-right: auto;
+    }
+
+    .search-input {
+      width: 100%;
+    }
+
+    .search-icon {
+      cursor: pointer;
+      color: rgba(0, 0, 0, 0.45);
+      transition: color 0.3s;
+    }
+
+    .search-icon:hover {
+      color: #1890ff;
+    }
+
+    /* Documents Table Card */
+    .documents-card {
+      margin: 0;
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+      box-shadow: none;
+      border-top: 1px solid #e8e8e8;
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
     }
 
     .document-link {
@@ -344,88 +484,268 @@ import { Company } from '../../core/models/company.model';
       text-decoration: underline;
     }
 
-    /* Prevent table overflow */
+    /* Table Styling */
+    ::ng-deep .ant-card {
+      border-radius: 0;
+      overflow: hidden;
+    }
+
+    ::ng-deep .ant-card-body {
+      padding: 0;
+    }
+
+    /* Title Cell Layout */
+    .title-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .doc-avatar {
+      flex-shrink: 0;
+    }
+
     ::ng-deep .ant-table-wrapper {
-      overflow-x: auto;
+      overflow: hidden;
+      width: 100%;
       max-width: 100%;
     }
 
     ::ng-deep .ant-table {
-      min-width: 100%;
       width: 100%;
+      max-width: 100%;
+      margin: 0;
+      table-layout: fixed;
     }
 
     ::ng-deep .ant-table-container {
-      overflow-x: auto;
+      overflow: hidden;
+      width: 100%;
       max-width: 100%;
     }
 
     ::ng-deep .ant-table-content {
-      overflow-x: auto;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    ::ng-deep .ant-table-body {
+      overflow: hidden;
+      width: 100%;
       max-width: 100%;
     }
 
     ::ng-deep .ant-table-wrapper .ant-table-cell {
       vertical-align: middle;
-      padding: 12px 8px;
-      white-space: nowrap;
+      padding: 16px 12px;
       overflow: hidden;
       text-overflow: ellipsis;
+      border-bottom: 1px solid #f5f5f5;
     }
 
-    /* RTL table fixes */
+    /* Specific cell content styling */
+    ::ng-deep .ant-table-cell .document-link,
+    ::ng-deep .ant-table-cell .title-cell {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: block;
+    }
+
+    .title-cell .document-link {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Prevent any horizontal overflow */
+    ::ng-deep .ant-table th,
+    ::ng-deep .ant-table td {
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    ::ng-deep .ant-table-thead th {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Force table to respect container bounds */
+    ::ng-deep .documents-card .ant-table-wrapper {
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow: hidden !important;
+    }
+
+    /* Prevent tag and content overflow */
+    ::ng-deep .ant-tag {
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: inline-block;
+    }
+
+    ::ng-deep .ant-table-thead > tr > th {
+      background: #fafafa;
+      font-weight: 600;
+      color: rgba(0, 0, 0, 0.85);
+      border-bottom: 1px solid #e8e8e8;
+      padding: 16px;
+    }
+
+    ::ng-deep .ant-table-tbody > tr:hover > td {
+      background-color: #f5f5f5;
+    }
+
+    /* RTL Table Support */
     .document-list-container.rtl ::ng-deep .ant-table-thead > tr > th {
       text-align: right;
+      direction: rtl;
     }
 
     .document-list-container.rtl ::ng-deep .ant-table-tbody > tr > td {
       text-align: right;
+      direction: rtl;
     }
 
     .document-list-container.rtl ::ng-deep .ant-table-cell {
       text-align: right;
+      direction: rtl;
     }
 
     .document-list-container.rtl ::ng-deep .ant-space {
       direction: ltr;
     }
 
-    /* Page header responsive */
-    ::ng-deep .ant-page-header-heading-extra {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
+    .document-list-container.rtl ::ng-deep .ant-btn {
+      direction: ltr;
     }
 
-    ::ng-deep .ant-statistic-content {
-      font-size: 20px;
+    /* RTL Button Icon Spacing */
+    .document-list-container.rtl .action-button {
+      direction: ltr; /* Keep button layout LTR for consistent icon/text positioning */
     }
 
-    /* Card overflow fix */
-    ::ng-deep .ant-card {
-      overflow: hidden;
+    .document-list-container.rtl ::ng-deep .ant-btn .anticon + span {
+      margin-left: 8px;
+      margin-right: 0;
     }
 
-    ::ng-deep .ant-card-body {
-      overflow-x: auto;
-      padding: 24px;
+    .document-list-container.rtl ::ng-deep .ant-btn span + .anticon {
+      margin-left: 0;
+      margin-right: 8px;
     }
 
-    /* Responsive table */
+    /* RTL Text Alignment */
+    .document-list-container.rtl .page-title,
+    .document-list-container.rtl .page-subtitle {
+      text-align: right;
+      direction: rtl;
+    }
+
+    .document-list-container.rtl .stat-label {
+      direction: rtl;
+      text-align: center;
+    }
+
+    /* RTL Badge positioning */
+    .document-list-container.rtl ::ng-deep .ant-badge {
+      direction: ltr;
+    }
+
+    /* Drawer RTL Support */
+    .document-list-container.rtl ::ng-deep .ant-drawer-content {
+      direction: rtl;
+    }
+
+    .document-list-container.rtl ::ng-deep .ant-drawer-header-title {
+      direction: rtl;
+      text-align: right;
+    }
+
+    .document-list-container.rtl ::ng-deep .ant-drawer-body {
+      direction: rtl;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .page-header-content {
+        padding: 16px;
+      }
+      
+      .header-bottom {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+      }
+      
+             .search-section {
+         margin: 0;
+         max-width: none;
+       }
+    }
+
     @media (max-width: 768px) {
-      .search-box {
-        max-width: 100%;
-        margin: 0;
+      .header-top {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
       }
       
-      ::ng-deep .ant-page-header-content .ant-row > .ant-col {
-        margin-bottom: 16px;
+      .header-actions {
+        justify-content: center;
       }
       
-      ::ng-deep .ant-table-wrapper .ant-table-cell {
-        padding: 8px 4px;
-        font-size: 12px;
+      .stats-section {
+        justify-content: center;
+      }
+      
+      .action-button {
+        flex: 1;
+        justify-content: center;
+        min-width: 120px;
+      }
+      
+             ::ng-deep .ant-table-wrapper .ant-table-cell {
+         padding: 12px 8px;
+         font-size: 12px;
+       }
+       
+       .page-header-content {
+         padding: 12px;
+       }
+    }
+
+    @media (max-width: 480px) {
+      .page-title {
+        font-size: 20px;
+      }
+      
+      .stat-value {
+        font-size: 16px;
+      }
+      
+      .stat-label {
+        font-size: 11px;
+      }
+      
+      ::ng-deep .ant-space-item {
+        margin-bottom: 8px !important;
+      }
+      
+      .header-actions ::ng-deep .ant-space {
+        flex-direction: column;
+        width: 100%;
+      }
+      
+      .action-button {
+        width: 100%;
       }
     }
   `],
