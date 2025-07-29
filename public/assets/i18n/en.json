@@ -156,7 +156,7 @@
     "resource_types": {
       "title": "Resource Type Management",
       "subtitle": "Manage document types and their field definitions",
-      "create": "Create Resource Type",
+      "create_button": "Create Resource Type",
       "table": {
         "id": "ID",
         "code": "Code",
@@ -186,6 +186,62 @@
         "count": "{count} field",
         "count_plural": "{count} fields",
         "none": "No fields"
+      },
+      "create": {
+        "title": "Create New Resource Type",
+        "subtitle": "Define document type and its custom fields",
+        "back": "Back to Resource Types",
+        "form": {
+          "title": "Resource Type Information",
+          "company": "Company",
+          "company_required": "Company is required",
+          "company_placeholder": "Select a company",
+          "code": "Code",
+          "code_required": "Code is required",
+          "code_placeholder": "e.g. Invoice 2024, Contract",
+          "name": "Name",
+          "name_required": "Name is required",
+          "name_placeholder": "e.g. Invoice Document",
+          "description": "Description",
+          "description_placeholder": "Optional description of this resource type",
+          "custom_fields": "Custom Fields",
+          "field": "Field",
+          "field_label": "Field Label",
+          "field_label_required": "Field label is required",
+          "field_label_placeholder": "e.g. Invoice Number",
+          "field_name": "Field Name (Auto-generated)",
+          "field_name_placeholder": "Auto-generated from label",
+          "field_type": "Field Type",
+          "field_type_required": "Field type is required",
+          "field_type_placeholder": "Select field type",
+          "options": "Options",
+          "options_required": "Options are required for SELECT type",
+          "options_placeholder": "Option 1, Option 2, Option 3",
+          "options_help": "Separate options with commas",
+          "required_field": "Required field",
+          "unique_within_type": "Unique within type",
+          "add_field": "Add Field",
+          "remove_field": "Remove field",
+          "cancel": "Cancel",
+          "create": "Create Resource Type"
+        },
+        "field_types": {
+          "TEXT": "Text",
+          "TEXTAREA": "Textarea",
+          "NUMBER": "Number",
+          "DATE": "Date",
+          "BOOLEAN": "Boolean",
+          "CHECKBOX": "Checkbox",
+          "SELECT": "Select"
+        },
+        "messages": {
+          "creating": "Creating resource type...",
+          "success": "Resource type \"{code}\" created successfully with {count} field{plural}!",
+          "error": "Failed to create resource type",
+          "form_invalid": "Please correct the errors in the form.",
+          "duplicate_fields": "Duplicate field names found. Field names must be unique.",
+          "loading_companies": "Failed to load companies"
+        }
       }
     }
   },

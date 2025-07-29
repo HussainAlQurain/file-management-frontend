@@ -156,7 +156,7 @@
     "resource_types": {
       "title": "إدارة أنواع الموارد",
       "subtitle": "إدارة أنواع الوثائق وتعريفات الحقول الخاصة بها",
-      "create": "إنشاء نوع مورد",
+      "create_button": "إنشاء نوع مورد",
       "table": {
         "id": "المعرف",
         "code": "الرمز",
@@ -186,6 +186,62 @@
         "count": "{count} حقل",
         "count_plural": "{count} حقل",
         "none": "لا توجد حقول"
+      },
+      "create": {
+        "title": "إنشاء نوع مورد جديد",
+        "subtitle": "تعريف نوع الوثيقة والحقول المخصصة الخاصة به",
+        "back": "العودة إلى أنواع الموارد",
+        "form": {
+          "title": "معلومات نوع المورد",
+          "company": "الشركة",
+          "company_required": "الشركة مطلوبة",
+          "company_placeholder": "اختر شركة",
+          "code": "الرمز",
+          "code_required": "الرمز مطلوب",
+          "code_placeholder": "مثال: فاتورة 2024، عقد",
+          "name": "الاسم",
+          "name_required": "الاسم مطلوب",
+          "name_placeholder": "مثال: وثيقة فاتورة",
+          "description": "الوصف",
+          "description_placeholder": "وصف اختياري لنوع المورد هذا",
+          "custom_fields": "الحقول المخصصة",
+          "field": "الحقل",
+          "field_label": "تسمية الحقل",
+          "field_label_required": "تسمية الحقل مطلوبة",
+          "field_label_placeholder": "مثال: رقم الفاتورة",
+          "field_name": "اسم الحقل (يتم إنشاؤه تلقائياً)",
+          "field_name_placeholder": "يتم إنشاؤه تلقائياً من التسمية",
+          "field_type": "نوع الحقل",
+          "field_type_required": "نوع الحقل مطلوب",
+          "field_type_placeholder": "اختر نوع الحقل",
+          "options": "الخيارات",
+          "options_required": "الخيارات مطلوبة لنوع SELECT",
+          "options_placeholder": "الخيار 1، الخيار 2، الخيار 3",
+          "options_help": "افصل الخيارات بفواصل",
+          "required_field": "حقل مطلوب",
+          "unique_within_type": "فريد ضمن النوع",
+          "add_field": "إضافة حقل",
+          "remove_field": "إزالة الحقل",
+          "cancel": "إلغاء",
+          "create": "إنشاء نوع المورد"
+        },
+        "field_types": {
+          "TEXT": "نص",
+          "TEXTAREA": "منطقة نص",
+          "NUMBER": "رقم",
+          "DATE": "تاريخ",
+          "BOOLEAN": "منطقي",
+          "CHECKBOX": "مربع اختيار",
+          "SELECT": "اختيار"
+        },
+        "messages": {
+          "creating": "جاري إنشاء نوع المورد...",
+          "success": "تم إنشاء نوع المورد \"{code}\" بنجاح مع {count} حقل{plural}!",
+          "error": "فشل في إنشاء نوع المورد",
+          "form_invalid": "يرجى تصحيح الأخطاء في النموذج.",
+          "duplicate_fields": "تم العثور على أسماء حقول مكررة. يجب أن تكون أسماء الحقول فريدة.",
+          "loading_companies": "فشل في تحميل الشركات"
+        }
       }
     }
   },

@@ -1,0 +1,51 @@
+/* Global RTL Override for Ant Design Components */
+
+/* RTL Select Components - Highest Priority */
+[dir="rtl"] .ant-select-selector,
+[dir="rtl"] .ant-select-selection-item,
+[dir="rtl"] .ant-select-selection-placeholder {
+  text-align: right !important;
+  direction: rtl !important;
+}
+
+/* Force RTL on nz-select-item component */
+[dir="rtl"] nz-select-item.ant-select-selection-item {
+  text-align: right !important;
+  direction: rtl !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+}
+
+/* RTL for all select dropdown items */
+[dir="rtl"] .ant-select-dropdown .ant-select-item,
+[dir="rtl"] .ant-select-dropdown .ant-select-item-option,
+[dir="rtl"] .ant-select-dropdown .ant-select-item-option-content {
+  text-align: right !important;
+  direction: rtl !important;
+}
+
+/* RTL Input fields */
+[dir="rtl"] .ant-input,
+[dir="rtl"] .ant-input-affix-wrapper,
+[dir="rtl"] textarea.ant-input {
+  text-align: right !important;
+  direction: rtl !important;
+}
+
+/* RTL Checkbox and other form elements */
+[dir="rtl"] .ant-checkbox-wrapper {
+  direction: rtl !important;
+}
+
+/* Override any LTR forcing */
+[dir="rtl"] * {
+  direction: inherit !important;
+}
+
+/* Specific override for select elements that resist styling */
+[dir="rtl"] .ant-select-single .ant-select-selector .ant-select-selection-item {
+  text-align: right !important;
+  direction: rtl !important;
+  padding-right: 11px !important;
+  padding-left: 0 !important;
+}
