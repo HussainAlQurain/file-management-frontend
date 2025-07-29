@@ -236,7 +236,9 @@
         },
         "messages": {
           "creating": "Creating resource type...",
-          "success": "Resource type \"{code}\" created successfully with {count} field{plural}!",
+          "success_template": "Resource type \"{code}\" created successfully with {count} {field}{plural}!",
+          "field": "field",
+          "plural_suffix": "s",
           "error": "Failed to create resource type",
           "form_invalid": "Please correct the errors in the form.",
           "duplicate_fields": "Duplicate field names found. Field names must be unique.",

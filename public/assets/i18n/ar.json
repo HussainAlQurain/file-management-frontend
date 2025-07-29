@@ -236,7 +236,9 @@
         },
         "messages": {
           "creating": "جاري إنشاء نوع المورد...",
-          "success": "تم إنشاء نوع المورد \"{code}\" بنجاح مع {count} حقل{plural}!",
+          "success_template": "تم إنشاء نوع المورد \"{code}\" بنجاح مع {count} {field}{plural}!",
+          "field": "حقل",
+          "plural_suffix": "",
           "error": "فشل في إنشاء نوع المورد",
           "form_invalid": "يرجى تصحيح الأخطاء في النموذج.",
           "duplicate_fields": "تم العثور على أسماء حقول مكررة. يجب أن تكون أسماء الحقول فريدة.",

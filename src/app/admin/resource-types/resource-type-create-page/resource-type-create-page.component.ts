@@ -709,14 +709,14 @@ export class ResourceTypeCreatePageComponent implements OnInit {
     this.resourceTypeService.create(resourceTypeDto).subscribe({
       next: (res) => {
         this.isSubmitting.set(false);
-        const plural = fields.length !== 1 ? 's' : '';
-        this.snackbar.success(
-          this.translateService.instant('admin.resource_types.create.messages.success', { 
-            code: res.code, 
-            count: fields.length, 
-            plural 
-          })
-        );
+        const fieldWord = this.translateService.instant('admin.resource_types.create.messages.field');
+        const plural = fields.length !== 1 ? this.translateService.instant('admin.resource_types.create.messages.plural_suffix') : '';
+        const successMessage = this.translateService.instant('admin.resource_types.create.messages.success_template')
+          .replace('{code}', res.code)
+          .replace('{count}', fields.length.toString())
+          .replace('{field}', fieldWord)
+          .replace('{plural}', plural);
+        this.snackbar.success(successMessage);
         this.router.navigate(['../']);
       },
       error: (err) => {
