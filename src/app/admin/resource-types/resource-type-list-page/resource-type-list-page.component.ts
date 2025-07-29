@@ -49,7 +49,7 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
             <div class="header-actions">
               <button nz-button nzType="primary" routerLink="new" class="action-button">
                 <nz-icon nzType="plus" nzTheme="outline"></nz-icon>
-                <span>{{ 'admin.resource_types.create' | translate }}</span>
+                <span>{{ 'admin.resource_types.create_button' | translate }}</span>
               </button>
             </div>
           </div>
