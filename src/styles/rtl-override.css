@@ -37,9 +37,41 @@
   direction: rtl !important;
 }
 
-/* Override any LTR forcing */
-[dir="rtl"] * {
-  direction: inherit !important;
+/* RTL Table dropdowns - specific positioning */
+[dir="rtl"] .actions-cell .ant-dropdown {
+  direction: rtl !important;
+}
+
+[dir="rtl"] .ant-dropdown-menu {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+[dir="rtl"] .ant-dropdown-menu-item {
+  text-align: right !important;
+  direction: rtl !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+}
+
+[dir="rtl"] .ant-dropdown-menu-item .anticon {
+  margin-left: 8px !important;
+  margin-right: 0 !important;
+  order: 2 !important;
+}
+
+[dir="rtl"] .ant-dropdown-menu-item > span {
+  order: 1 !important;
+}
+
+/* Better dropdown positioning in RTL tables */
+[dir="rtl"] .actions-cell {
+  position: relative;
+}
+
+[dir="rtl"] .actions-cell .ant-dropdown-trigger {
+  position: relative;
 }
 
 /* Specific override for select elements that resist styling */

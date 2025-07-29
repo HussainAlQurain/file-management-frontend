@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { BidiModule } from '@angular/cdk/bidi';
 
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -26,6 +27,7 @@ import { TranslationService } from '../../../core/services/translation.service';
     CommonModule,
     RouterLink,
     DatePipe,
+    BidiModule,
     NzButtonModule,
     NzCardModule,
     NzIconModule,
@@ -37,17 +39,17 @@ import { TranslationService } from '../../../core/services/translation.service';
     TranslateModule
   ],
   template: `
-    <div class="company-admin-container" [class.rtl]="translationService.isRTL()">
+    <div [dir]="translationService.isRTL() ? 'rtl' : 'ltr'" class="company-admin-container">
       <!-- Page Header -->
       <div class="page-header-wrapper">
         <div class="page-header-content">
           <!-- Title and Actions Row -->
           <div class="header-top">
-            <div class="header-title-section" [class.rtl-header]="translationService.isRTL()">
+            <div class="header-title-section">
               <h1 class="page-title">{{ 'admin.companies.title' | translate }}</h1>
               <p class="page-subtitle">{{ 'admin.companies.subtitle' | translate }}</p>
             </div>
-            <div class="header-actions" [class.rtl-actions]="translationService.isRTL()">
+            <div class="header-actions">
               <button nz-button nzType="primary" routerLink="new" class="action-button">
                 <nz-icon nzType="plus" nzTheme="outline"></nz-icon>
                 <span>{{ 'admin.companies.create' | translate }}</span>
@@ -103,7 +105,8 @@ import { TranslationService } from '../../../core/services/translation.service';
                     nzType="text" 
                     nzSize="small"
                     nz-dropdown 
-                    [nzDropdownMenu]="menu">
+                    [nzDropdownMenu]="menu"
+                    nzPlacement="bottomRight">
                     <nz-icon nzType="more" nzTheme="outline"></nz-icon>
                   </button>
                   <nz-dropdown-menu #menu="nzDropdownMenu">
@@ -131,7 +134,7 @@ import { TranslationService } from '../../../core/services/translation.service';
 
         <!-- Empty State -->
         @if (companies().length === 0 && !isLoading()) {
-          <div class="empty-state-container" [class.rtl-empty-state]="translationService.isRTL()">
+          <div class="empty-state-container">
             <nz-icon nzType="bank" class="empty-state-icon"></nz-icon>
             <h3 class="empty-state-title">{{ 'admin.companies.empty.message' | translate }}</h3>
             <button nz-button nzType="primary" routerLink="new" class="empty-state-button">
@@ -150,10 +153,6 @@ import { TranslationService } from '../../../core/services/translation.service';
       overflow: hidden;
       background-color: #f5f5f5;
       min-height: 100vh;
-    }
-
-    .company-admin-container.rtl {
-      direction: rtl;
     }
 
     /* Page Header Redesign */
@@ -183,10 +182,6 @@ import { TranslationService } from '../../../core/services/translation.service';
       min-width: 0;
     }
 
-    .header-title-section.rtl-header {
-      text-align: right;
-    }
-
     .page-title {
       font-size: 24px;
       font-weight: 600;
@@ -206,10 +201,6 @@ import { TranslationService } from '../../../core/services/translation.service';
       flex-shrink: 0;
       display: flex;
       align-items: center;
-    }
-
-    .header-actions.rtl-actions {
-      direction: ltr; /* Keep button internal layout LTR */
     }
 
     .action-button {
@@ -334,20 +325,6 @@ import { TranslationService } from '../../../core/services/translation.service';
     .empty-state-container {
       text-align: center;
       padding: 64px 24px;
-      direction: ltr;
-    }
-
-    .empty-state-container.rtl-empty-state {
-      text-align: center;
-      direction: ltr;
-    }
-
-    .empty-state-container.rtl-empty-state .empty-state-title {
-      direction: rtl;
-      unicode-bidi: embed;
-      text-align: center !important;
-      display: block;
-      width: 100%;
     }
 
     .empty-state-icon {
@@ -369,41 +346,6 @@ import { TranslationService } from '../../../core/services/translation.service';
       display: inline-flex;
       align-items: center;
       gap: 4px;
-    }
-
-    /* RTL Support */
-    .company-admin-container.rtl .page-title,
-    .company-admin-container.rtl .page-subtitle {
-      text-align: right;
-      direction: rtl;
-    }
-
-    .company-admin-container.rtl .action-button {
-      direction: ltr;
-    }
-
-    .company-admin-container.rtl ::ng-deep .ant-btn .anticon + span {
-      margin-left: 8px;
-      margin-right: 0;
-    }
-
-    .company-admin-container.rtl ::ng-deep .ant-table-thead > tr > th {
-      text-align: right;
-      direction: rtl;
-    }
-
-    .company-admin-container.rtl ::ng-deep .ant-table-tbody > tr > td {
-      text-align: right;
-      direction: rtl;
-    }
-
-    .company-admin-container.rtl .company-name-cell {
-      flex-direction: row-reverse;
-    }
-
-    .company-admin-container.rtl ::ng-deep .ant-dropdown-menu-item .anticon {
-      margin-right: 0;
-      margin-left: 8px;
     }
 
     /* Responsive Design */

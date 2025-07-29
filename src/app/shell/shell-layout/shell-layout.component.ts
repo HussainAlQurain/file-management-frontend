@@ -2,6 +2,7 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { BidiModule, Directionality } from '@angular/cdk/bidi';
 
 // NG-ZORRO imports
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
@@ -19,6 +20,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { LoadingService } from '../../core/services/loading.service';
 import { HasRoleDirective } from '../../shared/directives/has-role.directive';
 import { LanguageSwitcherComponent } from '../../shared/components/language-switcher/language-switcher.component';
+import { TranslationService } from '../../core/services/translation.service';
 
 @Component({
   selector: 'app-shell-layout',
@@ -27,6 +29,7 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
     CommonModule, 
     RouterModule,
     TranslateModule,
+    BidiModule,
     NzLayoutModule,
     NzMenuModule,
     NzIconModule,
@@ -41,15 +44,16 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
     LanguageSwitcherComponent
   ],
   template: `
-    <nz-layout class="app-layout">
-      <!-- Sider -->
-      <nz-sider 
-        class="menu-sidebar"
-        nzCollapsible
-        nzBreakpoint="lg"
-        [nzCollapsed]="isCollapsed"
-        (nzCollapsedChange)="isCollapsed = $event"
-        [nzTrigger]="null">
+    <div [dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
+      <nz-layout class="app-layout">
+        <!-- Sider -->
+        <nz-sider 
+          class="menu-sidebar"
+          nzCollapsible
+          nzBreakpoint="lg"
+          [nzCollapsed]="isCollapsed"
+          (nzCollapsedChange)="isCollapsed = $event"
+          [nzTrigger]="null">
         
         <div class="sidebar-logo">
           <a routerLink="/dashboard">
@@ -179,6 +183,7 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
         </nz-footer>
       </nz-layout>
     </nz-layout>
+    </div>
   `,
   styles: [`
     :host {
@@ -449,6 +454,7 @@ export class ShellLayoutComponent {
   authService = inject(AuthService);
   loadingService = inject(LoadingService);
   translateService = inject(TranslateService);
+  translationService = inject(TranslationService);
   router = inject(Router);
   
   isCollapsed = false;
