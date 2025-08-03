@@ -141,7 +141,7 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
                     <nz-select 
                       formControlName="resourceTypeId" 
                       nzShowSearch
-                      [nzPlaceHolder]="'documents.create.step2.placeholder' | translate"
+                      [nzPlaceHolder]="'documents.create.step2.type_placeholder' | translate"
                       nzSize="large"
                       (ngModelChange)="onResourceTypeChange($event)">
                       <nz-option 
@@ -253,7 +253,9 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
               </div>
 
               <!-- Custom Fields -->
-              <div *ngIf="selectedResourceType()?.fields && selectedResourceType()!.fields!.length > 0" class="form-section">
+              <div *ngIf="selectedResourceType()?.fields && selectedResourceType()!.fields!.length > 0" 
+                   class="form-section custom-fields-section" 
+                   [class.rtl-custom-fields]="translationService.isRTL()">
                 <nz-divider></nz-divider>
                 <h4 nz-typography>{{ 'documents.create.step3.custom_fields' | translate }}</h4>
                 
@@ -283,10 +285,10 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
                   <!-- Select Field -->
                   <nz-form-item *ngIf="field.kind === FieldType.SELECT">
                     <nz-form-label [nzRequired]="field.required">{{ field.label || field.name }}</nz-form-label>
-                    <nz-form-control [nzErrorTip]="field.label + ' is required'">
+                    <nz-form-control [nzErrorTip]="(field.label || field.name) + ' ' + ('documents.create.step3.field_required' | translate)">
                       <nz-select 
                         [formControlName]="field.name"
-                        nzPlaceHolder="Select an option">
+                        [nzPlaceHolder]="'documents.create.step3.select_option' | translate">
                         <nz-option 
                           *ngFor="let option of field.options" 
                           [nzValue]="option" 
@@ -299,12 +301,12 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
                   <!-- Textarea Field -->
                   <nz-form-item *ngIf="field.kind === FieldType.TEXTAREA">
                     <nz-form-label [nzRequired]="field.required">{{ field.label || field.name }}</nz-form-label>
-                    <nz-form-control [nzErrorTip]="field.label + ' is required'">
+                    <nz-form-control [nzErrorTip]="(field.label || field.name) + ' ' + ('documents.create.step3.field_required' | translate)">
                       <textarea 
                         nz-input 
                         [formControlName]="field.name" 
                         [nzAutosize]="{ minRows: 3, maxRows: 6 }"
-                        [placeholder]="'Enter ' + (field.label || field.name)">
+                        [placeholder]="('documents.create.step3.field_placeholder' | translate) + ' ' + (field.label || field.name)">
                       </textarea>
                     </nz-form-control>
                   </nz-form-item>
@@ -312,10 +314,10 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
                   <!-- Number Field -->
                   <nz-form-item *ngIf="field.kind === FieldType.NUMBER">
                     <nz-form-label [nzRequired]="field.required">{{ field.label || field.name }}</nz-form-label>
-                    <nz-form-control [nzErrorTip]="field.label + ' is required'">
+                    <nz-form-control [nzErrorTip]="(field.label || field.name) + ' ' + ('documents.create.step3.field_required' | translate)">
                       <nz-input-number 
                         [formControlName]="field.name"
-                        [nzPlaceHolder]="'Enter ' + (field.label || field.name)"
+                        [nzPlaceHolder]="('documents.create.step3.field_placeholder' | translate) + ' ' + (field.label || field.name)"
                         style="width: 100%;">
                       </nz-input-number>
                     </nz-form-control>
@@ -324,11 +326,11 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
                   <!-- Text Field (default) -->
                   <nz-form-item *ngIf="!field.kind || field.kind === FieldType.TEXT">
                     <nz-form-label [nzRequired]="field.required">{{ field.label || field.name }}</nz-form-label>
-                    <nz-form-control [nzErrorTip]="field.label + ' is required'">
+                    <nz-form-control [nzErrorTip]="(field.label || field.name) + ' ' + ('documents.create.step3.field_required' | translate)">
                       <input 
                         nz-input 
                         [formControlName]="field.name"
-                        [placeholder]="'Enter ' + (field.label || field.name)" />
+                        [placeholder]="('documents.create.step3.field_placeholder' | translate) + ' ' + (field.label || field.name)" />
                     </nz-form-control>
                   </nz-form-item>
                 </ng-container>
@@ -397,13 +399,13 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
         </div>
 
         <!-- Navigation buttons -->
-        <div class="steps-action">
+        <div class="steps-action" [class.rtl]="translationService.isRTL()">
           <button 
             nz-button 
             nzType="default" 
             (click)="previousStep()"
             *ngIf="currentStep > 0">
-            <span nz-icon nzType="left" nzTheme="outline"></span>
+            <span nz-icon [nzType]="translationService.isRTL() ? 'right' : 'left'" nzTheme="outline"></span>
             {{ 'documents.create.navigation.previous' | translate }}
           </button>
           
@@ -414,7 +416,7 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
             [disabled]="!canProceed()"
             *ngIf="currentStep < 3">
             {{ 'documents.create.navigation.next' | translate }}
-            <span nz-icon nzType="right" nzTheme="outline"></span>
+            <span nz-icon [nzType]="translationService.isRTL() ? 'left' : 'right'" nzTheme="outline"></span>
           </button>
           
           <button 
@@ -452,6 +454,10 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
       border-top: 1px solid #f0f0f0;
       display: flex;
       justify-content: space-between;
+    }
+
+    .steps-action.rtl {
+      flex-direction: row-reverse;
     }
 
     .form-section {
@@ -548,6 +554,37 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
 
     ::ng-deep .ant-form-item {
       margin-bottom: 16px;
+    }
+
+    /* RTL Support */
+    .rtl-custom-fields {
+      direction: rtl;
+    }
+
+    .rtl-custom-fields ::ng-deep .ant-form-item-label {
+      text-align: right;
+    }
+
+    .rtl-custom-fields ::ng-deep .ant-form-item-control {
+      text-align: right;
+    }
+
+    .rtl-custom-fields ::ng-deep .ant-input {
+      direction: rtl;
+      text-align: right;
+    }
+
+    .rtl-custom-fields ::ng-deep .ant-select {
+      direction: rtl;
+    }
+
+    .rtl-custom-fields ::ng-deep .ant-input-number {
+      direction: rtl;
+    }
+
+    .rtl-custom-fields ::ng-deep textarea {
+      direction: rtl;
+      text-align: right;
     }
   `],
   providers: [NzMessageService]
