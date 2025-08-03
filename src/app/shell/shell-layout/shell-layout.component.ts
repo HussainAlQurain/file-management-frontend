@@ -2,7 +2,6 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { BidiModule, Directionality } from '@angular/cdk/bidi';
 
 // NG-ZORRO imports
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
@@ -29,7 +28,6 @@ import { TranslationService } from '../../core/services/translation.service';
     CommonModule, 
     RouterModule,
     TranslateModule,
-    BidiModule,
     NzLayoutModule,
     NzMenuModule,
     NzIconModule,
@@ -44,16 +42,15 @@ import { TranslationService } from '../../core/services/translation.service';
     LanguageSwitcherComponent
   ],
   template: `
-    <div [dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
-      <nz-layout class="app-layout">
-        <!-- Sider -->
-        <nz-sider 
-          class="menu-sidebar"
-          nzCollapsible
-          nzBreakpoint="lg"
-          [nzCollapsed]="isCollapsed"
-          (nzCollapsedChange)="isCollapsed = $event"
-          [nzTrigger]="null">
+    <nz-layout class="app-layout">
+      <!-- Sider -->
+      <nz-sider 
+        class="menu-sidebar"
+        nzCollapsible
+        nzBreakpoint="lg"
+        [nzCollapsed]="isCollapsed"
+        (nzCollapsedChange)="isCollapsed = $event"
+        [nzTrigger]="null">
         
         <div class="sidebar-logo">
           <a routerLink="/dashboard">
@@ -183,7 +180,6 @@ import { TranslationService } from '../../core/services/translation.service';
         </nz-footer>
       </nz-layout>
     </nz-layout>
-    </div>
   `,
   styles: [`
     :host {

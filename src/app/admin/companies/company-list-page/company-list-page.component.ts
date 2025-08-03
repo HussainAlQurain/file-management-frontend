@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { BidiModule } from '@angular/cdk/bidi';
 
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -27,7 +26,6 @@ import { TranslationService } from '../../../core/services/translation.service';
     CommonModule,
     RouterLink,
     DatePipe,
-    BidiModule,
     NzButtonModule,
     NzCardModule,
     NzIconModule,
@@ -39,7 +37,7 @@ import { TranslationService } from '../../../core/services/translation.service';
     TranslateModule
   ],
   template: `
-    <div [dir]="translationService.isRTL() ? 'rtl' : 'ltr'" class="company-admin-container">
+    <div class="company-admin-container" [attr.dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
       <!-- Page Header -->
       <div class="page-header-wrapper">
         <div class="page-header-content">
@@ -106,7 +104,8 @@ import { TranslationService } from '../../../core/services/translation.service';
                     nzSize="small"
                     nz-dropdown 
                     [nzDropdownMenu]="menu"
-                    nzPlacement="bottomRight">
+                    [nzPlacement]="translationService.isRTL() ? 'bottomLeft' : 'bottomRight'"
+                    class="actions-button">
                     <nz-icon nzType="more" nzTheme="outline"></nz-icon>
                   </button>
                   <nz-dropdown-menu #menu="nzDropdownMenu">
