@@ -67,11 +67,11 @@ import { environment } from '../../../environments/environment';
                 <img 
                   [src]="fileUrl()" 
                   [alt]="document()?.title || 'Document Image'"
-                  class="max-w-full max-h-[80vh] mx-auto rounded-lg shadow-lg object-contain"
+                  class="max-w-full max-h-[80vh] mx-auto rounded-lg shadow-lg object-contain image-viewer"
                   style="border: 1px solid #e0e0e0; transition: transform 0.3s ease; cursor: zoom-in;"
                   (error)="onImageError($event)"
-                  (mouseover)="$event.target.style.transform = 'scale(1.02)'"
-                  (mouseout)="$event.target.style.transform = 'scale(1)'">
+                  (mouseover)="onImageHover($event, true)"
+                  (mouseout)="onImageHover($event, false)">
               </div>
             } @else {
               <div class="text-center p-8">
@@ -97,7 +97,21 @@ import { environment } from '../../../environments/environment';
       }
     </div>
   `,
-  styles: ``
+  styles: [`
+    .document-viewer-container {
+      max-width: 100%;
+      overflow-x: auto;
+    }
+    
+    .image-viewer {
+      transition: transform 0.3s ease;
+      cursor: zoom-in;
+    }
+    
+    .image-viewer:hover {
+      transform: scale(1.02);
+    }
+  `]
 })
 export class DocumentViewerPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -207,6 +221,13 @@ export class DocumentViewerPageComponent implements OnInit {
   onImageError(event: any): void {
     console.error('Failed to load image:', event);
     this.snackbarService.error(this.translateService.instant('documents.viewer.messages.image_load_error'));
+  }
+  
+  onImageHover(event: Event, isHover: boolean): void {
+    const target = event.target as HTMLImageElement;
+    if (target) {
+      target.style.transform = isHover ? 'scale(1.02)' : 'scale(1)';
+    }
   }
   
   downloadFile(): void {
