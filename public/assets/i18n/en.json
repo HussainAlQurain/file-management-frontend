@@ -636,7 +636,8 @@
         "not_found_description": "The document you are trying to view could not be loaded.",
         "go_back": "Go Back",
         "no_file": "Document has no file attached",
-        "loading_error": "Failed to load document"
+        "loading_error": "Failed to load document",
+        "image_load_error": "Failed to load image"
       }
     }
   },

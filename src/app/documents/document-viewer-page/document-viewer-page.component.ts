@@ -53,7 +53,7 @@ import { environment } from '../../../environments/environment';
             </div>
           </mat-card-header>
           <mat-card-content>
-            <!-- Simple viewer for PDF files -->
+            <!-- Viewer for PDF files -->
             @if (isPdf()) {
               <iframe 
                 [src]="trustedFileUrl()" 
@@ -61,6 +61,18 @@ import { environment } from '../../../environments/environment';
                 height="600px"
                 style="border: none;">
               </iframe>
+            } @else if (isImage()) {
+              <!-- Image viewer -->
+              <div class="text-center">
+                <img 
+                  [src]="fileUrl()" 
+                  [alt]="document()?.title || 'Document Image'"
+                  class="max-w-full max-h-[80vh] mx-auto rounded-lg shadow-lg object-contain"
+                  style="border: 1px solid #e0e0e0; transition: transform 0.3s ease; cursor: zoom-in;"
+                  (error)="onImageError($event)"
+                  (mouseover)="$event.target.style.transform = 'scale(1.02)'"
+                  (mouseout)="$event.target.style.transform = 'scale(1)'">
+              </div>
             } @else {
               <div class="text-center p-8">
                 <mat-icon class="text-6xl text-gray-400">description</mat-icon>
@@ -172,6 +184,29 @@ export class DocumentViewerPageComponent implements OnInit {
   isPdf(): boolean {
     const doc = this.document();
     return doc?.mimeType === 'application/pdf';
+  }
+  
+  isImage(): boolean {
+    const doc = this.document();
+    if (!doc?.mimeType) return false;
+    
+    const imageTypes = [
+      'image/jpeg',
+      'image/jpg', 
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/svg+xml',
+      'image/bmp',
+      'image/tiff'
+    ];
+    
+    return imageTypes.includes(doc.mimeType.toLowerCase());
+  }
+  
+  onImageError(event: any): void {
+    console.error('Failed to load image:', event);
+    this.snackbarService.error(this.translateService.instant('documents.viewer.messages.image_load_error'));
   }
   
   downloadFile(): void {
