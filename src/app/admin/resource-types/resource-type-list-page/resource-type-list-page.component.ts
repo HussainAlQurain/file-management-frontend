@@ -17,6 +17,7 @@ import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
 import { ResourceTypeService } from '../../../core/services/resource-type.service';
 import { ResourceType } from '../../../core/models/resource-type.model';
 import { SnackbarService } from '../../../core/services/snackbar.service';
+import { TranslationService } from '../../../core/services/translation.service';
 
 @Component({
   selector: 'app-resource-type-list-page',
@@ -36,7 +37,7 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
     NzDropDownModule
   ],
   template: `
-    <div class="resource-types-admin-container">
+    <div class="resource-types-admin-container" [attr.dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
       <!-- Page Header -->
       <div class="page-header-wrapper">
         <div class="page-header-content">
@@ -465,6 +466,7 @@ export class ResourceTypeListPageComponent implements OnInit {
   private snackbar = inject(SnackbarService);
   private modal = inject(NzModalService);
   private translateService = inject(TranslateService);
+  protected translationService = inject(TranslationService);
 
   isLoading = signal(true);
   resourceTypes = signal<ResourceType[]>([]);

@@ -4,6 +4,8 @@ import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
+import { TranslationService } from '../../../core/services/translation.service';
+
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzSelectModule } from 'ng-zorro-antd/select';
@@ -33,7 +35,7 @@ import { User, UserRole } from '../../../core/models/auth.model';
     NzGridModule
   ],
   template: `
-    <div class="user-create-container">
+    <div class="user-create-container" [attr.dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
       <!-- Page Header -->
       <div class="page-header-wrapper">
         <div class="page-header-content">
@@ -378,6 +380,7 @@ export class UserCreatePageComponent {
   private snackbar = inject(SnackbarService);
   private router = inject(Router);
   private translateService = inject(TranslateService);
+  protected translationService = inject(TranslationService);
 
   isSubmitting = signal(false);
   userRoles = ['USER', 'SYS_ADMIN'];

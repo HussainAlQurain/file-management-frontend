@@ -458,6 +458,7 @@
       "edit": "تعديل",
       "delete": "حذف",
       "download": "تحميل",
+      "downloading": "جاري تحميل الوثيقة...",
       "manage_access": "إدارة الوصول",
       "manage_acl": "إدارة صلاحيات الوصول",
       "archive": "أرشفة"

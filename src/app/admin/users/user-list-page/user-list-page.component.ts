@@ -4,6 +4,8 @@ import { Router, RouterModule } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
+import { TranslationService } from '../../../core/services/translation.service';
+
 import { NzTableModule, NzTableQueryParams } from 'ng-zorro-antd/table';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -37,7 +39,7 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
     NzDropDownModule
   ],
   template: `
-    <div class="users-admin-container">
+    <div class="users-admin-container" [attr.dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
       <!-- Page Header -->
       <div class="page-header-wrapper">
         <div class="page-header-content">
@@ -457,6 +459,7 @@ export class UserListPageComponent implements OnInit {
   private snackbar = inject(SnackbarService);
   private modal = inject(NzModalService);
   private translateService = inject(TranslateService);
+  protected translationService = inject(TranslationService);
 
   isLoading = signal(true);
   usersPage: WritableSignal<Page<User> | null> = signal(null);

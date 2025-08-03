@@ -5,6 +5,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { switchMap } from 'rxjs/operators';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
+import { TranslationService } from '../../../core/services/translation.service';
+
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzSelectModule } from 'ng-zorro-antd/select';
@@ -40,7 +42,7 @@ import { AuthService } from '../../../core/services/auth.service';
     NzGridModule
   ],
   template: `
-    <div class="user-edit-container">
+    <div class="user-edit-container" [attr.dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
       <!-- Page Header -->
       <div class="page-header-wrapper">
         <div class="page-header-content">
@@ -418,6 +420,7 @@ export class UserEditPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private authService = inject(AuthService);
   private translateService = inject(TranslateService);
+  protected translationService = inject(TranslationService);
 
   userId = signal<number | null>(null);
   isSubmitting = signal(false);

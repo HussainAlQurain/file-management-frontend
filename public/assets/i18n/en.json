@@ -458,6 +458,7 @@
       "edit": "Edit",
       "delete": "Delete",
       "download": "Download",
+      "downloading": "Downloading document...",
       "manage_access": "Manage Access",
       "manage_acl": "Manage ACL",
       "archive": "Archive"

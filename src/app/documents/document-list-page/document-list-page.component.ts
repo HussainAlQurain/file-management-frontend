@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormGroup, FormBuilder } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 // NG-ZORRO imports
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -760,6 +760,7 @@ export class DocumentListPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private message = inject(NzMessageService);
   private cdr = inject(ChangeDetectorRef);
+  private translateService = inject(TranslateService);
   
   translationService = inject(TranslationService);
   
@@ -971,7 +972,7 @@ export class DocumentListPageComponent implements OnInit {
   downloadDocument(doc: Document): void {
     if (!doc.storageKey) return;
     
-    const loading = this.message.loading('Downloading document...', { nzDuration: 0 });
+    const loading = this.message.loading(this.translateService.instant('documents.actions.downloading'), { nzDuration: 0 });
     this.documentService.downloadLatestPrimaryFile(doc.id, doc.storageKey).subscribe({
       next: (blob) => {
         this.message.remove(loading.messageId);
