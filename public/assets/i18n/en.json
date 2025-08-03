@@ -128,7 +128,28 @@
     "companies": {
       "title": "Company Management",
       "subtitle": "Manage companies and their configurations",
-      "create": "Create Company",
+      "load_error": "Failed to load companies",
+      "create": {
+        "title": "Create New Company",
+        "subtitle": "Add a new company to the system",
+        "breadcrumb": "Create Company",
+        "back": "Back to Companies",
+        "button": "Create Company",
+        "form": {
+          "title": "Company Information",
+          "name": "Company Name",
+          "name_placeholder": "Enter company name",
+          "name_required": "Company name is required",
+          "name_maxlength": "Company name cannot exceed 255 characters",
+          "description": "Description",
+          "description_placeholder": "Enter company description (optional)",
+          "description_maxlength": "Description cannot exceed 1000 characters",
+          "cancel": "Cancel",
+          "create": "Create Company"
+        },
+        "success": "Company \"{name}\" created successfully!",
+        "error": "Failed to create company"
+      },
       "table": {
         "id": "ID",
         "name": "Name",
@@ -150,7 +171,31 @@
         "title": "Delete Company",
         "content": "Are you sure you want to delete \"{name}\"? This action cannot be undone and will affect all related resource types.",
         "ok": "Delete",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "success": "Company \"{name}\" deleted successfully!",
+        "error": "Failed to delete company"
+      },
+      "edit": {
+        "title": "Edit Company",
+        "subtitle": "Update company information",
+        "breadcrumb": "Edit Company",
+        "back": "Back to Companies",
+        "loading": "Loading company...",
+        "form": {
+          "title": "Company Information",
+          "name": "Company Name",
+          "name_placeholder": "Enter company name",
+          "name_required": "Company name is required",
+          "name_maxlength": "Company name cannot exceed 255 characters",
+          "description": "Description",
+          "description_placeholder": "Enter company description (optional)",
+          "description_maxlength": "Description cannot exceed 1000 characters",
+          "cancel": "Cancel",
+          "update": "Update Company"
+        },
+        "success": "Company \"{name}\" updated successfully!",
+        "error": "Failed to update company",
+        "not_found": "Company not found"
       }
     },
     "resource_types": {

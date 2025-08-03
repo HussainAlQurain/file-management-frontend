@@ -50,7 +50,7 @@ import { TranslationService } from '../../../core/services/translation.service';
             <div class="header-actions">
               <button nz-button nzType="primary" routerLink="new" class="action-button">
                 <nz-icon nzType="plus" nzTheme="outline"></nz-icon>
-                <span>{{ 'admin.companies.create' | translate }}</span>
+                <span>{{ 'admin.companies.create.button' | translate }}</span>
               </button>
             </div>
           </div>
@@ -414,7 +414,8 @@ export class CompanyListPageComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading companies:', error);
-        this.snackbar.error('Failed to load companies');
+        const errorMessage = this.translateService.instant('admin.companies.load_error');
+        this.snackbar.error(errorMessage);
         this.isLoading.set(false);
       }
     });
@@ -430,11 +431,14 @@ export class CompanyListPageComponent implements OnInit {
       nzCancelText: this.translateService.instant('admin.companies.delete.cancel'),
       nzOnOk: () => {
         return this.companyService.delete(company.id).toPromise().then(() => {
-          this.snackbar.success('Company deleted successfully');
+          const successMessage = this.translateService.instant('admin.companies.delete.success')
+            .replace('{name}', company.name);
+          this.snackbar.success(successMessage);
           this.loadCompanies();
         }).catch((error) => {
           console.error('Error deleting company:', error);
-          this.snackbar.error('Failed to delete company');
+          const errorMessage = this.translateService.instant('admin.companies.delete.error');
+          this.snackbar.error(errorMessage);
         });
       }
     });
