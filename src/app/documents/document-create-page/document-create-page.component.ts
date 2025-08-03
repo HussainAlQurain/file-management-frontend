@@ -34,6 +34,7 @@ import { ResourceTypeService } from '../../core/services/resource-type.service';
 import { CompanyService } from '../../core/services/company.service';
 import { DocumentService } from '../../core/services/document.service';
 import { SnackbarService } from '../../core/services/snackbar.service';
+import { TranslationService } from '../../core/services/translation.service';
 import { ResourceType, FieldDefinitionDto, FieldType } from '../../core/models/resource-type.model';
 import { Company } from '../../core/models/company.model';
 import { Document, CreateDocumentDto } from '../../core/models/document.model';
@@ -67,7 +68,7 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
     NzPageHeaderModule
   ],
   template: `
-    <div class="create-document-container">
+    <div class="create-document-container" [attr.dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
       <!-- Page Header -->
       <div class="page-header-wrapper">
         <div class="page-header-content">
@@ -126,21 +127,21 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
         <!-- Step 2: Select Resource Type -->
           <div *ngIf="currentStep === 1" class="step-container">
             <form nz-form [formGroup]="resourceTypeForm" nzLayout="vertical">
-              <h3 nz-typography>Select Document Type</h3>
-              <p nz-typography nzType="secondary">Choose the type of document you want to create</p>
+              <h3 nz-typography>{{ 'documents.create.step2.title' | translate }}</h3>
+              <p nz-typography nzType="secondary">{{ 'documents.create.step2.description' | translate }}</p>
               
-              <nz-spin *ngIf="loadingResourceTypes" nzTip="Loading document types...">
+              <nz-spin *ngIf="loadingResourceTypes" [nzTip]="'documents.create.step2.loading' | translate">
                 <div style="height: 200px;"></div>
               </nz-spin>
               
               <div *ngIf="!loadingResourceTypes">
                 <nz-form-item>
-                  <nz-form-label nzRequired>Document Type</nz-form-label>
-                  <nz-form-control nzErrorTip="Please select a document type">
+                  <nz-form-label nzRequired>{{ 'documents.create.step2.type' | translate }}</nz-form-label>
+                  <nz-form-control [nzErrorTip]="'documents.create.step2.type_required' | translate">
                     <nz-select 
                       formControlName="resourceTypeId" 
                       nzShowSearch
-                      nzPlaceHolder="Select a document type"
+                      [nzPlaceHolder]="'documents.create.step2.placeholder' | translate"
                       nzSize="large"
                       (ngModelChange)="onResourceTypeChange($event)">
                       <nz-option 
@@ -161,7 +162,7 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
                 
                 <nz-empty 
                   *ngIf="resourceTypes().length === 0" 
-                  nzNotFoundContent="No document types available for this company">
+                  [nzNotFoundContent]="'documents.create.step2.no_types' | translate">
                 </nz-empty>
             </div>
           </form>
@@ -170,36 +171,36 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
           <!-- Step 3: Fill Metadata -->
           <div *ngIf="currentStep === 2" class="step-container">
             <form nz-form [formGroup]="metadataForm" nzLayout="vertical">
-              <h3 nz-typography>Document Details</h3>
-              <p nz-typography nzType="secondary">Fill in the document information</p>
+              <h3 nz-typography>{{ 'documents.create.step3.title' | translate }}</h3>
+              <p nz-typography nzType="secondary">{{ 'documents.create.step3.description' | translate }}</p>
               
               <nz-divider></nz-divider>
               
               <!-- Basic Information -->
               <div class="form-section">
-                <h4 nz-typography>Basic Information</h4>
+                <h4 nz-typography>{{ 'documents.create.step3.basic_info' | translate }}</h4>
                 
                 <nz-form-item>
-                  <nz-form-label nzRequired>Title</nz-form-label>
-                  <nz-form-control nzErrorTip="Title is required">
-                    <input nz-input formControlName="title" placeholder="Enter document title" />
+                  <nz-form-label nzRequired>{{ 'documents.create.step3.doc_title' | translate }}</nz-form-label>
+                  <nz-form-control [nzErrorTip]="'documents.create.step3.title_required' | translate">
+                    <input nz-input formControlName="title" [placeholder]="'documents.create.step3.title_placeholder' | translate" />
                   </nz-form-control>
                 </nz-form-item>
 
                 <nz-form-item>
-                  <nz-form-label nzRequired>Resource Code</nz-form-label>
-                  <nz-form-control nzErrorTip="Resource code is required" nzExtra="Auto-generated based on document type">
-                    <input nz-input formControlName="resourceCode" placeholder="Resource code" />
+                  <nz-form-label nzRequired>{{ 'documents.create.step3.resource_code' | translate }}</nz-form-label>
+                  <nz-form-control [nzErrorTip]="'documents.create.step3.resource_code_required' | translate" [nzExtra]="'documents.create.step3.resource_code_hint' | translate">
+                    <input nz-input formControlName="resourceCode" [placeholder]="'documents.create.step3.resource_code_placeholder' | translate" />
                   </nz-form-control>
                 </nz-form-item>
 
                 <nz-form-item>
-                  <nz-form-label>Parent Document</nz-form-label>
-                  <nz-form-control nzExtra="Select a parent document of the same type (optional)">
+                  <nz-form-label>{{ 'documents.create.step3.parent_document' | translate }}</nz-form-label>
+                  <nz-form-control [nzExtra]="'documents.create.step3.parent_hint' | translate">
                     <input 
                       nz-input 
                       formControlName="parentSearch" 
-                      placeholder="Search for parent document..." 
+                      [placeholder]="'documents.create.step3.parent_placeholder' | translate" 
                       [nzAutocomplete]="auto"
                       (focus)="onParentSearchFocus()"
                       (input)="onParentSearchInput($event)" />
@@ -209,14 +210,14 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
                         nzDisabled 
                         nzCustomContent>
                         <span nz-icon nzType="loading" nzTheme="outline"></span>
-                        Searching...
+                        {{ 'documents.create.step3.searching' | translate }}
                       </nz-auto-option>
                       <nz-auto-option 
                         *ngIf="!isSearchingParents() && parentSearchResults().length === 0 && (parentSearchQuery().length > 0 || hasSearchedOnFocus)" 
                         nzDisabled 
                         nzCustomContent>
-                        <span *ngIf="!selectedResourceType()">Please select a document type first</span>
-                        <span *ngIf="selectedResourceType()">No documents found</span>
+                        <span *ngIf="!selectedResourceType()">{{ 'documents.create.step3.select_type_first' | translate }}</span>
+                        <span *ngIf="selectedResourceType()">{{ 'documents.create.step3.no_documents_found' | translate }}</span>
                       </nz-auto-option>
                       <nz-auto-option 
                         *ngFor="let doc of parentSearchResults()" 
@@ -244,9 +245,9 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
                 </nz-form-item>
 
                 <nz-form-item>
-                  <nz-form-label>Tags</nz-form-label>
-                  <nz-form-control nzExtra="Separate tags with commas">
-                    <input nz-input formControlName="tags" placeholder="Enter tags (comma separated)" />
+                  <nz-form-label>{{ 'documents.create.step3.tags' | translate }}</nz-form-label>
+                  <nz-form-control [nzExtra]="'documents.create.step3.tags_hint' | translate">
+                    <input nz-input formControlName="tags" [placeholder]="'documents.create.step3.tags_placeholder' | translate" />
                   </nz-form-control>
                 </nz-form-item>
               </div>
@@ -254,7 +255,7 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
               <!-- Custom Fields -->
               <div *ngIf="selectedResourceType()?.fields && selectedResourceType()!.fields!.length > 0" class="form-section">
                 <nz-divider></nz-divider>
-                <h4 nz-typography>Custom Fields</h4>
+                <h4 nz-typography>{{ 'documents.create.step3.custom_fields' | translate }}</h4>
                 
                 <ng-container *ngFor="let field of selectedResourceType()!.fields">
                   <!-- Boolean Field -->
@@ -345,8 +346,8 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
 
           <!-- Step 4: Upload Primary File -->
           <div *ngIf="currentStep === 3" class="step-container">
-            <h3 nz-typography>Upload Primary File</h3>
-            <p nz-typography nzType="secondary">Upload the main file for this document</p>
+            <h3 nz-typography>{{ 'documents.create.step4.title' | translate }}</h3>
+            <p nz-typography nzType="secondary">{{ 'documents.create.step4.description' | translate }}</p>
             
             <nz-divider></nz-divider>
             
@@ -360,9 +361,9 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
                 <p class="ant-upload-drag-icon">
                   <span nz-icon nzType="cloud-upload" nzTheme="outline"></span>
                 </p>
-                <p class="ant-upload-text">Click or drag file to this area to upload</p>
+                <p class="ant-upload-text">{{ 'documents.create.step4.upload_text' | translate }}</p>
                 <p class="ant-upload-hint">
-                  Support for a single file upload. Maximum file size: {{ maxFileSize / (1024*1024) }}MB
+                  {{ ('documents.create.step4.upload_hint' | translate).replace('{size}', (maxFileSize / (1024*1024)).toString()) }}
                 </p>
               </nz-upload>
               
@@ -375,7 +376,7 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
                       <div class="file-meta">
                         <span>{{ getFileSize(primaryFile()!.size) }}</span>
                         <nz-divider nzType="vertical"></nz-divider>
-                        <span>{{ primaryFile()!.type || 'Unknown type' }}</span>
+                        <span>{{ primaryFile()!.type || ('documents.create.step4.unknown_type' | translate) }}</span>
                       </div>
                     </div>
                     <button nz-button nzType="text" nzDanger (click)="removePrimaryFile()">
@@ -387,7 +388,7 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
               
               <nz-alert 
                 nzType="info" 
-                [nzMessage]="'Allowed file types: ' + allowedFileExtensions.join(', ')"
+                [nzMessage]="('documents.create.step4.allowed_types' | translate).replace('{types}', allowedFileExtensions.join(', '))"
                 [nzShowIcon]="true"
                 style="margin-top: 16px;">
               </nz-alert>
@@ -403,7 +404,7 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
             (click)="previousStep()"
             *ngIf="currentStep > 0">
             <span nz-icon nzType="left" nzTheme="outline"></span>
-            Previous
+            {{ 'documents.create.navigation.previous' | translate }}
           </button>
           
           <button 
@@ -412,7 +413,7 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
             (click)="nextStep()"
             [disabled]="!canProceed()"
             *ngIf="currentStep < 3">
-            Next
+            {{ 'documents.create.navigation.next' | translate }}
             <span nz-icon nzType="right" nzTheme="outline"></span>
           </button>
           
@@ -424,7 +425,7 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
             [disabled]="!canSubmit()"
             *ngIf="currentStep === 3">
             <span nz-icon nzType="check" nzTheme="outline"></span>
-            Create Document
+            {{ 'documents.create.navigation.create' | translate }}
           </button>
         </div>
       </nz-card>
@@ -560,6 +561,7 @@ export class DocumentCreatePageComponent implements OnInit, OnDestroy {
   private snackbar = inject(SnackbarService);
   private message = inject(NzMessageService);
   private translateService = inject(TranslateService);
+  translationService = inject(TranslationService);
 
   FieldType = FieldType;
 

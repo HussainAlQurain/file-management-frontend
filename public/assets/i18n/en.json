@@ -196,6 +196,64 @@
         "success": "Company \"{name}\" updated successfully!",
         "error": "Failed to update company",
         "not_found": "Company not found"
+      },
+      "acl": {
+        "title": "Manage Company Access",
+        "breadcrumb": {
+          "companies": "Companies",
+          "manage_access": "Manage Access"
+        },
+        "back": "Back to Companies",
+        "loading": "Loading access data...",
+        "loading_error": "Failed to load data",
+        "grant_form": {
+          "title": "Grant User Access",
+          "user": "User",
+          "user_required": "User is required",
+          "user_placeholder": "Select a user",
+          "resource_type": "Resource Type",
+          "resource_type_placeholder": "All Resource Types",
+          "permissions": "Permissions",
+          "permissions_read": "Read",
+          "permissions_write": "Write", 
+          "permissions_delete": "Delete",
+          "permissions_manage": "Manage",
+          "grant_button": "Grant Access"
+        },
+        "table": {
+          "title": "Current User Access",
+          "user": "User",
+          "resource_type": "Resource Type",
+          "permissions": "Permissions",
+          "actions": "Actions",
+          "all_resource_types": "All Resource Types"
+        },
+        "permissions": {
+          "read": "Read",
+          "write": "Write",
+          "delete": "Delete",
+          "manage": "Manage"
+        },
+        "actions": {
+          "edit": "Edit Access",
+          "remove": "Remove Access"
+        },
+        "empty": {
+          "message": "No user access granted",
+          "description": "Grant access to users using the form above"
+        },
+        "messages": {
+          "grant_success": "User access granted successfully",
+          "grant_error": "Failed to grant user access",
+          "remove_success": "User access removed successfully", 
+          "remove_error": "Failed to remove user access"
+        },
+        "delete": {
+          "title": "Remove Access",
+          "content": "Are you sure you want to remove access for \"{userName}\"?",
+          "ok": "Remove",
+          "cancel": "Cancel"
+        }
       }
     },
     "resource_types": {
@@ -336,21 +394,6 @@
     "title_za": "Title Z-A",
     "recently_updated": "Recently Updated"
   },
-  "user": {
-    "menu": {
-      "profile": "My Profile",
-      "change_password": "Change Password",
-      "logout": "Logout"
-    },
-    "role": {
-      "admin": "System Admin",
-      "user": "User"
-    }
-  },
-  "footer": {
-    "copyright": "Document Management System © 2025",
-    "version": "v1.0.0"
-  },
   "login": {
     "username": {
       "label": "Username",
@@ -441,6 +484,7 @@
         "type": "Document Type",
         "type_required": "Please select a document type",
         "type_placeholder": "Select a document type",
+        "loading": "Loading document types...",
         "no_types": "No document types available for this company"
       },
       "step3": {
@@ -448,24 +492,44 @@
         "description": "Fill in the document information",
         "basic_info": "Basic Information",
         "doc_title": "Title",
-        "title_required": "Please enter a title",
+        "title_required": "Title is required",
         "title_placeholder": "Enter document title",
+        "resource_code": "Resource Code",
+        "resource_code_required": "Resource code is required",
+        "resource_code_placeholder": "Resource code",
+        "resource_code_hint": "Auto-generated based on document type",
         "doc_description": "Description",
         "description_placeholder": "Enter document description",
         "tags": "Tags",
-        "tags_placeholder": "Add tags (comma separated)",
+        "tags_placeholder": "Enter tags (comma separated)",
+        "tags_hint": "Separate tags with commas",
         "custom_fields": "Custom Fields",
+        "no_custom_fields": "No custom fields",
+        "no_custom_fields_desc": "This document type doesn't have any custom fields defined.",
         "parent_document": "Parent Document",
-        "parent_placeholder": "Search for parent document",
-        "no_parent": "No parent document"
+        "parent_placeholder": "Search for parent document...",
+        "parent_hint": "Select a parent document of the same type (optional)",
+        "searching": "Searching...",
+        "no_parent": "No parent document",
+        "select_type_first": "Please select a document type first",
+        "no_documents_found": "No documents found",
+        "field_required": "is required",
+        "field_placeholder": "Enter",
+        "select_option": "Select an option"
       },
       "step4": {
-        "title": "Upload File",
-        "description": "Upload the document file",
+        "title": "Upload Primary File",
+        "description": "Upload the main file for this document",
         "file": "File",
         "file_required": "Please upload a file",
         "upload_text": "Click or drag file to this area to upload",
-        "upload_hint": "Support for a single upload",
+        "upload_hint": "Support for a single file upload. Maximum file size: {size}MB",
+        "file_info": "File Information",
+        "file_size": "Size",
+        "file_type": "Type",
+        "unknown_type": "Unknown type",
+        "remove_file": "Remove file",
+        "allowed_types": "Allowed file types: {types}",
         "uploading": "Uploading...",
         "upload_success": "File uploaded successfully",
         "upload_error": "Upload failed"
@@ -475,6 +539,11 @@
         "previous": "Previous",
         "create": "Create Document",
         "cancel": "Cancel"
+      },
+      "navigation": {
+        "previous": "Previous",
+        "next": "Next", 
+        "create": "Create Document"
       },
       "messages": {
         "creating": "Creating document...",

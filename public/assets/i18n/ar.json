@@ -196,6 +196,64 @@
         "success": "تم تحديث الشركة \"{name}\" بنجاح!",
         "error": "فشل في تحديث الشركة",
         "not_found": "الشركة غير موجودة"
+      },
+      "acl": {
+        "title": "إدارة صلاحيات الشركة",
+        "breadcrumb": {
+          "companies": "الشركات",
+          "manage_access": "إدارة الصلاحيات"
+        },
+        "back": "العودة إلى الشركات",
+        "loading": "جاري تحميل بيانات الصلاحيات...",
+        "loading_error": "فشل في تحميل البيانات",
+        "grant_form": {
+          "title": "منح صلاحية للمستخدم",
+          "user": "المستخدم",
+          "user_required": "المستخدم مطلوب",
+          "user_placeholder": "اختر مستخدماً",
+          "resource_type": "نوع المورد",
+          "resource_type_placeholder": "جميع أنواع الموارد",
+          "permissions": "الصلاحيات",
+          "permissions_read": "قراءة",
+          "permissions_write": "كتابة",
+          "permissions_delete": "حذف",
+          "permissions_manage": "إدارة",
+          "grant_button": "منح الصلاحية"
+        },
+        "table": {
+          "title": "صلاحيات المستخدمين الحالية",
+          "user": "المستخدم",
+          "resource_type": "نوع المورد",
+          "permissions": "الصلاحيات",
+          "actions": "الإجراءات",
+          "all_resource_types": "جميع أنواع الموارد"
+        },
+        "permissions": {
+          "read": "قراءة",
+          "write": "كتابة",
+          "delete": "حذف",
+          "manage": "إدارة"
+        },
+        "actions": {
+          "edit": "تعديل الصلاحية",
+          "remove": "إزالة الصلاحية"
+        },
+        "empty": {
+          "message": "لم يتم منح أي صلاحيات للمستخدمين",
+          "description": "امنح الصلاحيات للمستخدمين باستخدام النموذج أعلاه"
+        },
+        "messages": {
+          "grant_success": "تم منح صلاحية المستخدم بنجاح",
+          "grant_error": "فشل في منح صلاحية المستخدم",
+          "remove_success": "تم إزالة صلاحية المستخدم بنجاح",
+          "remove_error": "فشل في إزالة صلاحية المستخدم"
+        },
+        "delete": {
+          "title": "إزالة الصلاحية",
+          "content": "هل أنت متأكد من أنك تريد إزالة الصلاحية عن \"{userName}\"؟",
+          "ok": "إزالة",
+          "cancel": "إلغاء"
+        }
       }
     },
     "resource_types": {
@@ -336,21 +394,6 @@
     "title_za": "العنوان ي-أ",
     "recently_updated": "المحدث مؤخراً"
   },
-  "user": {
-    "menu": {
-      "profile": "ملفي الشخصي",
-      "change_password": "تغيير كلمة المرور",
-      "logout": "تسجيل الخروج"
-    },
-    "role": {
-      "admin": "مدير النظام",
-      "user": "مستخدم"
-    }
-  },
-  "footer": {
-    "copyright": "نظام إدارة الوثائق © 2025",
-    "version": "الإصدار 1.0.0"
-  },
   "login": {
     "username": {
       "label": "اسم المستخدم",
@@ -441,6 +484,7 @@
         "type": "نوع الوثيقة",
         "type_required": "يرجى اختيار نوع الوثيقة",
         "type_placeholder": "اختر نوع الوثيقة",
+        "loading": "جاري تحميل أنواع الوثائق...",
         "no_types": "لا توجد أنواع وثائق متاحة لهذه الشركة"
       },
       "step3": {
@@ -448,24 +492,44 @@
         "description": "املأ معلومات الوثيقة",
         "basic_info": "المعلومات الأساسية",
         "doc_title": "العنوان",
-        "title_required": "يرجى إدخال عنوان",
+        "title_required": "العنوان مطلوب",
         "title_placeholder": "أدخل عنوان الوثيقة",
+        "resource_code": "رمز المورد",
+        "resource_code_required": "رمز المورد مطلوب",
+        "resource_code_placeholder": "رمز المورد",
+        "resource_code_hint": "يتم إنشاؤه تلقائياً بناءً على نوع الوثيقة",
         "doc_description": "الوصف",
         "description_placeholder": "أدخل وصف الوثيقة",
         "tags": "العلامات",
-        "tags_placeholder": "أضف علامات (مفصولة بفواصل)",
+        "tags_placeholder": "أدخل العلامات (مفصولة بفواصل)",
+        "tags_hint": "افصل العلامات بفواصل",
         "custom_fields": "الحقول المخصصة",
+        "no_custom_fields": "لا توجد حقول مخصصة",
+        "no_custom_fields_desc": "نوع الوثيقة هذا لا يحتوي على حقول مخصصة محددة.",
         "parent_document": "الوثيقة الأصل",
-        "parent_placeholder": "ابحث عن الوثيقة الأصل",
-        "no_parent": "لا توجد وثيقة أصل"
+        "parent_placeholder": "ابحث عن الوثيقة الأصل...",
+        "parent_hint": "اختر وثيقة أصل من نفس النوع (اختياري)",
+        "searching": "جاري البحث...",
+        "no_parent": "لا توجد وثيقة أصل",
+        "select_type_first": "يرجى اختيار نوع الوثيقة أولاً",
+        "no_documents_found": "لم يتم العثور على وثائق",
+        "field_required": "مطلوب",
+        "field_placeholder": "أدخل",
+        "select_option": "اختر خياراً"
       },
       "step4": {
-        "title": "رفع الملف",
-        "description": "ارفع ملف الوثيقة",
+        "title": "رفع الملف الأساسي",
+        "description": "ارفع الملف الرئيسي لهذه الوثيقة",
         "file": "الملف",
         "file_required": "يرجى رفع ملف",
         "upload_text": "انقر أو اسحب الملف إلى هذه المنطقة للرفع",
-        "upload_hint": "دعم لرفع ملف واحد",
+        "upload_hint": "دعم لرفع ملف واحد. الحد الأقصى لحجم الملف: {size} ميجابايت",
+        "file_info": "معلومات الملف",
+        "file_size": "الحجم",
+        "file_type": "النوع",
+        "unknown_type": "نوع غير معروف",
+        "remove_file": "إزالة الملف",
+        "allowed_types": "أنواع الملفات المسموحة: {types}",
         "uploading": "جاري الرفع...",
         "upload_success": "تم رفع الملف بنجاح",
         "upload_error": "فشل في رفع الملف"
@@ -475,6 +539,11 @@
         "previous": "السابق",
         "create": "إنشاء الوثيقة",
         "cancel": "إلغاء"
+      },
+      "navigation": {
+        "previous": "السابق",
+        "next": "التالي",
+        "create": "إنشاء الوثيقة"
       },
       "messages": {
         "creating": "جاري إنشاء الوثيقة...",
