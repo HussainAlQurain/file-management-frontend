@@ -4,6 +4,10 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 
+// Translation imports
+import { TranslateModule } from '@ngx-translate/core';
+import { TranslationService } from '../../core/services/translation.service';
+
 // NG-ZORRO imports
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
@@ -48,6 +52,7 @@ import { NzModalService } from 'ng-zorro-antd/modal';
   imports: [
     CommonModule,
     RouterModule,
+    TranslateModule,
     NzCardModule,
     NzSpinModule,
     NzButtonModule,
@@ -74,10 +79,10 @@ import { NzModalService } from 'ng-zorro-antd/modal';
     FileSizePipe
   ],
   template: `
-    <div class="document-detail-container">
+    <div class="document-detail-container" [attr.dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
       <!-- Loading State -->
       <div *ngIf="isLoading()" class="loading-container">
-        <nz-spin nzSimple [nzSize]="'large'" nzTip="Loading document..."></nz-spin>
+        <nz-spin nzSimple [nzSize]="'large'" [nzTip]="'documents.detail.loading' | translate"></nz-spin>
       </div>
 
       <!-- Document Content -->
@@ -87,11 +92,11 @@ import { NzModalService } from 'ng-zorro-antd/modal';
           nzBackIcon
           (nzBack)="navigateBack()"
           [nzTitle]="document()!.title"
-          [nzSubtitle]="'Resource Code: ' + document()!.resourceCode">
+          [nzSubtitle]="('documents.detail.breadcrumb.documents' | translate) + ': ' + document()!.resourceCode">
           
           <nz-breadcrumb nz-page-header-breadcrumb>
             <nz-breadcrumb-item>
-              <a routerLink="/documents">Documents</a>
+              <a routerLink="/documents">{{ 'documents.detail.breadcrumb.documents' | translate }}</a>
             </nz-breadcrumb-item>
             <nz-breadcrumb-item>{{ document()!.resourceType?.name || 'Unknown Type' }}</nz-breadcrumb-item>
             <nz-breadcrumb-item>{{ document()!.title }}</nz-breadcrumb-item>
@@ -99,20 +104,20 @@ import { NzModalService } from 'ng-zorro-antd/modal';
 
           <nz-page-header-content>
             <div nz-row [nzGutter]="[16, 16]">
-              <nz-statistic nz-col [nzSpan]="6" nzTitle="Status" [nzValue]="document()!.status">
+              <nz-statistic nz-col [nzSpan]="6" [nzTitle]="'documents.detail.information.status' | translate" [nzValue]="document()!.status">
                 <ng-template #nzValueTemplate>
                   <nz-tag [nzColor]="getStatusColor(document()!.status)">
                     {{ document()!.status }}
                   </nz-tag>
                 </ng-template>
               </nz-statistic>
-              <nz-statistic nz-col [nzSpan]="6" nzTitle="Created By" [nzValue]="document()!.owner?.username || 'System'"></nz-statistic>
-              <nz-statistic nz-col [nzSpan]="6" nzTitle="Created">
+              <nz-statistic nz-col [nzSpan]="6" [nzTitle]="'documents.detail.information.created_by' | translate" [nzValue]="document()!.owner?.username || 'System'"></nz-statistic>
+              <nz-statistic nz-col [nzSpan]="6" [nzTitle]="'documents.detail.information.created_at' | translate">
                 <ng-template #nzValueTemplate>
                   {{ document()!.createdAt | date:'mediumDate' }}
                 </ng-template>
               </nz-statistic>
-              <nz-statistic nz-col [nzSpan]="6" nzTitle="Last Updated">
+              <nz-statistic nz-col [nzSpan]="6" [nzTitle]="'documents.detail.information.updated_at' | translate">
                 <ng-template #nzValueTemplate>
                   {{ document()!.updatedAt | date:'mediumDate' }}
                 </ng-template>
@@ -124,18 +129,18 @@ import { NzModalService } from 'ng-zorro-antd/modal';
             <nz-space>
               <button *nzSpaceItem nz-button nzType="primary" [routerLink]="['/documents', document()!.id, 'edit']">
                 <span nz-icon nzType="edit" nzTheme="outline"></span>
-                Edit
+                {{ 'documents.detail.actions.edit' | translate }}
               </button>
               <button *nzSpaceItem nz-button [routerLink]="['/documents', document()!.id, 'acl']">
                 <span nz-icon nzType="safety" nzTheme="outline"></span>
-                Manage ACL
+                {{ 'documents.detail.actions.manage_acl' | translate }}
               </button>
               <ng-container *ngIf="document()!.storageKey">
                 <a *nzSpaceItem 
                    nz-button nzType="default" 
                    [routerLink]="['/documents', document()!.id, 'view']">
                   <span nz-icon nzType="eye" nzTheme="outline"></span>
-                  View File
+                  {{ 'documents.detail.actions.view_file' | translate }}
                 </a>
               </ng-container>
             </nz-space>
@@ -146,11 +151,11 @@ import { NzModalService } from 'ng-zorro-antd/modal';
         <nz-card class="content-card">
           <nz-tabset>
             <!-- Details Tab -->
-            <nz-tab nzTitle="Details">
+            <nz-tab [nzTitle]="'documents.detail.tabs.details' | translate">
               <div class="tab-content">
                 <!-- Primary File Section -->
                 <div class="detail-section">
-                  <h3 nz-typography nzType="secondary">Primary File</h3>
+                  <h3 nz-typography nzType="secondary">{{ 'documents.detail.primary_file.title' | translate }}</h3>
                   <div class="primary-file-actions">
                     <div *ngIf="document()!.storageKey; else noFileTemplate" class="file-info">
                       <span nz-icon nzType="file-pdf" nzTheme="twotone" [nzTwotoneColor]="'#ff4d4f'" style="font-size: 24px; margin-right: 8px;"></span>
@@ -158,14 +163,14 @@ import { NzModalService } from 'ng-zorro-antd/modal';
                       <nz-space style="margin-left: 16px;">
                         <button *nzSpaceItem nz-button nzType="primary" nzSize="small" (click)="downloadLatestPrimaryFile(document()!)">
                           <span nz-icon nzType="download" nzTheme="outline"></span>
-                          Download
+                          {{ 'documents.detail.primary_file.download' | translate }}
                         </button>
                         <nz-upload *nzSpaceItem
                           [nzBeforeUpload]="beforeUpload"
                           [nzShowUploadList]="false">
                           <button nz-button nzType="default" nzSize="small">
                             <span nz-icon nzType="upload" nzTheme="outline"></span>
-                            Upload New Version
+                            {{ 'documents.detail.primary_file.upload_new_version' | translate }}
                           </button>
                         </nz-upload>
                       </nz-space>
@@ -173,8 +178,8 @@ import { NzModalService } from 'ng-zorro-antd/modal';
                     <ng-template #noFileTemplate>
                       <nz-alert 
                         nzType="warning" 
-                        nzMessage="No file uploaded"
-                        nzDescription="Upload a primary file to complete this document"
+                        [nzMessage]="'documents.detail.primary_file.no_file' | translate"
+                        [nzDescription]="'documents.detail.primary_file.no_file_description' | translate"
                         [nzShowIcon]="true"
                         style="margin-bottom: 16px;">
                       </nz-alert>
@@ -183,7 +188,7 @@ import { NzModalService } from 'ng-zorro-antd/modal';
                         [nzShowUploadList]="false">
                         <button nz-button nzType="primary">
                           <span nz-icon nzType="upload" nzTheme="outline"></span>
-                          Upload Primary File
+                          {{ 'documents.detail.primary_file.upload_primary' | translate }}
                         </button>
                       </nz-upload>
                     </ng-template>
@@ -192,31 +197,31 @@ import { NzModalService } from 'ng-zorro-antd/modal';
 
                 <!-- Description -->
                 <div *ngIf="document()!.description" class="detail-section">
-                  <h3 nz-typography nzType="secondary">Description</h3>
+                  <h3 nz-typography nzType="secondary">{{ 'documents.detail.description.title' | translate }}</h3>
                   <p nz-typography>{{ document()!.description }}</p>
                 </div>
 
                 <!-- Metadata -->
                 <div class="detail-section">
-                  <h3 nz-typography nzType="secondary">Document Information</h3>
+                  <h3 nz-typography nzType="secondary">{{ 'documents.detail.information.title' | translate }}</h3>
                   <nz-descriptions nzBordered [nzColumn]="{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }">
-                    <nz-descriptions-item nzTitle="ID">{{ document()!.id }}</nz-descriptions-item>
-                    <nz-descriptions-item nzTitle="Resource Type">
+                    <nz-descriptions-item [nzTitle]="'documents.detail.information.id' | translate">{{ document()!.id }}</nz-descriptions-item>
+                    <nz-descriptions-item [nzTitle]="'documents.detail.information.resource_type' | translate">
                       <nz-tag nzColor="blue">{{ document()!.resourceType?.name || 'N/A' }}</nz-tag>
                     </nz-descriptions-item>
-                    <nz-descriptions-item nzTitle="Resource Code">{{ document()!.resourceCode }}</nz-descriptions-item>
-                    <nz-descriptions-item nzTitle="Status">
+                    <nz-descriptions-item [nzTitle]="'documents.detail.information.resource_code' | translate">{{ document()!.resourceCode }}</nz-descriptions-item>
+                    <nz-descriptions-item [nzTitle]="'documents.detail.information.status' | translate">
                       <nz-tag [nzColor]="getStatusColor(document()!.status)">{{ document()!.status }}</nz-tag>
                     </nz-descriptions-item>
-                    <nz-descriptions-item nzTitle="Created By">{{ document()!.owner?.username || document()!.owner?.email || 'System' }}</nz-descriptions-item>
-                    <nz-descriptions-item nzTitle="Created At">{{ document()!.createdAt | date:'medium' }}</nz-descriptions-item>
-                    <nz-descriptions-item nzTitle="Updated At">{{ document()!.updatedAt | date:'medium' }}</nz-descriptions-item>
+                    <nz-descriptions-item [nzTitle]="'documents.detail.information.created_by' | translate">{{ document()!.owner?.username || document()!.owner?.email || 'System' }}</nz-descriptions-item>
+                    <nz-descriptions-item [nzTitle]="'documents.detail.information.created_at' | translate">{{ document()!.createdAt | date:'medium' }}</nz-descriptions-item>
+                    <nz-descriptions-item [nzTitle]="'documents.detail.information.updated_at' | translate">{{ document()!.updatedAt | date:'medium' }}</nz-descriptions-item>
                   </nz-descriptions>
                 </div>
 
                 <!-- Field Values -->
                 <div *ngIf="document()!.fieldValues && getFieldValueKeys(document()!.fieldValues).length > 0" class="detail-section">
-                  <h3 nz-typography nzType="secondary">Custom Fields</h3>
+                  <h3 nz-typography nzType="secondary">{{ 'documents.detail.custom_fields.title' | translate }}</h3>
                   <div class="field-values-grid">
                     <div *ngFor="let item of document()!.fieldValues | keyvalue" class="field-value-item">
                       <div class="field-value-label">{{ item.key }}</div>
@@ -228,14 +233,14 @@ import { NzModalService } from 'ng-zorro-antd/modal';
             </nz-tab>
 
             <!-- Related Documents Tab -->
-            <nz-tab nzTitle="Related Documents">
+            <nz-tab [nzTitle]="'documents.detail.tabs.related_documents' | translate">
               <div class="tab-content">
                 <nz-spin *ngIf="isLoadingRelated()" nzSimple></nz-spin>
                 
                 <div *ngIf="!isLoadingRelated()">
                   <!-- Parent Document -->
                   <div *ngIf="relatedDocuments()?.parent" class="detail-section">
-                    <h3 nz-typography nzType="secondary">Parent Document</h3>
+                    <h3 nz-typography nzType="secondary">{{ 'documents.detail.related.parent' | translate }}</h3>
                     <nz-card nzHoverable [routerLink]="['/documents', relatedDocuments()!.parent!.id]" class="related-doc-card">
                       <div class="flex items-center">
                         <nz-avatar nzIcon="folder" [nzSize]="48" style="background-color: #1890ff;"></nz-avatar>
@@ -251,7 +256,7 @@ import { NzModalService } from 'ng-zorro-antd/modal';
 
                   <!-- Child Documents -->
                   <div *ngIf="relatedDocuments()?.children && relatedDocuments()!.children!.length > 0" class="detail-section">
-                    <h3 nz-typography nzType="secondary">Child Documents ({{ relatedDocuments()!.children!.length }})</h3>
+                    <h3 nz-typography nzType="secondary">{{ 'documents.detail.related.children' | translate }} ({{ relatedDocuments()!.children!.length }})</h3>
                     <div class="children-grid">
                       <nz-card *ngFor="let child of relatedDocuments()!.children" 
                                nzHoverable 
@@ -273,21 +278,21 @@ import { NzModalService } from 'ng-zorro-antd/modal';
                   <!-- Empty State -->
                   <nz-empty *ngIf="!relatedDocuments()?.parent && (!relatedDocuments()?.children || relatedDocuments()!.children!.length === 0)"
                             nzNotFoundImage="simple"
-                            [nzNotFoundContent]="'No related documents found'">
+                            [nzNotFoundContent]="'documents.detail.related.no_related' | translate">
                   </nz-empty>
                 </div>
               </div>
             </nz-tab>
 
             <!-- Reminders Tab -->
-            <nz-tab nzTitle="Reminders">
+            <nz-tab [nzTitle]="'documents.detail.tabs.reminders' | translate">
               <div class="tab-content">
                 <div class="detail-section">
                   <div class="flex justify-between items-center mb-4">
-                    <h3 nz-typography nzType="secondary" style="margin: 0;">Document Reminders</h3>
+                    <h3 nz-typography nzType="secondary" style="margin: 0;">{{ 'documents.detail.reminders.title' | translate }}</h3>
                     <button nz-button nzType="primary" (click)="openReminderDialog()">
                       <span nz-icon nzType="plus" nzTheme="outline"></span>
-                      Add Reminder
+                      {{ 'documents.detail.reminders.add' | translate }}
                     </button>
                   </div>
 
@@ -313,7 +318,7 @@ import { NzModalService } from 'ng-zorro-antd/modal';
                             {{ reminder.remindAt | date:'short' }}
                             <span *ngIf="isAdmin"> | User: {{ getUsername(reminder.userId) }}</span>
                             <nz-tag [nzColor]="reminder.sent ? 'success' : 'warning'" style="margin-left: 8px;">
-                              {{ reminder.sent ? 'Sent' : 'Pending' }}
+                              {{ reminder.sent ? ('documents.detail.reminders.sent' | translate) : ('documents.detail.reminders.pending' | translate) }}
                             </nz-tag>
                           </nz-list-item-meta-description>
                         </nz-list-item-meta>
@@ -322,48 +327,48 @@ import { NzModalService } from 'ng-zorro-antd/modal';
                   </nz-list>
 
                   <ng-template #noReminders>
-                    <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="'No reminders set for this document'"></nz-empty>
+                    <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="'documents.detail.reminders.no_reminders' | translate"></nz-empty>
                   </ng-template>
                 </div>
               </div>
             </nz-tab>
 
             <!-- Versions Tab -->
-            <nz-tab nzTitle="Version History">
+            <nz-tab [nzTitle]="'documents.detail.tabs.version_history' | translate">
               <div class="tab-content">
                 <div class="detail-section">
                   <div *ngIf="!versionsLoaded && !versionsLoading" class="text-center">
                     <button nz-button nzType="primary" (click)="loadVersions()">
                       <span nz-icon nzType="history" nzTheme="outline"></span>
-                      Load Version History
+                      {{ 'documents.detail.versions.load' | translate }}
                     </button>
                   </div>
 
-                  <nz-spin *ngIf="versionsLoading" nzSimple nzTip="Loading versions..."></nz-spin>
+                  <nz-spin *ngIf="versionsLoading" nzSimple [nzTip]="'documents.detail.versions.loading' | translate"></nz-spin>
 
                   <nz-timeline *ngIf="versionsLoaded && versions.length > 0">
                     <nz-timeline-item *ngFor="let version of versions" [nzColor]="version.versionNo === versions[0].versionNo ? 'green' : 'gray'">
                       <nz-card>
                         <h4 nz-typography>
-                          Version {{ version.versionNo }}
-                          <nz-tag *ngIf="version.versionNo === versions[0].versionNo" nzColor="success" style="margin-left: 8px;">Current</nz-tag>
+                          {{ 'documents.detail.versions.version' | translate }} {{ version.versionNo }}
+                          <nz-tag *ngIf="version.versionNo === versions[0].versionNo" nzColor="success" style="margin-left: 8px;">{{ 'documents.detail.versions.current' | translate }}</nz-tag>
                         </h4>
                         <nz-descriptions [nzColumn]="1" nzSize="small">
-                          <nz-descriptions-item nzTitle="Created">{{ version.createdAt | date:'medium' }}</nz-descriptions-item>
-                          <nz-descriptions-item nzTitle="Size">{{ version.sizeBytes | fileSize }}</nz-descriptions-item>
-                          <nz-descriptions-item nzTitle="Checksum">
+                          <nz-descriptions-item [nzTitle]="'documents.detail.versions.created' | translate">{{ version.createdAt | date:'medium' }}</nz-descriptions-item>
+                          <nz-descriptions-item [nzTitle]="'documents.detail.versions.size' | translate">{{ version.sizeBytes | fileSize }}</nz-descriptions-item>
+                          <nz-descriptions-item [nzTitle]="'documents.detail.versions.checksum' | translate">
                             <span class="text-xs font-mono">{{ version.checksumSha256 ? version.checksumSha256.substring(0, 16) + '...' : 'N/A' }}</span>
                           </nz-descriptions-item>
                         </nz-descriptions>
                         <nz-space style="margin-top: 12px;">
                           <button *nzSpaceItem nz-button nzType="primary" nzSize="small" (click)="downloadVersionFile(version.versionNo)">
                             <span nz-icon nzType="download" nzTheme="outline"></span>
-                            Download
+                            {{ 'documents.detail.versions.download' | translate }}
                           </button>
                           <a *nzSpaceItem nz-button nzType="default" nzSize="small" 
                              [routerLink]="['/documents', documentId(), 'versions', version.versionNo, 'view']">
                             <span nz-icon nzType="eye" nzTheme="outline"></span>
-                            View
+                            {{ 'documents.detail.versions.view' | translate }}
                           </a>
                         </nz-space>
                       </nz-card>
@@ -372,7 +377,7 @@ import { NzModalService } from 'ng-zorro-antd/modal';
 
                   <nz-empty *ngIf="versionsLoaded && versions.length === 0" 
                             nzNotFoundImage="simple" 
-                            [nzNotFoundContent]="'No version history available'">
+                            [nzNotFoundContent]="'documents.detail.versions.no_versions' | translate">
                   </nz-empty>
                 </div>
               </div>
@@ -388,11 +393,11 @@ import { NzModalService } from 'ng-zorro-antd/modal';
             nzNotFoundImage="simple"
             [nzNotFoundContent]="errorContent">
             <ng-template #errorContent>
-              <h2>Document Not Found</h2>
-              <p>The document you are looking for does not exist or could not be loaded.</p>
+              <h2>{{ 'documents.detail.error.not_found' | translate }}</h2>
+              <p>{{ 'documents.detail.error.not_found_description' | translate }}</p>
               <button nz-button nzType="primary" routerLink="/documents">
                 <span nz-icon nzType="arrow-left" nzTheme="outline"></span>
-                Back to Documents
+                {{ 'documents.detail.error.back_to_documents' | translate }}
               </button>
             </ng-template>
           </nz-empty>
@@ -527,6 +532,7 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
   private snackbar = inject(SnackbarService);
   private message = inject(NzMessageService);
   private http = inject(HttpClient);
+  public translationService = inject(TranslationService);
 
   isLoading = signal(true);
   document: WritableSignal<Document | null> = signal(null);

@@ -551,6 +551,93 @@
         "success": "Document created successfully",
         "error": "Failed to create document"
       }
+    },
+    "detail": {
+      "loading": "Loading document...",
+      "tabs": {
+        "details": "Details",
+        "related_documents": "Related Documents",
+        "reminders": "Reminders",
+        "version_history": "Version History"
+      },
+      "primary_file": {
+        "title": "Primary File",
+        "no_file": "No file uploaded",
+        "no_file_description": "Upload a primary file to complete this document",
+        "download": "Download",
+        "upload_new_version": "Upload New Version",
+        "upload_primary": "Upload Primary File"
+      },
+      "description": {
+        "title": "Description"
+      },
+      "information": {
+        "title": "Document Information",
+        "id": "ID",
+        "resource_type": "Resource Type",
+        "resource_code": "Resource Code",
+        "status": "Status",
+        "created_by": "Created By",
+        "created_at": "Created At",
+        "updated_at": "Updated At"
+      },
+      "custom_fields": {
+        "title": "Custom Fields"
+      },
+      "actions": {
+        "edit": "Edit",
+        "manage_acl": "Manage ACL",
+        "view_file": "View File",
+        "back": "Back to Documents"
+      },
+      "related": {
+        "parent": "Parent Document",
+        "children": "Child Documents",
+        "no_related": "No related documents found"
+      },
+      "reminders": {
+        "title": "Document Reminders",
+        "add": "Add Reminder",
+        "no_reminders": "No reminders set for this document",
+        "sent": "Sent",
+        "pending": "Pending"
+      },
+      "versions": {
+        "load": "Load Version History",
+        "loading": "Loading versions...",
+        "current": "Current",
+        "version": "Version",
+        "created": "Created",
+        "size": "Size",
+        "checksum": "Checksum",
+        "download": "Download",
+        "view": "View",
+        "no_versions": "No version history available"
+      },
+      "breadcrumb": {
+        "documents": "Documents"
+      },
+      "error": {
+        "not_found": "Document Not Found",
+        "not_found_description": "The document you are looking for does not exist or could not be loaded.",
+        "back_to_documents": "Back to Documents"
+      }
+    },
+    "viewer": {
+      "title": "Document Viewer",
+      "actions": {
+        "download": "Download",
+        "back": "Back",
+        "download_file": "Download File"
+      },
+      "messages": {
+        "cannot_preview": "This file type cannot be previewed directly.",
+        "not_found": "Document Not Found",
+        "not_found_description": "The document you are trying to view could not be loaded.",
+        "go_back": "Go Back",
+        "no_file": "Document has no file attached",
+        "loading_error": "Failed to load document"
+      }
     }
   },
   "company_structure": {

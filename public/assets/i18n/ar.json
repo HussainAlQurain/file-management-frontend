@@ -551,6 +551,93 @@
         "success": "تم إنشاء الوثيقة بنجاح",
         "error": "فشل في إنشاء الوثيقة"
       }
+    },
+    "detail": {
+      "loading": "جاري تحميل الوثيقة...",
+      "tabs": {
+        "details": "التفاصيل",
+        "related_documents": "الوثائق ذات الصلة",
+        "reminders": "التذكيرات",
+        "version_history": "تاريخ الإصدارات"
+      },
+      "primary_file": {
+        "title": "الملف الأساسي",
+        "no_file": "لم يتم رفع ملف",
+        "no_file_description": "ارفع ملفاً أساسياً لإكمال هذه الوثيقة",
+        "download": "تحميل",
+        "upload_new_version": "رفع إصدار جديد",
+        "upload_primary": "رفع الملف الأساسي"
+      },
+      "description": {
+        "title": "الوصف"
+      },
+      "information": {
+        "title": "معلومات الوثيقة",
+        "id": "المعرف",
+        "resource_type": "نوع المورد",
+        "resource_code": "رمز المورد",
+        "status": "الحالة",
+        "created_by": "أنشأ بواسطة",
+        "created_at": "تاريخ الإنشاء",
+        "updated_at": "تاريخ التحديث"
+      },
+      "custom_fields": {
+        "title": "الحقول المخصصة"
+      },
+      "actions": {
+        "edit": "تحرير",
+        "manage_acl": "إدارة الصلاحيات",
+        "view_file": "عرض الملف",
+        "back": "العودة للوثائق"
+      },
+      "related": {
+        "parent": "الوثيقة الأب",
+        "children": "الوثائق الفرعية",
+        "no_related": "لم يتم العثور على وثائق ذات صلة"
+      },
+      "reminders": {
+        "title": "تذكيرات الوثيقة",
+        "add": "إضافة تذكير",
+        "no_reminders": "لم يتم تعيين تذكيرات لهذه الوثيقة",
+        "sent": "مرسل",
+        "pending": "معلق"
+      },
+      "versions": {
+        "load": "تحميل تاريخ الإصدارات",
+        "loading": "جاري تحميل الإصدارات...",
+        "current": "الحالي",
+        "version": "الإصدار",
+        "created": "تاريخ الإنشاء",
+        "size": "الحجم",
+        "checksum": "مجموع التحقق",
+        "download": "تحميل",
+        "view": "عرض",
+        "no_versions": "لا يوجد تاريخ إصدارات متاح"
+      },
+      "breadcrumb": {
+        "documents": "الوثائق"
+      },
+      "error": {
+        "not_found": "الوثيقة غير موجودة",
+        "not_found_description": "الوثيقة التي تبحث عنها غير موجودة أو لا يمكن تحميلها.",
+        "back_to_documents": "العودة للوثائق"
+      }
+    },
+    "viewer": {
+      "title": "عارض الوثائق",
+      "actions": {
+        "download": "تحميل",
+        "back": "رجوع",
+        "download_file": "تحميل الملف"
+      },
+      "messages": {
+        "cannot_preview": "لا يمكن معاينة هذا النوع من الملفات مباشرة.",
+        "not_found": "الوثيقة غير موجودة",
+        "not_found_description": "الوثيقة التي تحاول عرضها لا يمكن تحميلها.",
+        "go_back": "العودة",
+        "no_file": "الوثيقة لا تحتوي على ملف مرفق",
+        "loading_error": "فشل في تحميل الوثيقة"
+      }
     }
   },
   "company_structure": {

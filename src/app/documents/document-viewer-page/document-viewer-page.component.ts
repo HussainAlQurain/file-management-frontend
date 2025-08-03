@@ -5,7 +5,12 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+
+// Translation imports
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslationService } from '../../core/services/translation.service';
 
 import { DocumentService } from '../../core/services/document.service';
 import { SnackbarService } from '../../core/services/snackbar.service';
@@ -18,29 +23,31 @@ import { environment } from '../../../environments/environment';
   imports: [
     CommonModule,
     RouterModule,
+    TranslateModule,
     MatProgressSpinnerModule,
     MatButtonModule,
     MatIconModule,
-    MatCardModule
+    MatCardModule,
+    MatTooltipModule
   ],
   template: `
-    <div class="p-4 md:p-8">
+    <div class="p-4 md:p-8 document-viewer-container" [attr.dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
       @if (isLoading()) {
         <div class="flex justify-center items-center min-h-[300px]">
           <mat-spinner diameter="60"></mat-spinner>
         </div>
       } @else if (document()) {
-        <mat-card>
+        <mat-card class="document-viewer-card">
           <mat-card-header>
             <mat-card-title>
-              {{ document()?.title || 'Document Viewer' }}
+              {{ document()?.title || ('documents.viewer.title' | translate) }}
             </mat-card-title>
             <div class="flex-grow"></div>
             <div class="actions">
-              <button mat-icon-button (click)="downloadFile()" matTooltip="Download">
+              <button mat-icon-button (click)="downloadFile()" [matTooltip]="'documents.viewer.actions.download' | translate">
                 <mat-icon>download</mat-icon>
               </button>
-              <button mat-icon-button (click)="navigateBack()" matTooltip="Back">
+              <button mat-icon-button (click)="navigateBack()" [matTooltip]="'documents.viewer.actions.back' | translate">
                 <mat-icon>close</mat-icon>
               </button>
             </div>
@@ -57,9 +64,9 @@ import { environment } from '../../../environments/environment';
             } @else {
               <div class="text-center p-8">
                 <mat-icon class="text-6xl text-gray-400">description</mat-icon>
-                <p class="mt-4">This file type cannot be previewed directly.</p>
+                <p class="mt-4">{{ 'documents.viewer.messages.cannot_preview' | translate }}</p>
                 <button mat-raised-button color="primary" class="mt-4" (click)="downloadFile()">
-                  <mat-icon>download</mat-icon> Download File
+                  <mat-icon>download</mat-icon> {{ 'documents.viewer.actions.download_file' | translate }}
                 </button>
               </div>
             }
@@ -67,12 +74,12 @@ import { environment } from '../../../environments/environment';
         </mat-card>
       } @else {
         <div class="flex flex-col items-center justify-center py-20 text-center px-4">
-          <h2 class="text-2xl font-semibold mb-2">Document Not Found</h2>
+          <h2 class="text-2xl font-semibold mb-2">{{ 'documents.viewer.messages.not_found' | translate }}</h2>
           <p class="text-gray-600 mb-6">
-            The document you are trying to view could not be loaded.
+            {{ 'documents.viewer.messages.not_found_description' | translate }}
           </p>
           <button mat-raised-button color="primary" (click)="navigateBack()">
-            Go Back
+            {{ 'documents.viewer.messages.go_back' | translate }}
           </button>
         </div>
       }
@@ -86,6 +93,8 @@ export class DocumentViewerPageComponent implements OnInit {
   private documentService = inject(DocumentService);
   private snackbarService = inject(SnackbarService);
   private sanitizer = inject(DomSanitizer);
+  private translateService = inject(TranslateService);
+  public translationService = inject(TranslationService);
 
   documentId = signal<number | null>(null);
   document = signal<Document | null>(null);
@@ -110,7 +119,7 @@ export class DocumentViewerPageComponent implements OnInit {
         }
       } else {
         this.isLoading.set(false);
-        this.snackbarService.error('Document ID not found in URL');
+        this.snackbarService.error(this.translateService.instant('documents.viewer.messages.loading_error'));
         this.router.navigate(['/documents']);
       }
     });
@@ -125,14 +134,14 @@ export class DocumentViewerPageComponent implements OnInit {
           // Use the document view URL from the service
           this.fileUrl.set(this.documentService.getDocumentViewUrl(id));
         } else {
-          this.snackbarService.error('Document has no file attached');
+          this.snackbarService.error(this.translateService.instant('documents.viewer.messages.no_file'));
         }
         
         this.isLoading.set(false);
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.snackbarService.error('Failed to load document: ' + (err.error?.message || err.message));
+        this.snackbarService.error(this.translateService.instant('documents.viewer.messages.loading_error') + ': ' + (err.error?.message || err.message));
       }
     });
   }
@@ -149,7 +158,7 @@ export class DocumentViewerPageComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.snackbarService.error('Failed to load document: ' + (err.error?.message || err.message));
+        this.snackbarService.error(this.translateService.instant('documents.viewer.messages.loading_error') + ': ' + (err.error?.message || err.message));
       }
     });
   }
