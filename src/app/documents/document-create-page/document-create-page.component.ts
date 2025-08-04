@@ -437,15 +437,108 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
     .create-document-container {
       max-width: 900px;
       margin: 0 auto;
+      padding: 0;
+      overflow: visible !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
+    }
+
+    .page-header-wrapper {
+      background: linear-gradient(135deg, #fff 0%, #fafafa 100%);
+      margin: -24px -24px 24px -24px;
+      padding: 40px 48px 32px 48px;
+      border-bottom: 1px solid #e8e8e8;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      position: relative;
+    }
+
+    .page-header-wrapper::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #1890ff 0%, #40a9ff 50%, #69c0ff 100%);
+    }
+
+    .page-header-content {
+      max-width: 100%;
+      overflow: visible;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      overflow: visible;
+    }
+
+    .header-title-section {
+      flex: 1;
+      padding-top: 8px;
+    }
+
+    .page-title {
+      margin: 0 0 12px 0;
+      font-size: 28px;
+      font-weight: 700;
+      color: #1f1f1f;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+    }
+
+    .page-subtitle {
+      margin: 0;
+      color: #666;
+      font-size: 15px;
+      line-height: 1.5;
+      font-weight: 400;
+    }
+
+    .header-actions {
+      flex-shrink: 0;
+      margin-left: 24px;
+      padding-top: 4px;
+    }
+
+    .action-button {
+      height: 44px;
+      padding: 0 20px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid #d9d9d9;
+      background: #fff;
+      color: #262626;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .action-button:hover {
+      border-color: #40a9ff;
+      color: #1890ff;
+      box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+      transform: translateY(-1px);
     }
 
     .steps-content {
       margin-top: 32px;
       min-height: 400px;
+      overflow: visible !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
     }
 
     .step-container {
       padding: 24px 0;
+      overflow: visible !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
     }
 
     .steps-action {
@@ -462,6 +555,9 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
 
     .form-section {
       margin-bottom: 32px;
+      overflow: visible !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
     }
 
     .form-section h4 {
@@ -556,6 +652,22 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
       margin-bottom: 16px;
     }
 
+    /* Global overflow fixes for all containers */
+    ::ng-deep app-document-create-page,
+    ::ng-deep .create-document-container,
+    ::ng-deep .ant-card,
+    ::ng-deep .ant-card-body,
+    ::ng-deep .steps-content,
+    ::ng-deep .step-container,
+    ::ng-deep .form-section,
+    ::ng-deep .custom-fields-section {
+      overflow: visible !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
+      height: auto !important;
+      min-height: auto !important;
+    }
+
     /* RTL Support */
     .rtl-custom-fields {
       direction: rtl;
@@ -585,6 +697,141 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
     .rtl-custom-fields ::ng-deep textarea {
       direction: rtl;
       text-align: right;
+    }
+
+    /* Enhanced RTL Support - Fix scrollbar issues */
+    [dir="rtl"] ::ng-deep .ant-form-item,
+    [dir="rtl"] ::ng-deep .ant-form-item-control,
+    [dir="rtl"] ::ng-deep .ant-form-item-control-input,
+    [dir="rtl"] ::ng-deep .ant-form-item-control-input-content {
+      overflow: visible !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
+    }
+
+    /* Fix parent containers overflow in RTL */
+    [dir="rtl"] ::ng-deep app-document-create-page,
+    [dir="rtl"] ::ng-deep .create-document-container,
+    [dir="rtl"] ::ng-deep .ant-card,
+    [dir="rtl"] ::ng-deep .ant-card-body,
+    [dir="rtl"] ::ng-deep .steps-content,
+    [dir="rtl"] ::ng-deep .step-container,
+    [dir="rtl"] ::ng-deep .form-section,
+    [dir="rtl"] ::ng-deep .custom-fields-section,
+    [dir="rtl"] ::ng-deep nz-card,
+    [dir="rtl"] ::ng-deep form {
+      overflow: visible !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
+      height: auto !important;
+      min-height: auto !important;
+      max-height: none !important;
+    }
+
+    /* Fix RTL text overflow and alignment */
+    [dir="rtl"] ::ng-deep .ant-input {
+      direction: rtl;
+      text-align: right;
+      overflow: visible !important;
+      white-space: nowrap;
+    }
+
+    [dir="rtl"] ::ng-deep .ant-form-item-label label {
+      white-space: nowrap;
+      overflow: visible !important;
+    }
+
+    [dir="rtl"] ::ng-deep .ant-form-item-extra {
+      text-align: right;
+      direction: rtl;
+      overflow: visible !important;
+      white-space: normal;
+      word-wrap: break-word;
+    }
+
+    [dir="rtl"] ::ng-deep .ant-select-selector {
+      direction: rtl;
+      text-align: right;
+    }
+
+    [dir="rtl"] ::ng-deep .ant-select-selection-search-input {
+      direction: rtl;
+      text-align: right;
+    }
+
+    /* Ensure proper spacing for RTL */
+    [dir="rtl"] ::ng-deep .ant-col {
+      overflow: visible !important;
+    }
+
+    [dir="rtl"] ::ng-deep .ant-row {
+      overflow: visible !important;
+    }
+
+    /* Override shell layout constraints if they exist */
+    ::ng-deep .inner-content {
+      overflow: visible !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
+      min-height: auto !important;
+      height: auto !important;
+      max-height: none !important;
+    }
+
+    /* Additional overflow fixes for potential parent containers */
+    ::ng-deep .content-wrapper,
+    ::ng-deep .page-wrapper,
+    ::ng-deep .main-content {
+      overflow: visible !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
+      height: auto !important;
+      min-height: auto !important;
+      max-height: none !important;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .page-header-wrapper {
+        padding: 32px 24px 24px 24px;
+        margin: -24px -24px 24px -24px;
+      }
+
+      .header-top {
+        flex-direction: column;
+        gap: 20px;
+        align-items: stretch;
+      }
+
+      .header-title-section {
+        padding-top: 0;
+      }
+
+      .page-title {
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
+
+      .page-subtitle {
+        font-size: 14px;
+      }
+
+      .header-actions {
+        margin-left: 0;
+        width: 100%;
+        padding-top: 0;
+      }
+
+      .action-button {
+        width: 100%;
+        justify-content: center;
+        height: 48px;
+      }
+
+      .create-document-container {
+        max-width: 100%;
+        margin: 0;
+      }
     }
   `],
   providers: [NzMessageService]
