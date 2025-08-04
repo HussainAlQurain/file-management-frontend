@@ -639,6 +639,41 @@
         "loading_error": "فشل في تحميل الوثيقة",
         "image_load_error": "فشل في تحميل الصورة"
       }
+    },
+    "edit": {
+      "title": "تحرير الوثيقة",
+      "basic_info": "المعلومات الأساسية",
+      "metadata_title": "الحقول المخصصة",
+      "existing_attachments": "المرفقات الموجودة",
+      "add_new_attachments": "إضافة مرفقات جديدة",
+      "no_existing_attachments": "لا توجد مرفقات موجودة",
+      "no_documents_found": "لم يتم العثور على وثائق",
+      "no_options_available": "لا توجد خيارات متاحة",
+      "unsupported_type": "نوع حقل غير مدعوم",
+      "document_not_found": "الوثيقة غير موجودة",
+      "document_not_found_description": "الوثيقة التي تحاول تحريرها لا يمكن تحميلها.",
+      "back_to_documents": "العودة إلى الوثائق",
+      "save_changes": "حفظ التغييرات",
+      "remove_attachment": "إزالة المرفق",
+      "files_selected": "ملف جديد محدد",
+      "upload_title": "اسحب وأفلت المرفقات الجديدة هنا",
+      "upload_subtitle": "أو انقر لتحديد الملفات",
+      "fields": {
+        "title": "العنوان",
+        "description": "الوصف",
+        "parent_document": "الوثيقة الأساسية (اختياري)",
+        "tags": "العلامات",
+        "tags_help": "أدخل العلامات مفصولة بفواصل"
+      },
+      "placeholders": {
+        "title": "أدخل عنوان الوثيقة",
+        "description": "أدخل وصف الوثيقة",
+        "parent_search": "البحث عن وثيقة أساسية...",
+        "tags": "علامة1، علامة2، علامة3"
+      },
+      "validation": {
+        "title_required": "العنوان مطلوب"
+      }
     }
   },
   "company_structure": {
@@ -663,6 +698,7 @@
     "edit": "تعديل",
     "view": "عرض",
     "search": "بحث",
+    "searching": "جاري البحث",
     "filter": "تصفية",
     "clear": "مسح",
     "submit": "إرسال",
@@ -675,6 +711,8 @@
     "refresh": "تحديث",
     "apply": "تطبيق",
     "reset": "إعادة تعيين",
-    "not_available": "غير متوفر"
+    "not_available": "غير متوفر",
+    "is_required": "مطلوب",
+    "select_option": "اختر خياراً"
   }
 }

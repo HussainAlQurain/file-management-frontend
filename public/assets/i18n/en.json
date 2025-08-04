@@ -639,6 +639,41 @@
         "loading_error": "Failed to load document",
         "image_load_error": "Failed to load image"
       }
+    },
+    "edit": {
+      "title": "Edit Document",
+      "basic_info": "Basic Information",
+      "metadata_title": "Custom Fields",
+      "existing_attachments": "Existing Attachments",
+      "add_new_attachments": "Add New Attachments",
+      "no_existing_attachments": "No existing attachments found",
+      "no_documents_found": "No documents found",
+      "no_options_available": "No options available",
+      "unsupported_type": "Unsupported field type",
+      "document_not_found": "Document Not Found",
+      "document_not_found_description": "The document you are trying to edit could not be loaded.",
+      "back_to_documents": "Back to Documents",
+      "save_changes": "Save Changes",
+      "remove_attachment": "Remove Attachment",
+      "files_selected": "new file(s) selected",
+      "upload_title": "Drag and drop new attachments here",
+      "upload_subtitle": "or click to select files",
+      "fields": {
+        "title": "Title",
+        "description": "Description",
+        "parent_document": "Parent Document (Optional)",
+        "tags": "Tags",
+        "tags_help": "Enter tags separated by commas"
+      },
+      "placeholders": {
+        "title": "Enter document title",
+        "description": "Enter document description",
+        "parent_search": "Search for parent document...",
+        "tags": "tag1, tag2, tag3"
+      },
+      "validation": {
+        "title_required": "Title is required"
+      }
     }
   },
   "company_structure": {
@@ -663,6 +698,7 @@
     "edit": "Edit",
     "view": "View",
     "search": "Search",
+    "searching": "Searching",
     "filter": "Filter",
     "clear": "Clear",
     "submit": "Submit",
@@ -675,6 +711,8 @@
     "refresh": "Refresh",
     "apply": "Apply",
     "reset": "Reset",
-    "not_available": "N/A"
+    "not_available": "N/A",
+    "is_required": "is required",
+    "select_option": "Select an option"
   }
 }

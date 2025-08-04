@@ -2,20 +2,31 @@ import { Component, OnInit, inject, signal, WritableSignal, DestroyRef } from '@
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatListModule } from '@angular/material/list';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { debounceTime, distinctUntilChanged, switchMap, tap, catchError, map } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
+
+// Translation imports
+import { TranslateModule } from '@ngx-translate/core';
+import { TranslationService } from '../../core/services/translation.service';
+
+// NG-ZORRO imports
+import { NzCardModule } from 'ng-zorro-antd/card';
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
+import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
+import { NzListModule } from 'ng-zorro-antd/list';
+import { NzAutocompleteModule } from 'ng-zorro-antd/auto-complete';
+import { NzGridModule } from 'ng-zorro-antd/grid';
+import { NzTypographyModule } from 'ng-zorro-antd/typography';
+import { NzDividerModule } from 'ng-zorro-antd/divider';
+import { NzAlertModule } from 'ng-zorro-antd/alert';
+import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 
 import { DocumentService } from '../../core/services/document.service';
 import { ResourceTypeService } from '../../core/services/resource-type.service';
@@ -33,149 +44,201 @@ import { environment } from '../../../environments/environment';
     CommonModule,
     RouterModule,
     ReactiveFormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatProgressSpinnerModule,
-    MatIconModule,
-    MatChipsModule,
-    MatSelectModule,
-    MatDatepickerModule,
-    MatCheckboxModule,
-    MatAutocompleteModule,
-    FileUploadComponent,
-    MatListModule
+    TranslateModule,
+    NzCardModule,
+    NzFormModule,
+    NzInputModule,
+    NzInputNumberModule,
+    NzButtonModule,
+    NzSpinModule,
+    NzIconModule,
+    NzSelectModule,
+    NzDatePickerModule,
+    NzCheckboxModule,
+    NzAutocompleteModule,
+    NzGridModule,
+    NzTypographyModule,
+    NzDividerModule,    
+    NzAlertModule,
+    NzToolTipModule,
+    NzListModule,
+    FileUploadComponent
   ],
   template: `
-    <div class="p-4 md:p-8">
+    <div class="document-edit-container" [class.rtl]="translationService.isRTL()">
       @if (isLoading()) {
-        <div class="flex justify-center items-center min-h-[300px]">
-          <mat-spinner diameter="60"></mat-spinner>
+        <div class="loading-container">
+          <nz-spin nzSize="large" [nzTip]="'common.loading' | translate"></nz-spin>
         </div>
       } @else if (document()) {
-        <form [formGroup]="editForm" (ngSubmit)="onSubmit()">
-          <mat-card>
-            <mat-card-header>
-              <mat-card-title class="text-2xl font-semibold">Edit Document: {{ document()?.title }}</mat-card-title>
-            </mat-card-header>
-            <mat-card-content class="space-y-6 p-4">
-              <!-- Basic Info -->
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Title</mat-label>
-                <input matInput formControlName="title" required>
-                @if (editForm.get('title')?.hasError('required')) {
-                  <mat-error>Title is required.</mat-error>
-                }
-              </mat-form-field>
+        <form nz-form [formGroup]="editForm" (ngSubmit)="onSubmit()" nzLayout="vertical">
+          <nz-card [nzTitle]="'documents.edit.title' | translate">
+            <ng-template #titleTemplate>
+              <h2>{{ ('documents.edit.title' | translate) + ': ' + document()?.title }}</h2>
+            </ng-template>
+            
+            <div nz-row [nzGutter]="[24, 24]">
+              <!-- Basic Information Section -->
+              <div nz-col [nzSpan]="24">
+                <h3>{{ 'documents.edit.basic_info' | translate }}</h3>
+                <nz-divider></nz-divider>
+              </div>
+              
+              <!-- Title Field -->
+              <div nz-col [nzSpan]="24">
+                <nz-form-item>
+                  <nz-form-label [nzRequired]="true">{{ 'documents.edit.fields.title' | translate }}</nz-form-label>
+                  <nz-form-control [nzErrorTip]="'documents.edit.validation.title_required' | translate">
+                    <input nz-input formControlName="title" [placeholder]="'documents.edit.placeholders.title' | translate">
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
 
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Description</mat-label>
-                <textarea matInput formControlName="description" rows="3"></textarea>
-              </mat-form-field>
+              <!-- Description Field -->
+              <div nz-col [nzSpan]="24">
+                <nz-form-item>
+                  <nz-form-label>{{ 'documents.edit.fields.description' | translate }}</nz-form-label>
+                  <nz-form-control>
+                    <textarea 
+                      nz-input 
+                      formControlName="description" 
+                      [rows]="4"
+                      [placeholder]="'documents.edit.placeholders.description' | translate">
+                    </textarea>
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
 
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Parent Document (Optional)</mat-label>
-                <input 
-                  matInput 
-                  formControlName="parentSearch" 
-                  placeholder="Search for parent document..." 
-                  [matAutocomplete]="parentAuto">
-                <mat-autocomplete #parentAuto="matAutocomplete" [displayWith]="displayParentFn">
-                  @if (isSearchingParents()) {
-                    <mat-option disabled>
-                      <mat-spinner diameter="20"></mat-spinner> Searching...
-                    </mat-option>
-                  } @else if (parentSearchResults().length === 0 && parentSearchQuery().length > 0) {
-                    <mat-option disabled>No documents found</mat-option>
-                  } @else {
-                    @for (doc of parentSearchResults(); track doc.id) {
-                      <mat-option [value]="doc">
-                        {{ doc.title }} ({{ doc.resourceCode }})
-                      </mat-option>
+              <!-- Parent Document Field -->
+              <div nz-col [nzSpan]="24">
+                <nz-form-item>
+                  <nz-form-label>{{ 'documents.edit.fields.parent_document' | translate }}</nz-form-label>
+                  <nz-form-control>
+                    <input 
+                      nz-input 
+                      formControlName="parentSearch"
+                      [placeholder]="'documents.edit.placeholders.parent_search' | translate"
+                      [nzAutocomplete]="parentAuto">
+                    <nz-autocomplete #parentAuto [nzDefaultActiveFirstOption]="false">
+                      @if (isSearchingParents()) {
+                        <nz-auto-option [nzDisabled]="true">
+                          <nz-spin nzSize="small"></nz-spin> {{ 'common.searching' | translate }}...
+                        </nz-auto-option>
+                      } @else if (parentSearchResults().length === 0 && parentSearchQuery().length > 0) {
+                        <nz-auto-option [nzDisabled]="true">{{ 'documents.edit.no_documents_found' | translate }}</nz-auto-option>
+                      } @else {
+                        @for (doc of parentSearchResults(); track doc.id) {
+                          <nz-auto-option [nzValue]="displayParentFn(doc)" (selectionChange)="onParentSelected(doc)">
+                            {{ doc.title }} ({{ doc.resourceCode }})
+                          </nz-auto-option>
+                        }
+                      }
+                    </nz-autocomplete>
+                    @if (editForm.get('parentId')?.value) {
+                      <span nz-input-group-slot="suffix">
+                        <button 
+                          nz-button 
+                          nzType="text" 
+                          nzSize="small"
+                          (click)="clearParentSelection()"
+                          [nz-tooltip]="'common.clear' | translate">
+                          <span nz-icon nzType="close"></span>
+                        </button>
+                      </span>
                     }
-                  }
-                </mat-autocomplete>
-                <button 
-                  *ngIf="editForm.get('parentId')?.value" 
-                  matSuffix 
-                  mat-icon-button 
-                  aria-label="Clear" 
-                  (click)="clearParentSelection()">
-                  <mat-icon>close</mat-icon>
-                </button>
-              </mat-form-field>
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
 
-              <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Tags (comma-separated)</mat-label>
-                <input matInput formControlName="tags">
-                 <mat-hint>Enter tags separated by commas.</mat-hint>
-              </mat-form-field>
+              <!-- Tags Field -->
+              <div nz-col [nzSpan]="24">
+                <nz-form-item>
+                  <nz-form-label>{{ 'documents.edit.fields.tags' | translate }}</nz-form-label>
+                  <nz-form-control [nzExtra]="'documents.edit.fields.tags_help' | translate">
+                    <input 
+                      nz-input 
+                      formControlName="tags"
+                      [placeholder]="'documents.edit.placeholders.tags' | translate">
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
 
               <!-- Dynamic Metadata Fields -->
               @if (resourceType(); as rt) {
                 @if (rt.fields && rt.fields.length > 0) {
-                  <h3 class="text-xl font-medium mt-6 mb-3 border-b pb-2">Metadata ({{ rt.code }})</h3>
-                  <div formGroupName="metadata" class="space-y-4">
+                  <div nz-col [nzSpan]="24">
+                    <h3>{{ 'documents.edit.metadata_title' | translate }} ({{ rt.code }})</h3>
+                    <nz-divider></nz-divider>
+                  </div>
+                  
+                  <div formGroupName="metadata">
                     @for (field of rt.fields; track field.id) {
-                      <ng-container [ngSwitch]="field.kind">
-                        <mat-form-field appearance="outline" class="w-full" *ngSwitchCase="FieldType.TEXT">
-                          <mat-label>{{ field.name }}</mat-label>
-                          <input matInput [formControlName]="field.name" [required]="field.required">
-                          @if (metadataFormGroup.get(field.name)?.hasError('required')) {
-                            <mat-error>{{ field.name }} is required.</mat-error>
-                          }
-                        </mat-form-field>
+                      <div nz-col [nzSpan]="24">
+                        <ng-container [ngSwitch]="field.kind">
+                          <!-- Text Field -->
+                          <nz-form-item *ngSwitchCase="FieldType.TEXT">
+                            <nz-form-label [nzRequired]="field.required">{{ field.label || field.name }}</nz-form-label>
+                            <nz-form-control [nzErrorTip]="(field.label || field.name) + ' ' + ('common.is_required' | translate)">
+                              <input nz-input [formControlName]="field.name">
+                            </nz-form-control>
+                          </nz-form-item>
 
-                        <mat-form-field appearance="outline" class="w-full" *ngSwitchCase="FieldType.NUMBER">
-                          <mat-label>{{ field.name }}</mat-label>
-                          <input matInput type="number" [formControlName]="field.name" [required]="field.required">
-                           @if (metadataFormGroup.get(field.name)?.hasError('required')) {
-                            <mat-error>{{ field.name }} is required.</mat-error>
-                          }
-                        </mat-form-field>
+                          <!-- Number Field -->
+                          <nz-form-item *ngSwitchCase="FieldType.NUMBER">
+                            <nz-form-label [nzRequired]="field.required">{{ field.label || field.name }}</nz-form-label>
+                            <nz-form-control [nzErrorTip]="(field.label || field.name) + ' ' + ('common.is_required' | translate)">
+                              <nz-input-number 
+                                [formControlName]="field.name" 
+                                style="width: 100%">
+                              </nz-input-number>
+                            </nz-form-control>
+                          </nz-form-item>
 
-                        <mat-form-field appearance="outline" class="w-full" *ngSwitchCase="FieldType.DATE">
-                          <mat-label>{{ field.name }}</mat-label>
-                          <input matInput [matDatepicker]="picker" [formControlName]="field.name" [required]="field.required">
-                          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                          <mat-datepicker #picker></mat-datepicker>
-                           @if (metadataFormGroup.get(field.name)?.hasError('required')) {
-                            <mat-error>{{ field.name }} is required.</mat-error>
-                          }
-                        </mat-form-field>
+                          <!-- Date Field -->
+                          <nz-form-item *ngSwitchCase="FieldType.DATE">
+                            <nz-form-label [nzRequired]="field.required">{{ field.label || field.name }}</nz-form-label>
+                            <nz-form-control [nzErrorTip]="(field.label || field.name) + ' ' + ('common.is_required' | translate)">
+                              <nz-date-picker 
+                                [formControlName]="field.name" 
+                                style="width: 100%">
+                              </nz-date-picker>
+                            </nz-form-control>
+                          </nz-form-item>
 
-                        <div class="py-2" *ngSwitchCase="FieldType.BOOLEAN"> 
-                           <mat-checkbox [formControlName]="field.name" [required]="field.required">
-                            {{ field.name }}
-                          </mat-checkbox>
-                           @if (metadataFormGroup.get(field.name)?.hasError('required')) {
-                            <mat-error class="text-xs">{{ field.name }} is required.</mat-error> 
-                          }
-                        </div>
+                          <!-- Boolean Field -->
+                          <nz-form-item *ngSwitchCase="FieldType.BOOLEAN">
+                            <nz-form-control>
+                              <label nz-checkbox [formControlName]="field.name">
+                                {{ field.label || field.name }}
+                              </label>
+                            </nz-form-control>
+                          </nz-form-item>
 
-                        <mat-form-field appearance="outline" class="w-full" *ngSwitchCase="FieldType.SELECT">
-                          <mat-label>{{ field.label || field.name }}</mat-label>
-                          <mat-select [formControlName]="field.name" [required]="field.required">
-                            @if(field.options && field.options.length > 0) {
-                              @for (option of field.options; track option) {
-                                <mat-option [value]="option">{{ option }}</mat-option>
-                              }
-                            } @else {
-                              <mat-option disabled>No options available</mat-option>
-                            }
-                          </mat-select>
-                          @if (metadataFormGroup.get(field.name)?.hasError('required')) {
-                            <mat-error>{{ field.label || field.name }} is required.</mat-error>
-                          }
-                        </mat-form-field>
+                          <!-- Select Field -->
+                          <nz-form-item *ngSwitchCase="FieldType.SELECT">
+                            <nz-form-label [nzRequired]="field.required">{{ field.label || field.name }}</nz-form-label>
+                            <nz-form-control [nzErrorTip]="(field.label || field.name) + ' ' + ('common.is_required' | translate)">
+                              <nz-select [formControlName]="field.name" [nzPlaceHolder]="'common.select_option' | translate">
+                                @if(field.options && field.options.length > 0) {
+                                  @for (option of field.options; track option) {
+                                    <nz-option [nzValue]="option" [nzLabel]="option"></nz-option>
+                                  }
+                                } @else {
+                                  <nz-option [nzDisabled]="true" [nzLabel]="'documents.edit.no_options_available' | translate"></nz-option>
+                                }
+                              </nz-select>
+                            </nz-form-control>
+                          </nz-form-item>
 
-                        <mat-form-field appearance="outline" class="w-full" *ngSwitchDefault>
-                            <mat-label>{{ field.label || field.name }} (Unsupported type: {{field.kind}})</mat-label>
-                            <input matInput [formControlName]="field.name" [required]="field.required" readonly>
-                        </mat-form-field>
-
-                      </ng-container>
+                          <!-- Unsupported Field Type -->
+                          <nz-form-item *ngSwitchDefault>
+                            <nz-form-label>{{ field.label || field.name }} ({{ 'documents.edit.unsupported_type' | translate }}: {{field.kind}})</nz-form-label>
+                            <nz-form-control>
+                              <input nz-input [formControlName]="field.name" readonly>
+                            </nz-form-control>
+                          </nz-form-item>
+                        </ng-container>
+                      </div>
                     }
                   </div>
                 }
@@ -183,64 +246,179 @@ import { environment } from '../../../environments/environment';
 
               <!-- Existing Attachments -->
               @if (document()?.attachments && document()!.attachments.length > 0) {
-                <h3 class="text-xl font-medium mt-6 mb-3 border-b pb-2">Existing Attachments</h3>
-                <mat-list>
-                  @for (att of document()?.attachments; track att.id; let i = $index) {
-                    <mat-list-item>
-                      <mat-icon matListItemIcon>attachment</mat-icon>
-                      <div matListItemTitle>
-                        <a [href]="getAttachmentDownloadUrl(att.storageKey)" target="_blank" class="hover:underline">
-                          {{ att.fileName }}
-                        </a>
-                      </div>
-                      <div matListItemMeta>
-                        <button mat-icon-button color="warn" type="button" (click)="markAttachmentForRemoval(att.id, i)" matTooltip="Remove Attachment">
-                          <mat-icon>delete</mat-icon>
-                        </button>
-                      </div>
-                    </mat-list-item>
-                  }
-                </mat-list>
+                <div nz-col [nzSpan]="24">
+                  <h3>{{ 'documents.edit.existing_attachments' | translate }}</h3>
+                  <nz-divider></nz-divider>
+                  
+                  <nz-list nzItemLayout="horizontal">
+                    @for (att of document()?.attachments; track att.id; let i = $index) {
+                      <nz-list-item>
+                        <nz-list-item-meta>
+                          <nz-list-item-meta-avatar>
+                            <span nz-icon nzType="file-text" nzTheme="outline"></span>
+                          </nz-list-item-meta-avatar>
+                          <nz-list-item-meta-title>
+                            <a [href]="getAttachmentDownloadUrl(att.storageKey)" target="_blank" class="link">
+                              {{ att.fileName }}
+                            </a>
+                          </nz-list-item-meta-title>
+                        </nz-list-item-meta>
+                        <ul nz-list-item-actions>
+                          <nz-list-item-action>
+                            <button 
+                              nz-button 
+                              nzType="text" 
+                              nzDanger
+                              (click)="markAttachmentForRemoval(att.id, i)" 
+                              [nz-tooltip]="'documents.edit.remove_attachment' | translate">
+                              <span nz-icon nzType="delete" nzTheme="outline"></span>
+                            </button>
+                          </nz-list-item-action>
+                        </ul>
+                      </nz-list-item>
+                    }
+                  </nz-list>
+                </div>
               } @else {
-                <p class="text-gray-500 mt-4">No existing attachments.</p>
-              }
-
-              <!-- File Upload for New Attachments -->
-              <h3 class="text-xl font-medium mt-6 mb-3 border-b pb-2">Add New Attachments</h3>
-              <app-file-upload 
-                (filesChanged)="onNewAttachmentsChanged($event)" 
-                [multiple]="true"
-                title="Drag and drop new attachments here"
-                subtitle="or click to select files">
-              </app-file-upload>
-              @if (newAttachments().length > 0) {
-                <div class="mt-2 text-sm text-gray-600">
-                  {{ newAttachments().length }} new file(s) selected.
+                <div nz-col [nzSpan]="24">
+                  <nz-alert 
+                    nzType="info" 
+                    [nzMessage]="'documents.edit.no_existing_attachments' | translate"
+                    nzShowIcon>
+                  </nz-alert>
                 </div>
               }
 
-            </mat-card-content>
-            <mat-card-actions class="p-4 flex justify-end space-x-2">
-              <button mat-stroked-button type="button" (click)="cancelEdit()">Cancel</button>
-              <button mat-raised-button color="primary" type="submit" [disabled]="editForm.invalid || isSubmitting()">
-                @if(isSubmitting()){ <mat-spinner diameter="20" class="inline-block mr-2"></mat-spinner> } 
-                Save Changes
+              <!-- File Upload for New Attachments -->
+              <div nz-col [nzSpan]="24">
+                <h3>{{ 'documents.edit.add_new_attachments' | translate }}</h3>
+                <nz-divider></nz-divider>
+                
+                <app-file-upload 
+                  (filesChanged)="onNewAttachmentsChanged($event)" 
+                  [multiple]="true"
+                  [title]="'documents.edit.upload_title' | translate"
+                  [subtitle]="'documents.edit.upload_subtitle' | translate">
+                </app-file-upload>
+                
+                @if (newAttachments().length > 0) {
+                  <nz-alert
+                    nzType="success"
+                    [nzMessage]="newAttachments().length + ' ' + ('documents.edit.files_selected' | translate)"
+                    nzShowIcon
+                    style="margin-top: 16px;">
+                  </nz-alert>
+                }
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <nz-divider></nz-divider>
+            <div class="action-buttons" [class.rtl-actions]="translationService.isRTL()">
+              <button nz-button nzType="default" (click)="cancelEdit()">
+                <span nz-icon nzType="close"></span>
+                {{ 'common.cancel' | translate }}
               </button>
-            </mat-card-actions>
-          </mat-card>
+              <button 
+                nz-button 
+                nzType="primary" 
+                nzHtmlType="submit" 
+                [nzLoading]="isSubmitting()"
+                [disabled]="editForm.invalid">
+                <span nz-icon nzType="save"></span>
+                {{ 'documents.edit.save_changes' | translate }}
+              </button>
+            </div>
+          </nz-card>
         </form>
       } @else {
-        <mat-card class="text-center p-8">
-          <mat-icon class="text-6xl text-gray-400">error_outline</mat-icon>
-          <h2 class="text-2xl font-semibold mt-4 mb-2">Document Not Found</h2>
-          <p class="text-gray-600 mb-6">The document you are looking for could not be loaded for editing.</p>
-          <button mat-stroked-button routerLink="/documents">
-            <mat-icon>arrow_back</mat-icon> Back to Documents List
-          </button>
-        </mat-card>
+        <!-- Error State -->
+        <nz-card>
+          <div class="error-state">
+            <span nz-icon nzType="exclamation-circle" nzTheme="outline" class="error-icon"></span>
+            <h2>{{ 'documents.edit.document_not_found' | translate }}</h2>
+            <p>{{ 'documents.edit.document_not_found_description' | translate }}</p>
+            <button nz-button nzType="default" routerLink="/documents">
+              <span nz-icon nzType="arrow-left"></span>
+              {{ 'documents.edit.back_to_documents' | translate }}
+            </button>
+          </div>
+        </nz-card>
       }
     </div>
-  `
+  `,
+  styles: [`
+    .document-edit-container {
+      padding: 24px;
+      background: #f0f2f5;
+      min-height: 100vh;
+    }
+
+    .document-edit-container.rtl {
+      direction: rtl;
+    }
+
+    .loading-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 300px;
+    }
+
+    .action-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .action-buttons.rtl-actions {
+      justify-content: flex-start;
+      flex-direction: row-reverse;
+    }
+
+    .error-state {
+      text-align: center;
+      padding: 48px 24px;
+    }
+
+    .error-icon {
+      font-size: 64px;
+      color: #ff4d4f;
+      margin-bottom: 16px;
+    }
+
+    .error-state h2 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: rgba(0, 0, 0, 0.85);
+    }
+
+    .error-state p {
+      color: rgba(0, 0, 0, 0.45);
+      margin-bottom: 24px;
+    }
+
+    .link {
+      color: #1890ff;
+      text-decoration: none;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+
+    /* RTL support */
+    .document-edit-container.rtl .action-buttons {
+      flex-direction: row-reverse;
+      justify-content: flex-start;
+    }
+
+    .document-edit-container.rtl .error-state {
+      text-align: right;
+    }
+  `]
 })
 export class DocumentEditPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -250,6 +428,7 @@ export class DocumentEditPageComponent implements OnInit {
   private resourceTypeService = inject(ResourceTypeService);
   private snackbar = inject(SnackbarService);
   private destroyRef = inject(DestroyRef);
+  public translationService = inject(TranslationService);
 
   isLoading = signal(true);
   isSubmitting = signal(false);
@@ -304,13 +483,7 @@ export class DocumentEditPageComponent implements OnInit {
         }
       }),
       switchMap(value => {
-        // If the value is an object, it means an option was selected
-        if (typeof value === 'object' && value !== null) {
-          this.editForm.patchValue({ parentId: value.id });
-          return of([]);
-        }
-        
-        // Otherwise search for documents matching the query
+        // Only search if it's a string and has more than 2 characters
         if (typeof value === 'string' && value.length > 2) {
           return this.searchDocuments(value).pipe(
             catchError(() => {
@@ -342,6 +515,14 @@ export class DocumentEditPageComponent implements OnInit {
 
   displayParentFn(doc: Document): string {
     return doc ? `${doc.title} (${doc.resourceCode})` : '';
+  }
+
+  onParentSelected(doc: Document): void {
+    this.editForm.patchValue({
+      parentId: doc.id,
+      parentSearch: this.displayParentFn(doc)
+    });
+    this.parentSearchResults.set([]);
   }
 
   clearParentSelection(): void {
