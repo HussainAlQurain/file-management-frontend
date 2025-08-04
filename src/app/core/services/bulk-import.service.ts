@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { ConfigService } from './config.service';
 import { BulkImportRequestDto, BulkImportResultDto } from '../models/bulk-import.model';
 
 @Injectable({
@@ -9,7 +9,11 @@ import { BulkImportRequestDto, BulkImportResultDto } from '../models/bulk-import
 })
 export class BulkImportService {
   private http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiBase}/bulk-import`;
+  private configService = inject(ConfigService);
+  
+  private get baseUrl(): string {
+    return `${this.configService.apiBase}/bulk-import`;
+  }
 
   /**
    * Generate Excel template for bulk import based on resource type field definitions

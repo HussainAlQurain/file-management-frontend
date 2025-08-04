@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { ConfigService } from './config.service';
 import { User } from '../models/auth.model';
 import { Page } from '../models/document.model';
 import { toParams } from '../utils/api-utils';
@@ -40,8 +40,15 @@ export interface UserDTO {
 })
 export class UserService {
   private http = inject(HttpClient);
-  private readonly usersApiUrl = `${environment.apiBase}/users`;
-  private readonly profileApiUrl = `${environment.apiBase}/profile`;
+  private configService = inject(ConfigService);
+  
+  private get usersApiUrl(): string {
+    return `${this.configService.apiBase}/users`;
+  }
+  
+  private get profileApiUrl(): string {
+    return `${this.configService.apiBase}/profile`;
+  }
   
   list(params: Record<string, any> = {}): Observable<Page<User>> {
     return this.http.get<Page<User>>(this.usersApiUrl, { params: toParams(params) });

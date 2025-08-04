@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, forkJoin } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { ConfigService } from './config.service';
 import { ResourceType, CreateResourceTypeDto, UpdateResourceTypeDto, FieldDefinitionDto, CreateFieldDto, UpdateFieldDto } from '../models/resource-type.model';
 import { Page } from '../models/document.model';
 import { toParams } from '../utils/api-utils';
@@ -12,7 +12,11 @@ import { tap, switchMap, map, catchError } from 'rxjs/operators';
 })
 export class ResourceTypeService {
   private http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiBase}/resource-types`;
+  private configService = inject(ConfigService);
+  
+  private get baseUrl(): string {
+    return `${this.configService.apiBase}/resource-types`;
+  }
   
   list(params: Record<string, any> = {}): Observable<Page<ResourceType>> {
     return this.http.get<Page<ResourceType>>(this.baseUrl, { params: toParams(params) });

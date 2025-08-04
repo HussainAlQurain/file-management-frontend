@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideZoneChangeDetection, importProvidersFrom } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection, importProvidersFrom, APP_INITIALIZER } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -20,6 +20,8 @@ import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { loadingInterceptor } from './core/interceptors/loading.interceptor';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { ConfigService } from './core/services/config.service';
+import { appInitializer } from './core/initializers/app.initializer';
 
 // Register locales
 registerLocaleData(en);
@@ -33,6 +35,14 @@ const icons: IconDefinition[] = Object.keys(antDesignIcons).map(key => antDesign
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    // Configuration loading at app startup
+    {
+      provide: APP_INITIALIZER,
+      useFactory: appInitializer,
+      deps: [ConfigService],
+      multi: true
+    },
+    
     // Zone.js change detection
     provideZoneChangeDetection({ eventCoalescing: true }),
     

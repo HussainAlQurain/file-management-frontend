@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
+import { ConfigService } from './config.service';
 import { Auth, LoginRequest, User } from '../models/auth.model';
 import { jwtDecode } from "jwt-decode";
 
@@ -21,6 +21,7 @@ interface JwtPayload {
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private configService = inject(ConfigService);
   
   // Signal based state for auth
   readonly authSignal = signal<Auth | null>(null);
@@ -28,7 +29,10 @@ export class AuthService {
   readonly loadingSignal = signal<boolean>(false);
   
   private readonly tokenKey = 'auth_token';
-  private readonly baseUrl = `${environment.apiBase}/auth`;
+  
+  private get baseUrl(): string {
+    return `${this.configService.apiBase}/auth`;
+  }
   
   constructor() {
     this.loadTokenFromStorage();

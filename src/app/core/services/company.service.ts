@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { ConfigService } from './config.service';
 import { 
   Company, 
   CreateCompanyDto, 
@@ -19,7 +19,11 @@ import { toParams } from '../utils/api-utils';
 })
 export class CompanyService {
   private http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiBase}/companies`;
+  private configService = inject(ConfigService);
+  
+  private get baseUrl(): string {
+    return `${this.configService.apiBase}/companies`;
+  }
   
   list(params: Record<string, any> = {}): Observable<Page<Company>> {
     return this.http.get<Page<Company>>(this.baseUrl, { params: toParams(params) });

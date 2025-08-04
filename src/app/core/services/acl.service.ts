@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { ConfigService } from './config.service';
 
 export interface AclRequest {
   action: 'grant' | 'revoke';
@@ -27,9 +27,12 @@ export interface AclGrantDto {
   providedIn: 'root'
 })
 export class AclService {
-  private baseUrl = `${environment.apiBase}/documents`;
-
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
+  private configService = inject(ConfigService);
+  
+  private get baseUrl(): string {
+    return `${this.configService.apiBase}/documents`;
+  }
 
   getAcls(documentId: number): Observable<AclEntryResponse[]> {
     return this.http.get<AclEntryResponse[]>(`${this.baseUrl}/${documentId}/acl`);

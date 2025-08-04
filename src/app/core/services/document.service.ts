@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
+import { ConfigService } from './config.service';
 import { Document, DocQuery, Page, DocumentVersionInfo, CreateDocumentDto, UpdateDocumentDto, RelatedDocuments, DocumentVersion } from '../models/document.model';
 import { toParams } from '../utils/api-utils';
 import { AuthService } from './auth.service';
@@ -13,7 +13,11 @@ import { AuthService } from './auth.service';
 export class DocumentService {
   private http = inject(HttpClient);
   private auth = inject(AuthService);
-  private readonly documentsApiUrl = `${environment.apiBase}/documents`; // Renamed from baseUrl
+  private configService = inject(ConfigService);
+  
+  private get documentsApiUrl(): string {
+    return `${this.configService.apiBase}/documents`;
+  }
 
   list(query: DocQuery): Observable<Page<Document>> {
     return this.http.get<Page<Document>>(`${this.documentsApiUrl}/search`, { params: toParams(query) }); // Changed to /search endpoint

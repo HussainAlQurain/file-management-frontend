@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { ConfigService } from './config.service';
 import { Observable } from 'rxjs';
 
 export interface ReminderDTO {
@@ -14,9 +14,12 @@ export interface ReminderDTO {
 
 @Injectable({ providedIn: 'root' })
 export class ReminderService {
-  private api = environment.apiBase + '/reminders';
-
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
+  private configService = inject(ConfigService);
+  
+  private get api(): string {
+    return `${this.configService.apiBase}/reminders`;
+  }
 
   create(reminder: ReminderDTO): Observable<ReminderDTO> {
     return this.http.post<ReminderDTO>(`${this.api}`, reminder);
