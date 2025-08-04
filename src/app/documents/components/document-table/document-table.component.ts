@@ -190,24 +190,24 @@ export interface PageEvent {
                 </button>
                 <nz-dropdown-menu #menu="nzDropdownMenu">
                   <ul nz-menu>
-                    <li nz-menu-item>
-                      <a [routerLink]="['/documents', document.id]">
-                        <nz-icon nzType="eye" nzTheme="outline"></nz-icon>
-                        <span>{{ 'documents.actions.view' | translate }}</span>
-                      </a>
-                    </li>
-                    <li nz-menu-item>
-                      <a [routerLink]="['/documents', document.id, 'edit']">
-                        <nz-icon nzType="edit" nzTheme="outline"></nz-icon>
-                        <span>{{ 'documents.actions.edit' | translate }}</span>
-                      </a>
-                    </li>
-                    <li nz-menu-item>
-                      <a [routerLink]="['/documents', document.id, 'acl']">
-                        <nz-icon nzType="safety" nzTheme="outline"></nz-icon>
-                        <span>{{ 'documents.actions.manage_access' | translate }}</span>
-                      </a>
-                    </li>
+                    <a [routerLink]="['/documents', document.id]">
+                      <li nz-menu-item>
+                          <nz-icon nzType="eye" nzTheme="outline"></nz-icon>
+                          <span>{{ 'documents.actions.view' | translate }}</span>
+                      </li>
+                    </a>
+                    <a [routerLink]="['/documents', document.id, 'edit']">
+                      <li nz-menu-item>
+                          <nz-icon nzType="edit" nzTheme="outline"></nz-icon>
+                          <span>{{ 'documents.actions.edit' | translate }}</span>
+                      </li>
+                    </a>
+                    <a [routerLink]="['/documents', document.id, 'acl']">
+                      <li nz-menu-item>
+                          <nz-icon nzType="safety" nzTheme="outline"></nz-icon>
+                          <span>{{ 'documents.actions.manage_access' | translate }}</span>
+                      </li>
+                    </a>
                     <li nz-menu-divider></li>
                     <li nz-menu-item nzDanger (click)="onDelete(document)">
                       <nz-icon nzType="delete" nzTheme="outline"></nz-icon>
@@ -360,13 +360,13 @@ export class DocumentTableComponent implements OnInit {
   translationService = inject(TranslationService);
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
-  
+
   @Input() documents: Document[] = [];
   @Input() loading = false;
   @Input() totalItems = 0;
   @Input() pageSize = 10;
   @Input() pageIndex = 0;
-  
+
   @Output() page = new EventEmitter<PageEvent>();
   @Output() delete = new EventEmitter<number>();
   @Output() view = new EventEmitter<number>();
@@ -380,25 +380,25 @@ export class DocumentTableComponent implements OnInit {
         this.cdr.detectChanges();
       });
   }
-  
+
   onPageIndexChange(pageIndex: number): void {
     this.page.emit({
       pageIndex: pageIndex - 1, // ng-zorro uses 1-based pagination
       pageSize: this.pageSize
     });
   }
-  
+
   onPageSizeChange(pageSize: number): void {
     this.page.emit({
       pageIndex: 0, // Reset to first page when changing page size
       pageSize: pageSize
     });
   }
-  
+
   onRowClick(document: Document): void {
     this.view.emit(document.id);
   }
-  
+
   onDelete(document: Document): void {
     this.delete.emit(document.id);
   }
@@ -478,24 +478,24 @@ export class DocumentTableComponent implements OnInit {
 
   getFileIcon(mimeType: string | undefined): string {
     if (!mimeType) return 'file';
-    
+
     if (mimeType.startsWith('image/')) return 'file-image';
     if (mimeType.startsWith('video/')) return 'video-camera';
     if (mimeType.startsWith('audio/')) return 'audio';
-    
+
     switch (mimeType) {
       case 'application/pdf': return 'file-pdf';
       case 'application/msword':
-      case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 
+      case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
         return 'file-word';
       case 'application/vnd.ms-excel':
-      case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 
+      case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
         return 'file-excel';
       case 'application/vnd.ms-powerpoint':
-      case 'application/vnd.openxmlformats-officedocument.presentationml.presentation': 
+      case 'application/vnd.openxmlformats-officedocument.presentationml.presentation':
         return 'file-ppt';
       case 'application/zip':
-      case 'application/x-rar-compressed': 
+      case 'application/x-rar-compressed':
         return 'file-zip';
       case 'text/plain': return 'file-text';
       case 'text/html': return 'html5';
@@ -506,21 +506,21 @@ export class DocumentTableComponent implements OnInit {
 
   getFileType(mimeType: string | undefined): string {
     if (!mimeType) return 'File';
-    
+
     if (mimeType.startsWith('image/')) return 'Image';
     if (mimeType.startsWith('video/')) return 'Video';
     if (mimeType.startsWith('audio/')) return 'Audio';
-    
+
     switch (mimeType) {
       case 'application/pdf': return 'PDF';
       case 'application/msword':
-      case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 
+      case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
         return 'Word';
       case 'application/vnd.ms-excel':
-      case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 
+      case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
         return 'Excel';
       case 'application/vnd.ms-powerpoint':
-      case 'application/vnd.openxmlformats-officedocument.presentationml.presentation': 
+      case 'application/vnd.openxmlformats-officedocument.presentationml.presentation':
         return 'PowerPoint';
       case 'application/zip': return 'ZIP';
       case 'application/x-rar-compressed': return 'RAR';
