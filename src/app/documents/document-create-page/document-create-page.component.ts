@@ -400,35 +400,77 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
 
         <!-- Navigation buttons -->
         <div class="steps-action" [class.rtl]="translationService.isRTL()">
-          <button 
-            nz-button 
-            nzType="default" 
-            (click)="previousStep()"
-            *ngIf="currentStep > 0">
-            <span nz-icon [nzType]="translationService.isRTL() ? 'right' : 'left'" nzTheme="outline"></span>
-            {{ 'documents.create.navigation.previous' | translate }}
-          </button>
-          
-          <button 
-            nz-button 
-            nzType="primary" 
-            (click)="nextStep()"
-            [disabled]="!canProceed()"
-            *ngIf="currentStep < 3">
-            {{ 'documents.create.navigation.next' | translate }}
-            <span nz-icon [nzType]="translationService.isRTL() ? 'left' : 'right'" nzTheme="outline"></span>
-          </button>
-          
-          <button 
-            nz-button 
-            nzType="primary" 
-            (click)="onSubmit()"
-            [nzLoading]="isSubmitting()"
-            [disabled]="!canSubmit()"
-            *ngIf="currentStep === 3">
-            <span nz-icon nzType="check" nzTheme="outline"></span>
-            {{ 'documents.create.navigation.create' | translate }}
-          </button>
+          <!-- RTL Layout: Next on left, Previous on right -->
+          <ng-container *ngIf="translationService.isRTL()">
+            <button 
+              nz-button 
+              nzType="primary" 
+              (click)="nextStep()"
+              [disabled]="!canProceed()"
+              *ngIf="currentStep < 3"
+              class="next-button">
+              {{ 'documents.create.navigation.next' | translate }}
+              <span nz-icon nzType="left" nzTheme="outline"></span>
+            </button>
+            
+            <button 
+              nz-button 
+              nzType="default" 
+              (click)="previousStep()"
+              *ngIf="currentStep > 0"
+              class="previous-button">
+              <span nz-icon nzType="right" nzTheme="outline"></span>
+              {{ 'documents.create.navigation.previous' | translate }}
+            </button>
+            
+            <button 
+              nz-button 
+              nzType="primary" 
+              (click)="onSubmit()"
+              [nzLoading]="isSubmitting()"
+              [disabled]="!canSubmit()"
+              *ngIf="currentStep === 3"
+              class="submit-button">
+              <span nz-icon nzType="check" nzTheme="outline"></span>
+              {{ 'documents.create.navigation.create' | translate }}
+            </button>
+          </ng-container>
+
+          <!-- LTR Layout: Previous on left, Next on right -->
+          <ng-container *ngIf="!translationService.isRTL()">
+            <button 
+              nz-button 
+              nzType="default" 
+              (click)="previousStep()"
+              *ngIf="currentStep > 0"
+              class="previous-button">
+              <span nz-icon nzType="left" nzTheme="outline"></span>
+              {{ 'documents.create.navigation.previous' | translate }}
+            </button>
+            
+            <button 
+              nz-button 
+              nzType="primary" 
+              (click)="nextStep()"
+              [disabled]="!canProceed()"
+              *ngIf="currentStep < 3"
+              class="next-button">
+              {{ 'documents.create.navigation.next' | translate }}
+              <span nz-icon nzType="right" nzTheme="outline"></span>
+            </button>
+            
+            <button 
+              nz-button 
+              nzType="primary" 
+              (click)="onSubmit()"
+              [nzLoading]="isSubmitting()"
+              [disabled]="!canSubmit()"
+              *ngIf="currentStep === 3"
+              class="submit-button">
+              <span nz-icon nzType="check" nzTheme="outline"></span>
+              {{ 'documents.create.navigation.create' | translate }}
+            </button>
+          </ng-container>
         </div>
       </nz-card>
     </div>
@@ -547,10 +589,19 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
       border-top: 1px solid #f0f0f0;
       display: flex;
       justify-content: space-between;
+      align-items: center;
+      gap: 16px;
     }
 
     .steps-action.rtl {
-      flex-direction: row-reverse;
+      direction: rtl;
+    }
+
+    /* Ensure buttons have proper spacing */
+    .steps-action .next-button,
+    .steps-action .previous-button,
+    .steps-action .submit-button {
+      flex-shrink: 0;
     }
 
     .form-section {
