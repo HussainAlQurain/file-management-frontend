@@ -513,6 +513,7 @@ import { Company } from '../../core/models/company.model';
   styles: [`
     .bulk-import-container {
       padding: 0;
+      overflow: visible;
     }
 
     .bulk-import-container.rtl {
@@ -520,25 +521,40 @@ import { Company } from '../../core/models/company.model';
     }
 
     .page-header-wrapper {
-      background: #fff;
-      margin: -24px -24px 24px;
-      padding: 24px;
+      background: linear-gradient(135deg, #fff 0%, #fafafa 100%);
+      margin: -24px -24px 24px -24px;
+      padding: 40px 48px 32px 48px;
       border-bottom: 1px solid #e8e8e8;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      position: relative;
+    }
+
+    .page-header-wrapper::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #1890ff 0%, #40a9ff 50%, #69c0ff 100%);
     }
 
     .page-header-content {
       max-width: 100%;
+      overflow: visible;
     }
 
     .header-top {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
+      overflow: visible;
     }
 
     .header-title-section {
       flex: 1;
+      padding-top: 8px;
     }
 
     .header-title-section.rtl-header {
@@ -546,23 +562,26 @@ import { Company } from '../../core/models/company.model';
     }
 
     .page-title {
-      margin: 0 0 8px 0;
-      font-size: 24px;
-      font-weight: 600;
-      color: #262626;
-      line-height: 1.35;
+      margin: 0 0 12px 0;
+      font-size: 28px;
+      font-weight: 700;
+      color: #1f1f1f;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
     }
 
     .page-subtitle {
       margin: 0;
-      color: #8c8c8c;
-      font-size: 14px;
+      color: #666;
+      font-size: 15px;
       line-height: 1.5;
+      font-weight: 400;
     }
 
     .header-actions {
       flex-shrink: 0;
       margin-left: 24px;
+      padding-top: 4px;
     }
 
     .header-actions.rtl-actions {
@@ -571,33 +590,75 @@ import { Company } from '../../core/models/company.model';
     }
 
     .action-button {
-      height: 40px;
-      padding: 0 16px;
+      height: 44px;
+      padding: 0 20px;
       font-size: 14px;
-      border-radius: 6px;
+      font-weight: 500;
+      border-radius: 8px;
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      border: 1px solid #d9d9d9;
+      background: #fff;
+      color: #262626;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .action-button:hover {
+      border-color: #40a9ff;
+      color: #1890ff;
+      box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+      transform: translateY(-1px);
     }
 
     .breadcrumb-section {
-      margin-top: 16px;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
     }
 
     .breadcrumb-section.rtl-breadcrumb {
       text-align: right;
     }
 
+    ::ng-deep .breadcrumb-section .ant-breadcrumb {
+      font-size: 14px;
+    }
+
+    ::ng-deep .breadcrumb-section .ant-breadcrumb a {
+      color: #1890ff;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    ::ng-deep .breadcrumb-section .ant-breadcrumb a:hover {
+      color: #40a9ff;
+    }
+
     .steps-card {
       margin-bottom: 24px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      border: 1px solid #f0f0f0;
+      overflow: hidden;
     }
 
     .steps-card.rtl-steps {
       direction: rtl;
     }
 
+    ::ng-deep .steps-card .ant-card-body {
+      padding: 32px;
+    }
+
     .content-card {
       margin-bottom: 24px;
+      overflow: visible;
+    }
+
+    .content-card .ant-card-body {
+      overflow: visible;
     }
 
     .file-info {
@@ -692,6 +753,27 @@ import { Company } from '../../core/models/company.model';
       font-weight: 500;
     }
 
+    /* Override shell layout constraints for bulk import */
+    ::ng-deep .inner-content {
+      overflow: visible !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
+      min-height: auto !important;
+      height: auto !important;
+    }
+
+    /* Ensure the main container and all child containers expand naturally */
+    ::ng-deep app-document-bulk-import-page,
+    ::ng-deep .bulk-import-container,
+    ::ng-deep .ant-card,
+    ::ng-deep .ant-card-body,
+    ::ng-deep .ant-row,
+    ::ng-deep .ant-col {
+      overflow: visible !important;
+      height: auto !important;
+      min-height: auto !important;
+    }
+
     /* RTL specific styles */
     ::ng-deep .rtl .ant-steps-item-tail::after {
       left: 0;
@@ -729,18 +811,53 @@ import { Company } from '../../core/models/company.model';
 
     /* Responsive design */
     @media (max-width: 768px) {
+      .page-header-wrapper {
+        padding: 32px 24px 24px 24px;
+        margin: -24px -24px 24px -24px;
+      }
+
       .header-top {
         flex-direction: column;
-        gap: 16px;
+        gap: 20px;
+        align-items: stretch;
+      }
+
+      .header-title-section {
+        padding-top: 0;
+      }
+
+      .page-title {
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
+
+      .page-subtitle {
+        font-size: 14px;
       }
 
       .header-actions {
         margin-left: 0;
         width: 100%;
+        padding-top: 0;
       }
 
       .header-actions.rtl-actions {
         margin-right: 0;
+      }
+
+      .action-button {
+        width: 100%;
+        justify-content: center;
+        height: 48px;
+      }
+
+      .breadcrumb-section {
+        margin-top: 16px;
+        padding-top: 12px;
+      }
+
+      ::ng-deep .steps-card .ant-card-body {
+        padding: 24px 16px;
       }
     }
   `],
