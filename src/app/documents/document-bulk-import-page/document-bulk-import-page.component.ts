@@ -573,6 +573,26 @@ export class DocumentBulkImportPageComponent implements OnInit {
   // File upload handler
   beforeUpload = (file: NzUploadFile): boolean => {
     console.log('beforeUpload called with file:', file);
+    
+    // Extract the actual File object and process it immediately
+    let actualFile: File | null = null;
+    
+    if (file.originFileObj) {
+      actualFile = file.originFileObj as File;
+    } else if ((file as any).file) {
+      actualFile = (file as any).file as File;
+    } else if (file instanceof File) {
+      actualFile = file;
+    }
+    
+    if (actualFile) {
+      console.log('Processing file in beforeUpload:', actualFile.name);
+      this.processSelectedFile(actualFile, file);
+    } else {
+      console.error('Could not extract file from beforeUpload');
+      this.message.error('Failed to process the selected file');
+    }
+    
     // Prevent automatic upload, we handle it manually
     return false;
   };
@@ -580,7 +600,14 @@ export class DocumentBulkImportPageComponent implements OnInit {
   // Custom upload request to handle files manually
   customUploadRequest = (item: any): any => {
     console.log('customUploadRequest called with:', item);
-    // We don't actually upload to server here, just mark as done
+    
+    // Mark the upload as successful immediately since we handle file processing in beforeUpload
+    if (item.onSuccess) {
+      setTimeout(() => {
+        item.onSuccess({}, item.file);
+      }, 0);
+    }
+    
     return { unsubscribe: () => {} };
   };
 
@@ -687,6 +714,7 @@ export class DocumentBulkImportPageComponent implements OnInit {
     console.log('Info type:', info.type);
     console.log('File list:', info.fileList);
     
+    // Update the file list for display purposes
     let newFileList = [...info.fileList];
     
     // Limit to 1 file
@@ -694,26 +722,29 @@ export class DocumentBulkImportPageComponent implements OnInit {
     
     if (newFileList.length > 0) {
       const nzFile = newFileList[0];
-      console.log('Processing file:', nzFile);
+      console.log('Updating file list with:', nzFile);
       
-      // Get the actual File object
-      let file: File | null = null;
+      // Just update the file list, processing is done in beforeUpload
+      this.fileList.set(newFileList);
       
-      if (nzFile.originFileObj) {
-        file = nzFile.originFileObj as File;
-      } else if ((nzFile as any).file) {
-        file = (nzFile as any).file as File;
-      } else if (nzFile instanceof File) {
-        file = nzFile;
-      }
-      
-      console.log('Extracted file:', file);
-      
-      if (file) {
-        this.processSelectedFile(file, nzFile);
-      } else {
-        console.error('Could not extract file from upload event');
-        this.message.error('Failed to process the selected file');
+      // Only process if the file wasn't already processed in beforeUpload
+      if (!this.uploadedFile() && info.type === 'success') {
+        // Get the actual File object as fallback
+        let file: File | null = null;
+        
+        if (nzFile.originFileObj) {
+          file = nzFile.originFileObj as File;
+        } else if ((nzFile as any).file) {
+          file = (nzFile as any).file as File;
+        } else if (nzFile instanceof File) {
+          file = nzFile;
+        }
+        
+        console.log('Fallback processing file:', file);
+        
+        if (file) {
+          this.processSelectedFile(file, nzFile);
+        }
       }
     } else {
       console.log('No files in list, clearing state');
