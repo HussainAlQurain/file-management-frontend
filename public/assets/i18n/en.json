@@ -713,6 +713,112 @@
     "reset": "Reset",
     "not_available": "N/A",
     "is_required": "is required",
-    "select_option": "Select an option"
+    "select_option": "Select an option",
+    "error": "Error",
+    "failed_to_load": "Failed to load {item}"
+  },
+  "bulk_import": {
+    "title": "Bulk Import Documents",
+    "subtitle": "Import multiple documents from Excel file",
+    "breadcrumb": "Bulk Import",
+    "back_to_documents": "Back to Documents",
+    "steps": {
+      "resource_type": "Select Resource Type",
+      "resource_type_desc": "Choose document type and download template",
+      "upload_file": "Upload Excel File", 
+      "upload_file_desc": "Fill template and upload your data",
+      "review_import": "Review & Import",
+      "review_import_desc": "Validate and process the import",
+      "results": "Results",
+      "results_desc": "View import results"
+    },
+    "step1": {
+      "title": "Step 1: Select Resource Type & Download Template",
+      "company": "Company",
+      "company_required": "Please select a company",
+      "company_placeholder": "Select a company",
+      "document_type": "Document Type",
+      "document_type_required": "Please select a document type",
+      "document_type_placeholder": "Select document type",
+      "fields_preview": "Document Fields Preview",
+      "field_required": "Required",
+      "field_options": "Options",
+      "download_template": "Download Excel Template",
+      "next_upload": "Next: Upload File"
+    },
+    "step2": {
+      "title": "Step 2: Upload Excel File",
+      "instructions": "Upload Instructions",
+      "instructions_desc": "Upload the Excel file you filled with document data. The file will be validated before processing.",
+      "drag_drop": "Click or drag Excel file to this area to upload",
+      "file_support": "Support for .xlsx and .xls files only",
+      "browse_files": "Or click here to browse files",
+      "file_info": "File Information",
+      "filename": "Filename",
+      "size": "Size",
+      "type": "Type",
+      "previous": "Previous",
+      "validate_continue": "Validate & Continue"
+    },
+    "step3": {
+      "title": "Step 3: Review & Import Options",
+      "validation_success": "File validation successful",
+      "validation_issues": "File validation completed with issues",
+      "data_rows_found": "Found {0} data rows",
+      "validation_issues_title": "Validation Issues",
+      "issues_count": "{0} issues",
+      "row": "Row",
+      "field": "Field",
+      "value": "Value",
+      "issue": "Issue",
+      "severity": "Severity",
+      "skip_invalid": "Skip invalid rows and continue with valid data",
+      "generate_codes": "Auto-generate resource codes for empty values",
+      "start_import": "Start Import"
+    },
+    "step4": {
+      "title": "Step 4: Import Results",
+      "success_title": "Successfully imported {0} documents",
+      "partial_title": "Partially completed: {0} successful, {1} failed",
+      "failure_title": "Import failed: {0} rows had errors",
+      "view_documents": "View Documents",
+      "import_more": "Import More",
+      "try_again": "Try Again",
+      "back_review": "Back to Review",
+      "start_over": "Start Over",
+      "import_errors": "Import Errors",
+      "errors_count": "{0} errors",
+      "created_documents": "Created Documents",
+      "created_count": "{0} created",
+      "resource_code": "Resource Code",
+      "created_at": "Created",
+      "view": "View"
+    },
+    "messages": {
+      "file_selected": "{0} file selected successfully",
+      "invalid_file": "Please select a valid Excel file (.xlsx or .xls)",
+      "file_processing_failed": "Failed to process the selected file",
+      "template_downloaded": "Template downloaded successfully",
+      "template_download_failed": "Failed to download template",
+      "validation_successful": "File validation successful",
+      "validation_issues": "File validated with {0} issues",
+      "validation_failed": "Failed to validate file",
+      "import_successful": "Successfully imported {0} documents",
+      "import_partial": "Partially completed: {0} successful, {1} failed",
+      "import_failed": "Import failed: {0} rows had errors",
+      "import_processing_failed": "Failed to process import"
+    },
+    "field_types": {
+      "TEXT": "Text",
+      "NUMBER": "Number", 
+      "DATE": "Date",
+      "BOOLEAN": "Boolean",
+      "SELECT": "Select",
+      "TEXTAREA": "Text Area"
+    },
+    "severities": {
+      "ERROR": "Error",
+      "WARNING": "Warning"
+    }
   }
 }

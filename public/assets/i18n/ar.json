@@ -713,6 +713,112 @@
     "reset": "إعادة تعيين",
     "not_available": "غير متوفر",
     "is_required": "مطلوب",
-    "select_option": "اختر خياراً"
+    "select_option": "اختر خياراً",
+    "error": "خطأ",
+    "failed_to_load": "فشل في تحميل {item}"
+  },
+  "bulk_import": {
+    "title": "استيراد الوثائق مجمعة",
+    "subtitle": "استيراد عدة وثائق من ملف Excel",
+    "breadcrumb": "استيراد مجمع",
+    "back_to_documents": "العودة إلى الوثائق",
+    "steps": {
+      "resource_type": "اختيار نوع المورد",
+      "resource_type_desc": "اختر نوع الوثيقة وحمل القالب",
+      "upload_file": "رفع ملف Excel",
+      "upload_file_desc": "املأ القالب وارفع بياناتك",
+      "review_import": "مراجعة والاستيراد",
+      "review_import_desc": "التحقق ومعالجة الاستيراد",
+      "results": "النتائج",
+      "results_desc": "عرض نتائج الاستيراد"
+    },
+    "step1": {
+      "title": "الخطوة 1: اختيار نوع المورد وتحميل القالب",
+      "company": "الشركة",
+      "company_required": "يرجى اختيار شركة",
+      "company_placeholder": "اختر شركة",
+      "document_type": "نوع الوثيقة",
+      "document_type_required": "يرجى اختيار نوع الوثيقة",
+      "document_type_placeholder": "اختر نوع الوثيقة",
+      "fields_preview": "معاينة حقول الوثيقة",
+      "field_required": "مطلوب",
+      "field_options": "الخيارات",
+      "download_template": "تحميل قالب Excel",
+      "next_upload": "التالي: رفع الملف"
+    },
+    "step2": {
+      "title": "الخطوة 2: رفع ملف Excel",
+      "instructions": "تعليمات الرفع",
+      "instructions_desc": "ارفع ملف Excel الذي ملأته ببيانات الوثائق. سيتم التحقق من صحة الملف قبل المعالجة.",
+      "drag_drop": "انقر أو اسحب ملف Excel إلى هذه المنطقة للرفع",
+      "file_support": "يدعم ملفات .xlsx و .xls فقط",
+      "browse_files": "أو انقر هنا لتصفح الملفات",
+      "file_info": "معلومات الملف",
+      "filename": "اسم الملف",
+      "size": "الحجم",
+      "type": "النوع",
+      "previous": "السابق",
+      "validate_continue": "التحقق والمتابعة"
+    },
+    "step3": {
+      "title": "الخطوة 3: مراجعة وخيارات الاستيراد",
+      "validation_success": "نجح التحقق من الملف",
+      "validation_issues": "اكتمل التحقق من الملف مع وجود مشاكل",
+      "data_rows_found": "تم العثور على {0} صف بيانات",
+      "validation_issues_title": "مشاكل التحقق",
+      "issues_count": "{0} مشكلة",
+      "row": "الصف",
+      "field": "الحقل",
+      "value": "القيمة",
+      "issue": "المشكلة",
+      "severity": "الخطورة",
+      "skip_invalid": "تخطي الصفوف غير الصحيحة والمتابعة مع البيانات الصحيحة",
+      "generate_codes": "إنشاء رموز الموارد تلقائياً للقيم الفارغة",
+      "start_import": "بدء الاستيراد"
+    },
+    "step4": {
+      "title": "الخطوة 4: نتائج الاستيراد",
+      "success_title": "تم استيراد {0} وثيقة بنجاح",
+      "partial_title": "اكتمل جزئياً: {0} نجح، {1} فشل",
+      "failure_title": "فشل الاستيراد: {0} صف به أخطاء",
+      "view_documents": "عرض الوثائق",
+      "import_more": "استيراد المزيد",
+      "try_again": "المحاولة مرة أخرى",
+      "back_review": "العودة إلى المراجعة",
+      "start_over": "البدء من جديد",
+      "import_errors": "أخطاء الاستيراد",
+      "errors_count": "{0} أخطاء",
+      "created_documents": "الوثائق المنشأة",
+      "created_count": "تم إنشاء {0}",
+      "resource_code": "رمز المورد",
+      "created_at": "تاريخ الإنشاء",
+      "view": "عرض"
+    },
+    "messages": {
+      "file_selected": "تم اختيار ملف {0} بنجاح",
+      "invalid_file": "يرجى اختيار ملف Excel صحيح (.xlsx أو .xls)",
+      "file_processing_failed": "فشل في معالجة الملف المختار",
+      "template_downloaded": "تم تحميل القالب بنجاح",
+      "template_download_failed": "فشل في تحميل القالب",
+      "validation_successful": "نجح التحقق من الملف",
+      "validation_issues": "تم التحقق من الملف مع {0} مشاكل",
+      "validation_failed": "فشل في التحقق من الملف",
+      "import_successful": "تم استيراد {0} وثيقة بنجاح",
+      "import_partial": "اكتمل جزئياً: {0} نجح، {1} فشل",
+      "import_failed": "فشل الاستيراد: {0} صف به أخطاء",
+      "import_processing_failed": "فشل في معالجة الاستيراد"
+    },
+    "field_types": {
+      "TEXT": "نص",
+      "NUMBER": "رقم",
+      "DATE": "تاريخ", 
+      "BOOLEAN": "منطقي",
+      "SELECT": "اختيار",
+      "TEXTAREA": "منطقة نص"
+    },
+    "severities": {
+      "ERROR": "خطأ",
+      "WARNING": "تحذير"
+    }
   }
 }

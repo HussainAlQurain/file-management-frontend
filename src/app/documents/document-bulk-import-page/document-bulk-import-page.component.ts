@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 // NG-ZORRO imports
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -30,6 +31,7 @@ import { NzResultModule } from 'ng-zorro-antd/result';
 import { BulkImportService } from '../../core/services/bulk-import.service';
 import { ResourceTypeService } from '../../core/services/resource-type.service';
 import { CompanyService } from '../../core/services/company.service';
+import { TranslationService } from '../../core/services/translation.service';
 import { BulkImportRequestDto, BulkImportResultDto, BulkImportErrorDto } from '../../core/models/bulk-import.model';
 import { ResourceType } from '../../core/models/resource-type.model';
 import { Company } from '../../core/models/company.model';
@@ -42,6 +44,7 @@ import { Company } from '../../core/models/company.model';
     RouterModule,
     FormsModule,
     ReactiveFormsModule,
+    TranslateModule,
     NzCardModule,
     NzButtonModule,
     NzIconModule,
@@ -64,48 +67,71 @@ import { Company } from '../../core/models/company.model';
     NzResultModule
   ],
   template: `
-    <div class="bulk-import-container">
+    <div class="bulk-import-container" [class.rtl]="translationService.isRTL()">
       <!-- Page Header -->
-      <nz-page-header
-        class="site-page-header"
-        nzTitle="Bulk Import Documents"
-        nzSubtitle="Import multiple documents from Excel file">
-        <nz-breadcrumb nz-page-header-breadcrumb>
-          <nz-breadcrumb-item>
-            <a routerLink="/documents">Documents</a>
-          </nz-breadcrumb-item>
-          <nz-breadcrumb-item>Bulk Import</nz-breadcrumb-item>
-        </nz-breadcrumb>
-
-        <nz-page-header-extra>
-          <button nz-button nzType="default" routerLink="/documents">
-            <nz-icon nzType="arrow-left"></nz-icon>
-            Back to Documents
-          </button>
-        </nz-page-header-extra>
-      </nz-page-header>
+      <div class="page-header-wrapper">
+        <div class="page-header-content">
+          <!-- Title and Actions Row -->
+          <div class="header-top">
+            <div class="header-title-section" [class.rtl-header]="translationService.isRTL()">
+              <h1 class="page-title">{{ 'bulk_import.title' | translate }}</h1>
+              <p class="page-subtitle">{{ 'bulk_import.subtitle' | translate }}</p>
+            </div>
+            <div class="header-actions" [class.rtl-actions]="translationService.isRTL()">
+              <nz-space nzSize="middle">
+                <button *nzSpaceItem nz-button nzType="default" routerLink="/documents" class="action-button">
+                  <nz-icon nzType="arrow-left" nzTheme="outline"></nz-icon>
+                  <span>{{ 'bulk_import.back_to_documents' | translate }}</span>
+                </button>
+              </nz-space>
+            </div>
+          </div>
+          
+          <!-- Breadcrumb -->
+          <div class="breadcrumb-section" [class.rtl-breadcrumb]="translationService.isRTL()">
+            <nz-breadcrumb>
+              <nz-breadcrumb-item>
+                <a routerLink="/documents">{{ 'nav.documents' | translate }}</a>
+              </nz-breadcrumb-item>
+              <nz-breadcrumb-item>{{ 'bulk_import.breadcrumb' | translate }}</nz-breadcrumb-item>
+            </nz-breadcrumb>
+          </div>
+        </div>
+      </div>
 
       <!-- Steps -->
       <nz-card class="steps-card">
-        <nz-steps [nzCurrent]="currentStep()" nzSize="small">
-          <nz-step nzTitle="Select Resource Type" nzDescription="Choose document type and download template"></nz-step>
-          <nz-step nzTitle="Upload Excel File" nzDescription="Fill template and upload your data"></nz-step>
-          <nz-step nzTitle="Review & Import" nzDescription="Validate and process the import"></nz-step>
-          <nz-step nzTitle="Results" nzDescription="View import results"></nz-step>
+        <nz-steps [nzCurrent]="currentStep()" nzSize="small" [class.rtl-steps]="translationService.isRTL()">
+          <nz-step 
+            [nzTitle]="'bulk_import.steps.resource_type' | translate" 
+            [nzDescription]="'bulk_import.steps.resource_type_desc' | translate">
+          </nz-step>
+          <nz-step 
+            [nzTitle]="'bulk_import.steps.upload_file' | translate" 
+            [nzDescription]="'bulk_import.steps.upload_file_desc' | translate">
+          </nz-step>
+          <nz-step 
+            [nzTitle]="'bulk_import.steps.review_import' | translate" 
+            [nzDescription]="'bulk_import.steps.review_import_desc' | translate">
+          </nz-step>
+          <nz-step 
+            [nzTitle]="'bulk_import.steps.results' | translate" 
+            [nzDescription]="'bulk_import.steps.results_desc' | translate">
+          </nz-step>
         </nz-steps>
       </nz-card>
 
       <!-- Step 1: Resource Type Selection -->
-      <nz-card *ngIf="currentStep() === 0" nzTitle="Step 1: Select Resource Type & Download Template">
+      <nz-card *ngIf="currentStep() === 0" [nzTitle]="'bulk_import.step1.title' | translate" class="content-card">
         <form nz-form [formGroup]="resourceTypeForm" nzLayout="vertical">
           <div nz-row [nzGutter]="[16, 16]">
             <div nz-col [nzSpan]="12">
               <nz-form-item>
-                <nz-form-label [nzRequired]="true">Company</nz-form-label>
-                <nz-form-control [nzErrorTip]="'Please select a company'">
+                <nz-form-label [nzRequired]="true">{{ 'bulk_import.step1.company' | translate }}</nz-form-label>
+                <nz-form-control [nzErrorTip]="'bulk_import.step1.company_required' | translate">
                   <nz-select 
                     formControlName="companyId" 
-                    nzPlaceHolder="Select a company"
+                    [nzPlaceHolder]="'bulk_import.step1.company_placeholder' | translate"
                     [nzLoading]="isLoadingCompanies()">
                     <nz-option 
                       *ngFor="let company of companies()" 
@@ -119,11 +145,11 @@ import { Company } from '../../core/models/company.model';
 
             <div nz-col [nzSpan]="12">
               <nz-form-item>
-                <nz-form-label [nzRequired]="true">Document Type</nz-form-label>
-                <nz-form-control [nzErrorTip]="'Please select a document type'">
+                <nz-form-label [nzRequired]="true">{{ 'bulk_import.step1.document_type' | translate }}</nz-form-label>
+                <nz-form-control [nzErrorTip]="'bulk_import.step1.document_type_required' | translate">
                   <nz-select 
                     formControlName="resourceTypeId" 
-                    nzPlaceHolder="Select document type"
+                    [nzPlaceHolder]="'bulk_import.step1.document_type_placeholder' | translate"
                     [nzLoading]="isLoadingResourceTypes()"
                     (ngModelChange)="onResourceTypeChange($event)">
                     <nz-option 
@@ -139,16 +165,18 @@ import { Company } from '../../core/models/company.model';
 
           <!-- Resource Type Fields Preview -->
           <div *ngIf="selectedResourceType()" class="mt-4">
-            <nz-divider nzText="Document Fields Preview" nzOrientation="left"></nz-divider>
+            <nz-divider [nzText]="'bulk_import.step1.fields_preview' | translate" nzOrientation="left"></nz-divider>
             <nz-descriptions nzBordered nzSize="small">
               <nz-descriptions-item 
                 *ngFor="let field of selectedResourceType()!.fields" 
                 [nzTitle]="field.label || field.name"
                 [nzSpan]="1">
-                <nz-tag [nzColor]="getFieldTypeColor(field.kind)">{{ field.kind }}</nz-tag>
-                <nz-tag *ngIf="field.required" nzColor="red">Required</nz-tag>
+                <nz-tag [nzColor]="getFieldTypeColor(field.kind)">
+                  {{ ('bulk_import.field_types.' + field.kind) | translate }}
+                </nz-tag>
+                <nz-tag *ngIf="field.required" nzColor="red">{{ 'bulk_import.step1.field_required' | translate }}</nz-tag>
                 <div *ngIf="field.options && field.options.length > 0" class="field-options">
-                  Options: {{ field.options.join(', ') }}
+                  {{ 'bulk_import.step1.field_options' | translate }}: {{ field.options.join(', ') }}
                 </div>
               </nz-descriptions-item>
             </nz-descriptions>
@@ -156,7 +184,7 @@ import { Company } from '../../core/models/company.model';
 
           <nz-divider></nz-divider>
 
-          <nz-space>
+          <nz-space [class.rtl-space]="translationService.isRTL()">
             <button 
               *nzSpaceItem
               nz-button 
@@ -165,7 +193,7 @@ import { Company } from '../../core/models/company.model';
               [disabled]="!resourceTypeForm.get('resourceTypeId')?.value"
               (click)="downloadTemplate()">
               <nz-icon nzType="download"></nz-icon>
-              Download Excel Template
+              <span>{{ 'bulk_import.step1.download_template' | translate }}</span>
             </button>
             <button 
               *nzSpaceItem
@@ -174,18 +202,18 @@ import { Company } from '../../core/models/company.model';
               [disabled]="!resourceTypeForm.get('resourceTypeId')?.value"
               (click)="nextStep()">
               <nz-icon nzType="arrow-right"></nz-icon>
-              Next: Upload File
+              <span>{{ 'bulk_import.step1.next_upload' | translate }}</span>
             </button>
           </nz-space>
         </form>
       </nz-card>
 
       <!-- Step 2: File Upload -->
-      <nz-card *ngIf="currentStep() === 1" nzTitle="Step 2: Upload Excel File">
+      <nz-card *ngIf="currentStep() === 1" [nzTitle]="'bulk_import.step2.title' | translate" class="content-card">
         <nz-alert
           nzType="info"
-          nzMessage="Upload Instructions"
-          nzDescription="Upload the Excel file you filled with document data. The file will be validated before processing."
+          [nzMessage]="'bulk_import.step2.instructions' | translate"
+          [nzDescription]="'bulk_import.step2.instructions_desc' | translate"
           nzShowIcon
           class="mb-4">
         </nz-alert>
@@ -212,25 +240,25 @@ import { Company } from '../../core/models/company.model';
               <p class="ant-upload-drag-icon">
                 <nz-icon nzType="inbox"></nz-icon>
               </p>
-              <p class="ant-upload-text">Click or drag Excel file to this area to upload</p>
-              <p class="ant-upload-hint">Support for .xlsx and .xls files only</p>
+              <p class="ant-upload-text">{{ 'bulk_import.step2.drag_drop' | translate }}</p>
+              <p class="ant-upload-hint">{{ 'bulk_import.step2.file_support' | translate }}</p>
             </nz-upload>
             
             <!-- Fallback button -->
             <div class="mt-3">
               <button nz-button nzType="dashed" nzBlock (click)="fileInput.click()">
                 <nz-icon nzType="folder-open"></nz-icon>
-                Or click here to browse files
+                <span>{{ 'bulk_import.step2.browse_files' | translate }}</span>
               </button>
             </div>
           </div>
 
           <div nz-col [nzSpan]="12">
             <div *ngIf="uploadedFile()" class="file-info">
-              <nz-descriptions nzBordered nzSize="small" nzTitle="File Information">
-                <nz-descriptions-item nzTitle="Filename">{{ uploadedFile()!.name }}</nz-descriptions-item>
-                <nz-descriptions-item nzTitle="Size">{{ formatFileSize(uploadedFile()!.size) }}</nz-descriptions-item>
-                <nz-descriptions-item nzTitle="Type">{{ uploadedFile()!.type || 'Unknown' }}</nz-descriptions-item>
+              <nz-descriptions nzBordered nzSize="small" [nzTitle]="'bulk_import.step2.file_info' | translate">
+                <nz-descriptions-item [nzTitle]="'bulk_import.step2.filename' | translate">{{ uploadedFile()!.name }}</nz-descriptions-item>
+                <nz-descriptions-item [nzTitle]="'bulk_import.step2.size' | translate">{{ formatFileSize(uploadedFile()!.size) }}</nz-descriptions-item>
+                <nz-descriptions-item [nzTitle]="'bulk_import.step2.type' | translate">{{ uploadedFile()!.type || ('common.not_available' | translate) }}</nz-descriptions-item>
               </nz-descriptions>
             </div>
           </div>
@@ -238,10 +266,10 @@ import { Company } from '../../core/models/company.model';
 
         <nz-divider></nz-divider>
 
-        <nz-space>
+        <nz-space [class.rtl-space]="translationService.isRTL()">
           <button *nzSpaceItem nz-button nzType="default" (click)="previousStep()">
             <nz-icon nzType="arrow-left"></nz-icon>
-            Previous
+            <span>{{ 'bulk_import.step2.previous' | translate }}</span>
           </button>
           <button 
             *nzSpaceItem
@@ -250,19 +278,19 @@ import { Company } from '../../core/models/company.model';
             [disabled]="!uploadedFile()"
             (click)="validateFile()">
             <nz-icon nzType="check-circle"></nz-icon>
-            Validate & Continue
+            <span>{{ 'bulk_import.step2.validate_continue' | translate }}</span>
           </button>
         </nz-space>
       </nz-card>
 
       <!-- Step 3: Review & Import Options -->
-      <nz-card *ngIf="currentStep() === 2" nzTitle="Step 3: Review & Import Options">
+      <nz-card *ngIf="currentStep() === 2" [nzTitle]="'bulk_import.step3.title' | translate" class="content-card">
         <!-- Validation Results -->
         <div *ngIf="validationResult()" class="validation-results mb-4">
           <nz-alert
             [nzType]="validationResult()!.errors.length === 0 ? 'success' : 'warning'"
-            [nzMessage]="validationResult()!.errors.length === 0 ? 'File validation successful' : 'File validation completed with issues'"
-            [nzDescription]="'Found ' + validationResult()!.totalRows + ' data rows'"
+            [nzMessage]="validationResult()!.errors.length === 0 ? ('bulk_import.step3.validation_success' | translate) : ('bulk_import.step3.validation_issues' | translate)"
+            [nzDescription]="getDataRowsMessage(validationResult()!.totalRows)"
             nzShowIcon>
           </nz-alert>
 
@@ -270,21 +298,21 @@ import { Company } from '../../core/models/company.model';
           <div *ngIf="validationResult()!.errors.length > 0" class="mt-4">
             <nz-collapse>
               <nz-collapse-panel 
-                nzHeader="Validation Issues" 
+                [nzHeader]="'bulk_import.step3.validation_issues_title' | translate" 
                 [nzActive]="true"
                 [nzExtra]="errorCountTemplate">
                 <ng-template #errorCountTemplate>
-                  <nz-tag nzColor="orange">{{ validationResult()!.errors.length }} issues</nz-tag>
+                  <nz-tag nzColor="orange">{{ getIssuesCountMessage(validationResult()!.errors.length) }}</nz-tag>
                 </ng-template>
 
                 <nz-table [nzData]="validationResult()!.errors" nzSize="small" [nzPageSize]="10">
                   <thead>
                     <tr>
-                      <th>Row</th>
-                      <th>Field</th>
-                      <th>Value</th>
-                      <th>Issue</th>
-                      <th>Severity</th>
+                      <th>{{ 'bulk_import.step3.row' | translate }}</th>
+                      <th>{{ 'bulk_import.step3.field' | translate }}</th>
+                      <th>{{ 'bulk_import.step3.value' | translate }}</th>
+                      <th>{{ 'bulk_import.step3.issue' | translate }}</th>
+                      <th>{{ 'bulk_import.step3.severity' | translate }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -295,7 +323,7 @@ import { Company } from '../../core/models/company.model';
                       <td>{{ error.errorMessage }}</td>
                       <td>
                         <nz-tag [nzColor]="error.severity === 'ERROR' ? 'red' : 'orange'">
-                          {{ error.severity }}
+                          {{ ('bulk_import.severities.' + error.severity) | translate }}
                         </nz-tag>
                       </td>
                     </tr>
@@ -311,7 +339,7 @@ import { Company } from '../../core/models/company.model';
           <nz-form-item>
             <nz-form-control>
               <label nz-checkbox formControlName="skipInvalidRows">
-                Skip invalid rows and continue with valid data
+                {{ 'bulk_import.step3.skip_invalid' | translate }}
               </label>
             </nz-form-control>
           </nz-form-item>
@@ -319,7 +347,7 @@ import { Company } from '../../core/models/company.model';
           <nz-form-item>
             <nz-form-control>
               <label nz-checkbox formControlName="generateResourceCodes">
-                Auto-generate resource codes for empty values
+                {{ 'bulk_import.step3.generate_codes' | translate }}
               </label>
             </nz-form-control>
           </nz-form-item>
@@ -327,10 +355,10 @@ import { Company } from '../../core/models/company.model';
 
         <nz-divider></nz-divider>
 
-        <nz-space>
+        <nz-space [class.rtl-space]="translationService.isRTL()">
           <button *nzSpaceItem nz-button nzType="default" (click)="previousStep()">
             <nz-icon nzType="arrow-left"></nz-icon>
-            Previous
+            <span>{{ 'bulk_import.step2.previous' | translate }}</span>
           </button>
           <button 
             *nzSpaceItem
@@ -340,28 +368,28 @@ import { Company } from '../../core/models/company.model';
             [disabled]="!canProceedWithImport()"
             (click)="processImport()">
             <nz-icon nzType="cloud-upload"></nz-icon>
-            Start Import
+            <span>{{ 'bulk_import.step3.start_import' | translate }}</span>
           </button>
         </nz-space>
       </nz-card>
 
       <!-- Step 4: Results -->
-      <nz-card *ngIf="currentStep() === 3" nzTitle="Step 4: Import Results">
+      <nz-card *ngIf="currentStep() === 3" [nzTitle]="'bulk_import.step4.title' | translate" class="content-card">
         <div *ngIf="importResult()">
           <!-- Success Result -->
           <nz-result 
             *ngIf="importResult()!.failedRows === 0"
             nzStatus="success"
-            [nzTitle]="'Successfully imported ' + importResult()!.successfulRows + ' documents'"
+            [nzTitle]="getSuccessTitle(importResult()!.successfulRows)"
             [nzSubTitle]="importResult()!.summary">
             <div nz-result-extra>
               <button nz-button nzType="primary" routerLink="/documents">
                 <nz-icon nzType="unordered-list"></nz-icon>
-                View Documents
+                <span>{{ 'bulk_import.step4.view_documents' | translate }}</span>
               </button>
               <button nz-button nzType="default" (click)="startNewImport()">
                 <nz-icon nzType="plus"></nz-icon>
-                Import More
+                <span>{{ 'bulk_import.step4.import_more' | translate }}</span>
               </button>
             </div>
           </nz-result>
@@ -370,16 +398,16 @@ import { Company } from '../../core/models/company.model';
           <nz-result 
             *ngIf="importResult()!.failedRows > 0 && importResult()!.successfulRows > 0"
             nzStatus="warning"
-            [nzTitle]="'Partially completed: ' + importResult()!.successfulRows + ' successful, ' + importResult()!.failedRows + ' failed'"
+            [nzTitle]="getPartialTitle(importResult()!.successfulRows, importResult()!.failedRows)"
             [nzSubTitle]="importResult()!.summary">
             <div nz-result-extra>
               <button nz-button nzType="primary" routerLink="/documents">
                 <nz-icon nzType="unordered-list"></nz-icon>
-                View Documents
+                <span>{{ 'bulk_import.step4.view_documents' | translate }}</span>
               </button>
               <button nz-button nzType="default" (click)="startNewImport()">
                 <nz-icon nzType="plus"></nz-icon>
-                Try Again
+                <span>{{ 'bulk_import.step4.try_again' | translate }}</span>
               </button>
             </div>
           </nz-result>
@@ -388,16 +416,16 @@ import { Company } from '../../core/models/company.model';
           <nz-result 
             *ngIf="importResult()!.failedRows > 0 && importResult()!.successfulRows === 0"
             nzStatus="error"
-            [nzTitle]="'Import failed: ' + importResult()!.failedRows + ' rows had errors'"
+            [nzTitle]="getFailureTitle(importResult()!.failedRows)"
             [nzSubTitle]="importResult()!.summary">
             <div nz-result-extra>
               <button nz-button nzType="primary" (click)="previousStep()">
                 <nz-icon nzType="arrow-left"></nz-icon>
-                Back to Review
+                <span>{{ 'bulk_import.step4.back_review' | translate }}</span>
               </button>
               <button nz-button nzType="default" (click)="startNewImport()">
                 <nz-icon nzType="reload"></nz-icon>
-                Start Over
+                <span>{{ 'bulk_import.step4.start_over' | translate }}</span>
               </button>
             </div>
           </nz-result>
@@ -406,20 +434,20 @@ import { Company } from '../../core/models/company.model';
           <div *ngIf="importResult()!.errors.length > 0" class="import-errors mt-4">
             <nz-collapse>
               <nz-collapse-panel 
-                nzHeader="Import Errors" 
+                [nzHeader]="'bulk_import.step4.import_errors' | translate" 
                 [nzExtra]="errorCountTemplate">
                 <ng-template #errorCountTemplate>
-                  <nz-tag nzColor="red">{{ importResult()!.errors.length }} errors</nz-tag>
+                  <nz-tag nzColor="red">{{ getErrorsCountMessage(importResult()!.errors.length) }}</nz-tag>
                 </ng-template>
 
                 <nz-table [nzData]="importResult()!.errors" nzSize="small" [nzPageSize]="10">
                   <thead>
                     <tr>
-                      <th>Row</th>
-                      <th>Field</th>
-                      <th>Value</th>
-                      <th>Error</th>
-                      <th>Severity</th>
+                      <th>{{ 'bulk_import.step3.row' | translate }}</th>
+                      <th>{{ 'bulk_import.step3.field' | translate }}</th>
+                      <th>{{ 'bulk_import.step3.value' | translate }}</th>
+                      <th>{{ 'common.error' | translate }}</th>
+                      <th>{{ 'bulk_import.step3.severity' | translate }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -430,7 +458,7 @@ import { Company } from '../../core/models/company.model';
                       <td>{{ error.errorMessage }}</td>
                       <td>
                         <nz-tag [nzColor]="error.severity === 'ERROR' ? 'red' : 'orange'">
-                          {{ error.severity }}
+                          {{ ('bulk_import.severities.' + error.severity) | translate }}
                         </nz-tag>
                       </td>
                     </tr>
@@ -444,19 +472,19 @@ import { Company } from '../../core/models/company.model';
           <div *ngIf="importResult()!.createdDocuments.length > 0" class="created-documents mt-4">
             <nz-collapse>
               <nz-collapse-panel 
-                nzHeader="Created Documents" 
+                [nzHeader]="'bulk_import.step4.created_documents' | translate" 
                 [nzExtra]="successCountTemplate">
                 <ng-template #successCountTemplate>
-                  <nz-tag nzColor="green">{{ importResult()!.createdDocuments.length }} created</nz-tag>
+                  <nz-tag nzColor="green">{{ getCreatedCountMessage(importResult()!.createdDocuments.length) }}</nz-tag>
                 </ng-template>
 
                 <nz-table [nzData]="importResult()!.createdDocuments" nzSize="small" [nzPageSize]="10">
                   <thead>
                     <tr>
-                      <th>Title</th>
-                      <th>Resource Code</th>
-                      <th>Created</th>
-                      <th>Actions</th>
+                      <th>{{ 'documents.table.title' | translate }}</th>
+                      <th>{{ 'bulk_import.step4.resource_code' | translate }}</th>
+                      <th>{{ 'bulk_import.step4.created_at' | translate }}</th>
+                      <th>{{ 'documents.table.actions' | translate }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -469,7 +497,7 @@ import { Company } from '../../core/models/company.model';
                       <td>
                         <a nz-button nzType="link" nzSize="small" [routerLink]="['/documents', doc.id]">
                           <nz-icon nzType="eye"></nz-icon>
-                          View
+                          <span>{{ 'bulk_import.step4.view' | translate }}</span>
                         </a>
                       </td>
                     </tr>
@@ -487,13 +515,88 @@ import { Company } from '../../core/models/company.model';
       padding: 0;
     }
 
-    .site-page-header {
+    .bulk-import-container.rtl {
+      direction: rtl;
+    }
+
+    .page-header-wrapper {
       background: #fff;
       margin: -24px -24px 24px;
-      padding: 16px 24px;
+      padding: 24px;
+      border-bottom: 1px solid #e8e8e8;
+    }
+
+    .page-header-content {
+      max-width: 100%;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .header-title-section {
+      flex: 1;
+    }
+
+    .header-title-section.rtl-header {
+      text-align: right;
+    }
+
+    .page-title {
+      margin: 0 0 8px 0;
+      font-size: 24px;
+      font-weight: 600;
+      color: #262626;
+      line-height: 1.35;
+    }
+
+    .page-subtitle {
+      margin: 0;
+      color: #8c8c8c;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .header-actions {
+      flex-shrink: 0;
+      margin-left: 24px;
+    }
+
+    .header-actions.rtl-actions {
+      margin-left: 0;
+      margin-right: 24px;
+    }
+
+    .action-button {
+      height: 40px;
+      padding: 0 16px;
+      font-size: 14px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .breadcrumb-section {
+      margin-top: 16px;
+    }
+
+    .breadcrumb-section.rtl-breadcrumb {
+      text-align: right;
     }
 
     .steps-card {
+      margin-bottom: 24px;
+    }
+
+    .steps-card.rtl-steps {
+      direction: rtl;
+    }
+
+    .content-card {
       margin-bottom: 24px;
     }
 
@@ -501,6 +604,7 @@ import { Company } from '../../core/models/company.model';
       background: #fafafa;
       padding: 16px;
       border-radius: 6px;
+      border: 1px solid #d9d9d9;
     }
 
     .field-options {
@@ -513,20 +617,53 @@ import { Company } from '../../core/models/company.model';
       background: #fafafa;
       padding: 16px;
       border-radius: 6px;
+      border: 1px solid #d9d9d9;
     }
 
     .import-errors, .created-documents {
       background: #fafafa;
       padding: 16px;
       border-radius: 6px;
+      border: 1px solid #d9d9d9;
+    }
+
+    .rtl-space {
+      direction: rtl;
+    }
+
+    .rtl-space .ant-space-item {
+      margin-left: 8px;
+      margin-right: 0;
     }
 
     ::ng-deep .ant-upload.ant-upload-drag {
       border-radius: 6px;
+      border: 1px dashed #d9d9d9;
+      background: #fafafa;
+      transition: border-color 0.3s ease;
+    }
+
+    ::ng-deep .ant-upload.ant-upload-drag:hover {
+      border-color: #40a9ff;
     }
 
     ::ng-deep .ant-upload-drag .ant-upload-btn {
       padding: 40px 16px !important;
+    }
+
+    ::ng-deep .ant-upload-drag .ant-upload-drag-icon {
+      margin-bottom: 16px;
+    }
+
+    ::ng-deep .ant-upload-drag .ant-upload-text {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    ::ng-deep .ant-upload-drag .ant-upload-hint {
+      font-size: 14px;
+      color: #999;
     }
 
     ::ng-deep .ant-result-extra {
@@ -536,6 +673,76 @@ import { Company } from '../../core/models/company.model';
     ::ng-deep .ant-result-extra .ant-btn {
       margin-right: 8px;
     }
+
+    ::ng-deep .rtl .ant-result-extra .ant-btn {
+      margin-right: 0;
+      margin-left: 8px;
+    }
+
+    ::ng-deep .ant-steps-item-title {
+      font-weight: 500;
+    }
+
+    ::ng-deep .ant-card-head-title {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    ::ng-deep .ant-form-item-label > label {
+      font-weight: 500;
+    }
+
+    /* RTL specific styles */
+    ::ng-deep .rtl .ant-steps-item-tail::after {
+      left: 0;
+      right: auto;
+    }
+
+    ::ng-deep .rtl .ant-steps-item-icon {
+      margin-left: 8px;
+      margin-right: 0;
+    }
+
+    ::ng-deep .rtl .ant-breadcrumb {
+      direction: rtl;
+    }
+
+    ::ng-deep .rtl .ant-breadcrumb-separator {
+      transform: scaleX(-1);
+    }
+
+    /* Animation for smooth transitions */
+    .content-card {
+      animation: fadeInUp 0.3s ease;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .header-top {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .header-actions {
+        margin-left: 0;
+        width: 100%;
+      }
+
+      .header-actions.rtl-actions {
+        margin-right: 0;
+      }
+    }
   `],
   providers: [NzMessageService]
 })
@@ -543,6 +750,8 @@ export class DocumentBulkImportPageComponent implements OnInit {
   private bulkImportService = inject(BulkImportService);
   private resourceTypeService = inject(ResourceTypeService);
   private companyService = inject(CompanyService);
+  public translationService = inject(TranslationService);
+  private translateService = inject(TranslateService);
   private fb = inject(FormBuilder);
   private destroyRef = inject(DestroyRef);
   private router = inject(Router);
@@ -590,7 +799,7 @@ export class DocumentBulkImportPageComponent implements OnInit {
       this.processSelectedFile(actualFile, file);
     } else {
       console.error('Could not extract file from beforeUpload');
-      this.message.error('Failed to process the selected file');
+      this.message.error(this.translateService.instant('bulk_import.messages.file_processing_failed'));
     }
     
     // Prevent automatic upload, we handle it manually
@@ -654,7 +863,7 @@ export class DocumentBulkImportPageComponent implements OnInit {
         },
         error: () => {
           this.isLoadingCompanies.set(false);
-          this.message.error('Failed to load companies');
+          this.message.error(this.translateService.instant('common.failed_to_load', { item: this.translateService.instant('bulk_import.step1.company') }));
         }
       });
   }
@@ -670,7 +879,7 @@ export class DocumentBulkImportPageComponent implements OnInit {
         },
         error: () => {
           this.isLoadingResourceTypes.set(false);
-          this.message.error('Failed to load resource types');
+          this.message.error(this.translateService.instant('common.failed_to_load', { item: this.translateService.instant('bulk_import.step1.document_type') }));
         }
       });
   }
@@ -700,11 +909,11 @@ export class DocumentBulkImportPageComponent implements OnInit {
           const filename = `${resourceType?.code || 'template'}_bulk_import_template.xlsx`;
           this.bulkImportService.downloadBlob(blob, filename);
           this.isDownloadingTemplate.set(false);
-          this.message.success('Template downloaded successfully');
+          this.message.success(this.translateService.instant('bulk_import.messages.template_downloaded'));
         },
         error: () => {
           this.isDownloadingTemplate.set(false);
-          this.message.error('Failed to download template');
+          this.message.error(this.translateService.instant('bulk_import.messages.template_download_failed'));
         }
       });
   }
@@ -786,7 +995,7 @@ export class DocumentBulkImportPageComponent implements OnInit {
                        file.name.toLowerCase().endsWith('.xls');
     
     if (!isValidType) {
-      this.message.error('Please select a valid Excel file (.xlsx or .xls)');
+      this.message.error(this.translateService.instant('bulk_import.messages.invalid_file'));
       this.fileList.set([]);
       this.uploadedFile.set(null);
       return;
@@ -808,7 +1017,7 @@ export class DocumentBulkImportPageComponent implements OnInit {
     }
     
     this.uploadedFile.set(file);
-    this.message.success(`${file.name} file selected successfully`);
+    this.message.success(this.translateService.instant('bulk_import.messages.file_selected', { 0: file.name }));
     console.log('File stored successfully:', file.name);
   }
 
@@ -828,14 +1037,14 @@ export class DocumentBulkImportPageComponent implements OnInit {
           this.nextStep();
           
           if (result.errors.length === 0) {
-            this.message.success('File validation successful');
+            this.message.success(this.translateService.instant('bulk_import.messages.validation_successful'));
           } else {
-            this.message.warning(`File validated with ${result.errors.length} issues`);
+            this.message.warning(this.translateService.instant('bulk_import.messages.validation_issues', { 0: result.errors.length }));
           }
         },
         error: () => {
           this.isValidating.set(false);
-          this.message.error('Failed to validate file');
+          this.message.error(this.translateService.instant('bulk_import.messages.validation_failed'));
         }
       });
   }
@@ -874,16 +1083,16 @@ export class DocumentBulkImportPageComponent implements OnInit {
           this.nextStep();
           
           if (result.failedRows === 0) {
-            this.message.success(`Successfully imported ${result.successfulRows} documents`);
+            this.message.success(this.translateService.instant('bulk_import.messages.import_successful', { 0: result.successfulRows }));
           } else if (result.successfulRows > 0) {
-            this.message.warning(`Partially completed: ${result.successfulRows} successful, ${result.failedRows} failed`);
+            this.message.warning(this.translateService.instant('bulk_import.messages.import_partial', { 0: result.successfulRows, 1: result.failedRows }));
           } else {
-            this.message.error(`Import failed: ${result.failedRows} rows had errors`);
+            this.message.error(this.translateService.instant('bulk_import.messages.import_failed', { 0: result.failedRows }));
           }
         },
         error: () => {
           this.isProcessing.set(false);
-          this.message.error('Failed to process import');
+          this.message.error(this.translateService.instant('bulk_import.messages.import_processing_failed'));
         }
       });
   }
@@ -933,5 +1142,34 @@ export class DocumentBulkImportPageComponent implements OnInit {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  // Translation helper methods
+  getDataRowsMessage(count: number): string {
+    return this.translateService.instant('bulk_import.step3.data_rows_found', { 0: count });
+  }
+
+  getIssuesCountMessage(count: number): string {
+    return this.translateService.instant('bulk_import.step3.issues_count', { 0: count });
+  }
+
+  getSuccessTitle(count: number): string {
+    return this.translateService.instant('bulk_import.step4.success_title', { 0: count });
+  }
+
+  getPartialTitle(successful: number, failed: number): string {
+    return this.translateService.instant('bulk_import.step4.partial_title', { 0: successful, 1: failed });
+  }
+
+  getFailureTitle(count: number): string {
+    return this.translateService.instant('bulk_import.step4.failure_title', { 0: count });
+  }
+
+  getErrorsCountMessage(count: number): string {
+    return this.translateService.instant('bulk_import.step4.errors_count', { 0: count });
+  }
+
+  getCreatedCountMessage(count: number): string {
+    return this.translateService.instant('bulk_import.step4.created_count', { 0: count });
   }
 } 
