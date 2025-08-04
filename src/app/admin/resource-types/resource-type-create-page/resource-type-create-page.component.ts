@@ -148,6 +148,7 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
                       nzType="text" 
                       nzSize="small" 
                       nzDanger 
+                      type="button"
                       (click)="removeField(i)"
                       nz-tooltip
                       [nzTooltipTitle]="'admin.resource_types.create.form.remove_field' | translate">
@@ -240,7 +241,7 @@ import { SnackbarService } from '../../../core/services/snackbar.service';
             </div>
 
             <div class="add-field-container">
-              <button nz-button nzType="dashed" (click)="addField()" class="add-field-button">
+              <button nz-button nzType="dashed" type="button" (click)="addField()" class="add-field-button">
                 <nz-icon nzType="plus"></nz-icon>
                 {{ 'admin.resource_types.create.form.add_field' | translate }}
               </button>
