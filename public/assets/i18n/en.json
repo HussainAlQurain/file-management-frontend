@@ -418,7 +418,8 @@
       "current_page": "Current Page"
     },
     "search": {
-      "placeholder": "Search by title or resource code..."
+      "placeholder": "Search by title or resource code...",
+      "global_placeholder": "Search anything... (e.g., title, code, custom fields, 2024-01-15)"
     },
     "filters": {
       "title": "Filter Documents",

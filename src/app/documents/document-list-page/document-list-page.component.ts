@@ -237,7 +237,6 @@ import { Company } from '../../core/models/company.model';
               <th nzColumnKey="title" [nzSortFn]="true" [nzWidth]="customFieldColumns().length > 0 ? '20%' : '30%'">{{ 'documents.table.title' | translate }}</th>
               <th nzColumnKey="resourceCode" [nzSortFn]="true" nzWidth="15%">{{ 'documents.table.resource_code' | translate }}</th>
               <th *ngIf="!currentResourceType()" nzWidth="12%">{{ 'documents.table.type' | translate }}</th>
-              <th nzWidth="12%">{{ 'documents.table.company' | translate }}</th>
               <th nzColumnKey="status" [nzSortFn]="true" nzWidth="10%">{{ 'documents.table.status' | translate }}</th>
               <th nzColumnKey="createdAt" [nzSortFn]="true" nzWidth="13%">{{ 'documents.table.created' | translate }}</th>
               <th nzWidth="8%">{{ 'documents.table.owner' | translate }}</th>
@@ -282,12 +281,6 @@ import { Company } from '../../core/models/company.model';
               <td *ngIf="!currentResourceType()">
                 <span *ngIf="doc.resourceType">{{ doc.resourceType.name }}</span>
                 <span *ngIf="!doc.resourceType" class="text-gray-400">{{ 'common.not_available' | translate }}</span>
-              </td>
-              
-              <!-- Company -->
-              <td>
-                <span *ngIf="doc.company">{{ doc.company.name }}</span>
-                <span *ngIf="!doc.company" class="text-gray-400">{{ 'common.not_available' | translate }}</span>
               </td>
               
               <!-- Status -->
