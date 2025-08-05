@@ -113,7 +113,7 @@ import { Company } from '../../core/models/company.model';
                 <input 
                   type="text" 
                   nz-input 
-                  [placeholder]="'documents.search.placeholder' | translate"
+                  [placeholder]="'documents.search.global_placeholder' | translate"
                   [(ngModel)]="searchQuery"
                   (keyup.enter)="onSearch()"
                   (ngModelChange)="onSearchChange($event)" />
@@ -948,8 +948,11 @@ export class DocumentListPageComponent implements OnInit {
   
   onSearch(): void {
     if (this.searchQuery) {
-      this.query.titleContains = this.searchQuery;
+      this.query.globalSearch = this.searchQuery;
+      // Remove specific title search when using global search
+      delete this.query.titleContains;
     } else {
+      delete this.query.globalSearch;
       delete this.query.titleContains;
     }
     this.query.page = 0;
@@ -958,6 +961,7 @@ export class DocumentListPageComponent implements OnInit {
   
   onSearchChange(value: string): void {
     if (!value) {
+      delete this.query.globalSearch;
       delete this.query.titleContains;
       this.query.page = 0;
       this.loadDocuments();

@@ -51,6 +51,7 @@ export interface DocQuery {
   size?: number;
   sort?: string;
   search?: string; // General search term, can be used by backend if it supports a global search
+  globalSearch?: string; // Unified search across all fields (title, resourceCode, fieldValues, tags, etc.)
   titleContains?: string; // Specific to title
   resourceCodeEquals?: string;
   resourceTypeIdEquals?: number; // Renamed from resourceTypeId for clarity with backend
