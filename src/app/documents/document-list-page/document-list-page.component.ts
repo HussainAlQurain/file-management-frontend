@@ -33,7 +33,7 @@ import { ResourceTypeService } from '../../core/services/resource-type.service';
 import { CompanyService } from '../../core/services/company.service';
 import { TranslationService } from '../../core/services/translation.service';
 import { Document, DocQuery, Page } from '../../core/models/document.model';
-import { ResourceType } from '../../core/models/resource-type.model';
+import { ResourceType, FieldDefinitionDto, FieldType } from '../../core/models/resource-type.model';
 import { Company } from '../../core/models/company.model';
 
 @Component({
@@ -228,9 +228,15 @@ import { Company } from '../../core/models/company.model';
           
           <thead>
             <tr>
-              <th nzColumnKey="title" [nzSortFn]="true" nzWidth="30%">{{ 'documents.table.title' | translate }}</th>
+              <!-- Custom Field Columns (displayed first when resource type is selected) -->
+              <th *ngFor="let field of customFieldColumns()" nzWidth="12%" [nzSortFn]="false">
+                {{ field.label || field.name }}
+              </th>
+              
+              <!-- Standard Columns -->
+              <th nzColumnKey="title" [nzSortFn]="true" [nzWidth]="customFieldColumns().length > 0 ? '20%' : '30%'">{{ 'documents.table.title' | translate }}</th>
               <th nzColumnKey="resourceCode" [nzSortFn]="true" nzWidth="15%">{{ 'documents.table.resource_code' | translate }}</th>
-              <th nzWidth="12%">{{ 'documents.table.type' | translate }}</th>
+              <th *ngIf="!currentResourceType()" nzWidth="12%">{{ 'documents.table.type' | translate }}</th>
               <th nzWidth="12%">{{ 'documents.table.company' | translate }}</th>
               <th nzColumnKey="status" [nzSortFn]="true" nzWidth="10%">{{ 'documents.table.status' | translate }}</th>
               <th nzColumnKey="createdAt" [nzSortFn]="true" nzWidth="13%">{{ 'documents.table.created' | translate }}</th>
@@ -240,6 +246,19 @@ import { Company } from '../../core/models/company.model';
           </thead>
           <tbody>
             <tr *ngFor="let doc of documentTable.data">
+              <!-- Custom Field Values -->
+              <td *ngFor="let field of customFieldColumns()">
+                <span *ngIf="doc.fieldValues && doc.fieldValues[field.name]; else noValue" 
+                      class="field-value"
+                      [nz-tooltip]="doc.fieldValues[field.name]">
+                  {{ formatFieldValue(doc.fieldValues[field.name], field.kind) }}
+                </span>
+                <ng-template #noValue>
+                  <span class="text-gray-400">—</span>
+                </ng-template>
+              </td>
+              
+              <!-- Title -->
               <td>
                 <div class="title-cell">
                   <nz-avatar 
@@ -253,25 +272,39 @@ import { Company } from '../../core/models/company.model';
                   </a>
                 </div>
               </td>
+              
+              <!-- Resource Code -->
               <td>
                 <nz-tag>{{ doc.resourceCode }}</nz-tag>
               </td>
-              <td>
+              
+              <!-- Resource Type (only show if no specific type is filtered) -->
+              <td *ngIf="!currentResourceType()">
                 <span *ngIf="doc.resourceType">{{ doc.resourceType.name }}</span>
                 <span *ngIf="!doc.resourceType" class="text-gray-400">{{ 'common.not_available' | translate }}</span>
               </td>
+              
+              <!-- Company -->
               <td>
                 <span *ngIf="doc.company">{{ doc.company.name }}</span>
                 <span *ngIf="!doc.company" class="text-gray-400">{{ 'common.not_available' | translate }}</span>
               </td>
+              
+              <!-- Status -->
               <td>
                 <nz-tag [nzColor]="getStatusColor(doc.status)">{{ ('status.' + (doc.status?.toLowerCase() || 'unknown')) | translate }}</nz-tag>
               </td>
+              
+              <!-- Created Date -->
               <td>{{ doc.createdAt | date:'short' }}</td>
+              
+              <!-- Owner -->
               <td>
                 <span *ngIf="doc.owner">{{ doc.owner.username }}</span>
                 <span *ngIf="!doc.owner" class="text-gray-400">{{ 'common.not_available' | translate }}</span>
               </td>
+              
+              <!-- Actions -->
               <td>
                 <nz-space>
                   <a *nzSpaceItem nz-button nzType="link" nzSize="small" [routerLink]="['/documents', doc.id]" nz-tooltip [nzTooltipTitle]="'documents.actions.view' | translate">
@@ -591,6 +624,17 @@ import { Company } from '../../core/models/company.model';
       display: inline-block;
     }
 
+    /* Custom field value styling */
+    .field-value {
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: rgba(0, 0, 0, 0.85);
+      font-size: 13px;
+    }
+
     ::ng-deep .ant-table-thead > tr > th {
       background: #fafafa;
       font-weight: 600;
@@ -784,6 +828,8 @@ export class DocumentListPageComponent implements OnInit {
   showFilters = false;
   searchQuery = '';
   activeFiltersCount = 0;
+  currentResourceType = signal<ResourceType | null>(null);
+  customFieldColumns = signal<FieldDefinitionDto[]>([]);
   
   query: DocQuery = {
     page: 0,
@@ -832,6 +878,7 @@ export class DocumentListPageComponent implements OnInit {
         if (params['resourceTypeId']) {
           this.query.resourceTypeIdEquals = +params['resourceTypeId'];
           this.filterForm.patchValue({ resourceTypeId: +params['resourceTypeId'] });
+          this.loadResourceTypeDetails(+params['resourceTypeId']);
         }
         
         if (params['resourceCode']) {
@@ -880,6 +927,25 @@ export class DocumentListPageComponent implements OnInit {
       });
   }
   
+  loadResourceTypeDetails(resourceTypeId: number): void {
+    this.resourceTypeService.get(resourceTypeId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (resourceType) => {
+          this.currentResourceType.set(resourceType);
+          // Sort fields by name for consistent display
+          const sortedFields = [...(resourceType.fields || [])].sort((a, b) => 
+            a.name.localeCompare(b.name)
+          );
+          this.customFieldColumns.set(sortedFields);
+        },
+        error: () => {
+          this.currentResourceType.set(null);
+          this.customFieldColumns.set([]);
+        }
+      });
+  }
+  
   onSearch(): void {
     if (this.searchQuery) {
       this.query.titleContains = this.searchQuery;
@@ -911,8 +977,11 @@ export class DocumentListPageComponent implements OnInit {
     // Apply resource type filter
     if (filters.resourceTypeId) {
       this.query.resourceTypeIdEquals = filters.resourceTypeId;
+      this.loadResourceTypeDetails(filters.resourceTypeId);
     } else {
       delete this.query.resourceTypeIdEquals;
+      this.currentResourceType.set(null);
+      this.customFieldColumns.set([]);
     }
     
     // Apply status filter
@@ -945,6 +1014,8 @@ export class DocumentListPageComponent implements OnInit {
       sort: 'createdAt,desc',
       perm: 'VIEW'
     };
+    this.currentResourceType.set(null);
+    this.customFieldColumns.set([]);
     this.updateActiveFiltersCount();
     this.loadDocuments();
   }
@@ -1031,5 +1102,26 @@ export class DocumentListPageComponent implements OnInit {
     }
     
     return params;
+  }
+  
+  formatFieldValue(value: any, fieldType: FieldType): string {
+    if (value === null || value === undefined || value === '') {
+      return '—';
+    }
+    
+    switch (fieldType) {
+      case FieldType.DATE:
+        try {
+          return new Date(value).toLocaleDateString();
+        } catch {
+          return String(value);
+        }
+      case FieldType.BOOLEAN:
+        return value ? '✓' : '✗';
+      case FieldType.NUMBER:
+        return typeof value === 'number' ? value.toLocaleString() : String(value);
+      default:
+        return String(value);
+    }
   }
 }
