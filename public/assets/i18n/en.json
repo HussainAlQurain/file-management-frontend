@@ -43,7 +43,8 @@
       "title": "Admin",
       "companies": "Companies",
       "resource_types": "Resource Types",
-      "users": "Users"
+      "users": "Users",
+      "email_settings": "Email Settings"
     }
   },
   "admin": {
@@ -348,6 +349,23 @@
           "loading_companies": "Failed to load companies"
         }
       }
+    },
+    "email_settings": {
+      "title": "Email Settings",
+      "host": "SMTP Host",
+      "port": "Port",
+      "username": "Username",
+      "password": "Password",
+      "from": "From Address",
+      "ssl_protocols": "SSL Protocols",
+      "smtp_auth": "SMTP Authentication",
+      "starttls": "Start TLS",
+      "starttls_required": "Start TLS Required",
+      "encoding": "Encoding",
+      "conn_timeout": "Connection Timeout (ms)",
+      "read_timeout": "Read Timeout (ms)",
+      "write_timeout": "Write Timeout (ms)",
+      "send_test": "Send Test Email"
     }
   },
   "dashboard": {

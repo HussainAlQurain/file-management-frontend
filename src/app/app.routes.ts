@@ -73,6 +73,13 @@ export const routes: Routes = [
           { path: ':id', loadComponent: () => import('./admin/users/user-edit-page/user-edit-page.component').then(c => c.UserEditPageComponent), canActivate: [roleGuard('SYS_ADMIN')] }
         ]
       },
+
+      // Email Settings (Admin only)
+      {
+        path: 'email-settings',
+        loadComponent: () => import('./admin/email-settings/email-settings-page.component').then(c => c.EmailSettingsPageComponent),
+        canActivate: [roleGuard('SYS_ADMIN')]
+      },
       
       // User profile
       {

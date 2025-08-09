@@ -43,7 +43,8 @@
       "title": "الإدارة",
       "companies": "الشركات",
       "resource_types": "أنواع الموارد",
-      "users": "المستخدمون"
+      "users": "المستخدمون",
+      "email_settings": "إعدادات البريد الإلكتروني"
     }
   },
   "admin": {
@@ -348,6 +349,23 @@
           "loading_companies": "فشل في تحميل الشركات"
         }
       }
+    },
+    "email_settings": {
+      "title": "إعدادات البريد الإلكتروني",
+      "host": "خادم SMTP",
+      "port": "المنفذ",
+      "username": "اسم المستخدم",
+      "password": "كلمة المرور",
+      "from": "عنوان المرسل",
+      "ssl_protocols": "بروتوكولات SSL",
+      "smtp_auth": "مصادقة SMTP",
+      "starttls": "بدء TLS",
+      "starttls_required": "بدء TLS مطلوب",
+      "encoding": "الترميز",
+      "conn_timeout": "مهلة الاتصال (مللي ثانية)",
+      "read_timeout": "مهلة القراءة (مللي ثانية)",
+      "write_timeout": "مهلة الكتابة (مللي ثانية)",
+      "send_test": "إرسال بريد تجريبي"
     }
   },
   "dashboard": {

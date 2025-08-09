@@ -92,6 +92,10 @@ import { TranslationService } from '../../core/services/translation.service';
                   <span nz-icon nzType="team" nzTheme="outline"></span>
                   <span>{{ 'nav.admin.users' | translate }}</span>
                 </li>
+                <li nz-menu-item nzMatchRouter routerLink="/email-settings">
+                  <span nz-icon nzType="mail" nzTheme="outline"></span>
+                  <span>{{ 'nav.admin.email_settings' | translate }}</span>
+                </li>
               </ul>
             </li>
           </ng-container>
