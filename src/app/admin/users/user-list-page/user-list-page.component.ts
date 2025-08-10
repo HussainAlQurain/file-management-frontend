@@ -538,25 +538,84 @@ export class UserListPageComponent implements OnInit {
   onResetPassword(user: User): void {
     this.modal.confirm({
       nzTitle: 'Reset Password',
-      nzContent: `Are you sure you want to reset the password for ${user.username}? A new temporary password will be generated.`,
+      nzContent: `Are you sure you want to reset the password for ${user.username}? This will generate a secure reset token.`,
       nzOkText: 'Reset Password',
       nzOkType: 'primary',
       nzOkDanger: true,
       nzCancelText: 'Cancel',
       nzOnOk: () => {
         return this.userService.resetPassword(user.id).toPromise().then((response) => {
-          if (response) {
-            this.modal.info({
-              nzTitle: 'Password Reset Successful',
-              nzContent: `Password for ${user.username} has been reset. The new temporary password is: ${response.resetToken}. Please save this securely.`,
-              nzOkText: 'Close'
-            });
-            this.snackbar.success(`Password reset for ${user.username}`);
+          if (response && response.success) {
+            
+            if (response.emailSent && response.resetToken) {
+              // Email sent successfully, but also provide manual backup
+              this.modal.info({
+                nzTitle: 'Password Reset Successful',
+                nzContent: `
+                  <div>
+                    <p><strong>✅ Email sent successfully</strong> to ${response.userEmail}</p>
+                    <p>The user will receive reset instructions via email.</p>
+                    <hr style="margin: 16px 0;">
+                    <p><strong>Backup Reset Link:</strong></p>
+                    <div style="background: #f5f5f5; padding: 8px; border-radius: 4px; margin: 8px 0; word-break: break-all; font-family: monospace; font-size: 12px;">
+                      ${response.resetLink}
+                    </div>
+                    <p style="font-size: 12px; color: #666;">
+                      <strong>Expires:</strong> ${new Date(response.expiresAt!).toLocaleString()}<br>
+                      <strong>User:</strong> ${response.username} (${response.userEmail})
+                    </p>
+                  </div>
+                `,
+                nzOkText: 'Close',
+                nzWidth: 600
+              });
+              this.snackbar.success(`Password reset email sent to ${user.username}`);
+              
+            } else if (!response.emailSent && response.resetToken) {
+              // Email failed, show manual reset token
+              this.modal.info({
+                nzTitle: 'Password Reset - Manual Delivery Required',
+                nzContent: `
+                  <div>
+                    <p><strong>⚠️ Email delivery failed</strong></p>
+                    <p>Please provide this reset link to the user manually:</p>
+                    <div style="background: #fff2e8; border: 1px solid #ffbb96; padding: 12px; border-radius: 4px; margin: 12px 0;">
+                      <div style="word-break: break-all; font-family: monospace; font-size: 12px; margin-bottom: 8px;">
+                        ${response.resetLink}
+                      </div>
+                      <button onclick="navigator.clipboard.writeText('${response.resetLink}'); alert('Copied to clipboard!');" 
+                              style="background: #1890ff; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
+                        📋 Copy Link
+                      </button>
+                    </div>
+                    <p style="font-size: 12px; color: #666;">
+                      <strong>Expires:</strong> ${new Date(response.expiresAt!).toLocaleString()}<br>
+                      <strong>User:</strong> ${response.username} (${response.userEmail})
+                    </p>
+                    ${response.errorDetails ? `
+                      <details style="margin-top: 12px;">
+                        <summary style="cursor: pointer; color: #666;">Technical Details</summary>
+                        <pre style="background: #f5f5f5; padding: 8px; border-radius: 4px; font-size: 11px; margin-top: 8px; overflow-x: auto;">${response.errorDetails}</pre>
+                      </details>
+                    ` : ''}
+                  </div>
+                `,
+                nzOkText: 'Close',
+                nzWidth: 700
+              });
+              this.snackbar.error(`Email failed - Manual reset link generated for ${user.username}`);
+              
+            } else {
+              // Generic success
+              this.snackbar.success(response.message || `Password reset initiated for ${user.username}`);
+            }
+            
           } else {
-            this.snackbar.error('Password reset response was empty');
+            this.snackbar.error(response?.message || 'Password reset failed');
           }
         }).catch((err) => {
-          this.snackbar.error('Failed to reset password: ' + (err.error?.message || err.message));
+          const errorMessage = err.error?.message || err.message || 'Failed to reset password';
+          this.snackbar.error('Failed to reset password: ' + errorMessage);
         });
       }
     });

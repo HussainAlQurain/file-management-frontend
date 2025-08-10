@@ -28,6 +28,28 @@ export interface ChangePasswordDTO {
   confirmPassword: string;
 }
 
+export interface PasswordResetRequestDTO {
+  email: string;
+}
+
+export interface PasswordResetConfirmDTO {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface PasswordResetResponseDTO {
+  success: boolean;
+  emailSent: boolean;
+  message: string;
+  resetToken?: string;
+  resetLink?: string;
+  expiresAt?: string;
+  userEmail?: string;
+  username?: string;
+  errorDetails?: string;
+}
+
 export interface UserDTO {
   id: number;
   username: string;
@@ -70,8 +92,8 @@ export class UserService {
     return this.http.delete<void>(`${this.usersApiUrl}/${id}`);
   }
   
-  resetPassword(id: number): Observable<{resetToken: string}> {
-    return this.http.post<{resetToken: string}>(`${this.usersApiUrl}/${id}/reset-password`, {});
+  resetPassword(id: number): Observable<PasswordResetResponseDTO> {
+    return this.http.post<PasswordResetResponseDTO>(`${this.usersApiUrl}/${id}/reset-password`, {});
   }
   
   // For backward compatibility
@@ -107,5 +129,30 @@ export class UserService {
 
   patch(id: number, user: UpdateUserDTO): Observable<User> {
     return this.http.patch<User>(`${this.usersApiUrl}/${id}`, user);
+  }
+
+  // ===============================================================
+  // SECURE PASSWORD RESET METHODS
+  // ===============================================================
+
+  /**
+   * Request password reset for forgotten passwords (public endpoint)
+   */
+  requestPasswordReset(request: PasswordResetRequestDTO): Observable<PasswordResetResponseDTO> {
+    return this.http.post<PasswordResetResponseDTO>(`${this.configService.apiBase}/auth/password-reset/request`, request);
+  }
+
+  /**
+   * Confirm password reset using token (public endpoint)
+   */
+  confirmPasswordReset(request: PasswordResetConfirmDTO): Observable<void> {
+    return this.http.post<void>(`${this.configService.apiBase}/auth/password-reset/confirm`, request);
+  }
+
+  /**
+   * Validate reset token (public endpoint for UI feedback)
+   */
+  validateResetToken(token: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.configService.apiBase}/auth/password-reset/validate?token=${encodeURIComponent(token)}`);
   }
 }

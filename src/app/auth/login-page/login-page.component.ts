@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -21,6 +21,7 @@ import { SnackbarService } from '../../core/services/snackbar.service';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    RouterModule,
     TranslateModule,
     NzCardModule,
     NzFormModule,
@@ -94,6 +95,12 @@ import { SnackbarService } from '../../core/services/snackbar.service';
             </nz-form-control>
           </nz-form-item>
         </form>
+        
+        <div class="forgot-password-link">
+          <a routerLink="/password-reset" class="text-sm text-blue-600 hover:text-blue-800">
+            Forgot your password?
+          </a>
+        </div>
       </nz-card>
     </div>
   `,
@@ -105,6 +112,17 @@ import { SnackbarService } from '../../core/services/snackbar.service';
     nz-card {
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
+    }
+    
+    .forgot-password-link {
+      text-align: center;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #f0f0f0;
+    }
+    
+    .forgot-password-link a {
+      transition: color 0.2s ease;
     }
   `]
 })
