@@ -346,10 +346,10 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
             </form>
           </div>
 
-          <!-- Step 4: Upload Primary File -->
+          <!-- Step 4: Upload Primary File (Optional) -->
           <div *ngIf="currentStep === 3" class="step-container">
-            <h3 nz-typography>{{ 'documents.create.step4.title' | translate }}</h3>
-            <p nz-typography nzType="secondary">{{ 'documents.create.step4.description' | translate }}</p>
+            <h3 nz-typography>{{ 'documents.create.step4.title' | translate }} <span class="optional-label">(Optional)</span></h3>
+            <p nz-typography nzType="secondary">{{ 'documents.create.step4.description_optional' | translate }}</p>
             
             <nz-divider></nz-divider>
             
@@ -642,6 +642,13 @@ import { Document, CreateDocumentDto } from '../../core/models/document.model';
     .required-marker {
       color: #ff4d4f;
       margin-left: 4px;
+    }
+
+    .optional-label {
+      color: #999;
+      font-size: 14px;
+      font-weight: 400;
+      margin-left: 8px;
     }
 
     ::ng-deep .ant-upload.ant-upload-drag {
@@ -1202,7 +1209,7 @@ export class DocumentCreatePageComponent implements OnInit, OnDestroy {
   }
 
   canSubmit(): boolean {
-    return this.metadataForm.valid && this.primaryFile() !== null && !this.isSubmitting();
+    return this.metadataForm.valid && !this.isSubmitting();
   }
 
   nextStep(): void {
@@ -1252,7 +1259,7 @@ export class DocumentCreatePageComponent implements OnInit, OnDestroy {
 
     const loading = this.message.loading('Creating document...', { nzDuration: 0 });
     
-    this.documentService.create(dto, this.primaryFile()!).subscribe({
+    this.documentService.create(dto, this.primaryFile() || undefined).subscribe({
       next: (createdDoc: Document) => {
         this.message.remove(loading.messageId);
         this.message.success('Document created successfully');

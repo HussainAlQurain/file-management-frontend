@@ -344,14 +344,26 @@ import { NzModalService } from 'ng-zorro-antd/modal';
                     </button>
                   </div>
 
+                  <!-- Version Controls -->
+                  <div *ngIf="versionsLoaded && versions.length > 0" class="version-controls" style="margin-bottom: 16px;">
+                    <nz-space>
+                      <span *nzSpaceItem style="font-weight: 500;">Sort by Date:</span>
+                      <button *nzSpaceItem nz-button nzType="default" nzSize="small" (click)="toggleVersionSort()" 
+                              [class.active-sort]="true" nz-tooltip [nzTooltipTitle]="versionSortDesc ? 'Newest first' : 'Oldest first'">
+                        <span nz-icon [nzType]="versionSortDesc ? 'arrow-down' : 'arrow-up'" nzTheme="outline"></span>
+                        {{ versionSortDesc ? 'Newest First' : 'Oldest First' }}
+                      </button>
+                    </nz-space>
+                  </div>
+
                   <nz-spin *ngIf="versionsLoading" nzSimple [nzTip]="'documents.detail.versions.loading' | translate"></nz-spin>
 
                   <nz-timeline *ngIf="versionsLoaded && versions.length > 0">
-                    <nz-timeline-item *ngFor="let version of versions" [nzColor]="version.versionNo === versions[0].versionNo ? 'green' : 'gray'">
+                    <nz-timeline-item *ngFor="let version of getSortedVersions()" [nzColor]="version.versionNo === document()?.currentVersion ? 'green' : 'gray'">
                       <nz-card>
                         <h4 nz-typography>
                           {{ 'documents.detail.versions.version' | translate }} {{ version.versionNo }}
-                          <nz-tag *ngIf="version.versionNo === versions[0].versionNo" nzColor="success" style="margin-left: 8px;">{{ 'documents.detail.versions.current' | translate }}</nz-tag>
+                          <nz-tag *ngIf="version.versionNo === document()?.currentVersion" nzColor="success" style="margin-left: 8px;">{{ 'documents.detail.versions.current' | translate }}</nz-tag>
                         </h4>
                         <nz-descriptions [nzColumn]="1" nzSize="small">
                           <nz-descriptions-item [nzTitle]="'documents.detail.versions.created' | translate">{{ version.createdAt | date:'medium' }}</nz-descriptions-item>
@@ -370,6 +382,15 @@ import { NzModalService } from 'ng-zorro-antd/modal';
                             <span nz-icon nzType="eye" nzTheme="outline"></span>
                             {{ 'documents.detail.versions.view' | translate }}
                           </a>
+                          <ng-container *nzSpaceItem>
+                            <button *ngIf="version.versionNo !== document()?.currentVersion" 
+                                    nz-button nzType="default" nzSize="small" nzDanger
+                                    (click)="setCurrentVersion(version.versionNo)"
+                                    nz-tooltip nzTooltipTitle="Set this version as current">
+                              <span nz-icon nzType="check-circle" nzTheme="outline"></span>
+                              Set as Current
+                            </button>
+                          </ng-container>
                         </nz-space>
                       </nz-card>
                     </nz-timeline-item>
@@ -547,6 +568,7 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
   versions: DocumentVersion[] = [];
   versionsLoaded = false;
   versionsLoading = false;
+  versionSortDesc = true; // Sort versions newest first by default
   private versionsSub?: Subscription;
   private relatedSub?: Subscription;
 
@@ -806,6 +828,50 @@ export class DocumentDetailPageComponent implements OnInit, OnDestroy {
 
   navigateBack(): void {
     this.router.navigate(['/documents']);
+  }
+
+  // Version management methods
+  toggleVersionSort(): void {
+    this.versionSortDesc = !this.versionSortDesc;
+  }
+
+  getSortedVersions(): DocumentVersion[] {
+    const sorted = [...this.versions];
+    return sorted.sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return this.versionSortDesc ? dateB - dateA : dateA - dateB;
+    });
+  }
+
+  setCurrentVersion(versionNo: number): void {
+    const docId = this.documentId();
+    if (!docId) return;
+
+    this.modal.confirm({
+      nzTitle: 'Set Current Version',
+      nzContent: `Are you sure you want to set version ${versionNo} as the current version? This will affect which file is downloaded when clicking the download button.`,
+      nzOkText: 'Yes, Set as Current',
+      nzOkType: 'primary',
+      nzCancelText: 'Cancel',
+      nzOnOk: () => {
+        const loading = this.message.loading('Setting current version...', { nzDuration: 0 });
+        
+        this.documentService.setCurrentVersion(docId, versionNo).subscribe({
+          next: (updatedDoc) => {
+            this.message.remove(loading.messageId);
+            this.message.success(`Version ${versionNo} is now the current version`);
+            
+            // Update the document with the new current version
+            this.document.set(updatedDoc);
+          },
+          error: (err) => {
+            this.message.remove(loading.messageId);
+            this.message.error('Failed to set current version: ' + (err.error?.message || err.message));
+          }
+        });
+      }
+    });
   }
 
   ngOnDestroy(): void {

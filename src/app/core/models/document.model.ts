@@ -11,6 +11,7 @@ export interface Document {
   updatedAt: string;
   tags: string[];
   version: number;
+  currentVersion?: number; // Which version is currently active
   primaryFile?: Attachment;
   attachments: Attachment[];
   fieldValues: Record<string, any>;

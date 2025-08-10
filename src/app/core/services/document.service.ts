@@ -31,11 +31,15 @@ export class DocumentService {
     return this.http.get<DocumentVersion[]>(`${this.documentsApiUrl}/${id}/versions`);
   }
   
-  create(documentDto: CreateDocumentDto, primaryFile: File, attachments?: File[]): Observable<Document> {
+  create(documentDto: CreateDocumentDto, primaryFile?: File, attachments?: File[]): Observable<Document> {
     const formData = new FormData();
     // Ensure the 'dto' part contains the CreateDocumentDto structure
     formData.append('dto', new Blob([JSON.stringify(documentDto)], { type: 'application/json' }));
-    formData.append('primaryFile', primaryFile, primaryFile.name);
+    
+    // Only append primary file if provided
+    if (primaryFile) {
+      formData.append('primaryFile', primaryFile, primaryFile.name);
+    }
     
     if (attachments && attachments.length > 0) {
       attachments.forEach(file => {
@@ -116,5 +120,10 @@ export class DocumentService {
   // New method for getting related documents
   getRelatedDocuments(id: number): Observable<RelatedDocuments> {
     return this.http.get<RelatedDocuments>(`${this.documentsApiUrl}/${id}/related`);
+  }
+
+  // Set current version
+  setCurrentVersion(id: number, versionNo: number): Observable<Document> {
+    return this.http.put<Document>(`${this.documentsApiUrl}/${id}/current-version/${versionNo}`, {});
   }
 }
