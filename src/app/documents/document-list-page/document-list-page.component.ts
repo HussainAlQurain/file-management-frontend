@@ -87,6 +87,14 @@ import { Company } from '../../core/models/company.model';
                   <nz-icon nzType="cloud-upload" nzTheme="outline"></nz-icon>
                   <span>{{ 'documents.bulk_import' | translate }}</span>
                 </button>
+                <button *nzSpaceItem nz-button nzType="default" routerLink="/documents/excel-grid-import" class="action-button">
+                  <nz-icon nzType="table" nzTheme="outline"></nz-icon>
+                  <span>{{ 'documents.excel_import' | translate }}</span>
+                </button>
+                <button *nzSpaceItem nz-button nzType="default" routerLink="/documents/data-grid-view" class="action-button">
+                  <nz-icon nzType="file-excel" nzTheme="outline"></nz-icon>
+                  <span>{{ 'documents.data_grid' | translate }}</span>
+                </button>
                 <button *nzSpaceItem nz-button nzType="primary" routerLink="/documents/new" class="action-button">
                   <nz-icon nzType="plus" nzTheme="outline"></nz-icon>
                   <span>{{ 'documents.new_document' | translate }}</span>

@@ -1,3 +1,7 @@
+/* Import AG-Grid styles */
+@import "ag-grid-community/styles/ag-grid.css";
+@import "ag-grid-community/styles/ag-theme-quartz.css";
+
 /* Import NG-ZORRO styles */
 @import "ng-zorro-antd/ng-zorro-antd.min.css";
 @import "ng-zorro-antd/ng-zorro-antd.compact.css"; /* Compact theme for better density */
@@ -1121,4 +1125,219 @@ body {
   .justify-between {
     justify-content: space-between !important;
   }
+}
+
+/* AG-Grid Custom Styling */
+.ag-theme-quartz {
+  /* Match NG-ZORRO font family */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  
+  /* Remove unwanted outlines and focus styles */
+  .ag-root-wrapper {
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  /* Adjust row height for better density */
+  .ag-row {
+    height: 48px !important;
+    font-size: 14px;
+  }
+  
+  /* Header styling to match NG-ZORRO */
+  .ag-header {
+    background-color: #fafafa;
+    border-bottom: 2px solid #f0f0f0;
+  }
+  
+  .ag-header-cell {
+    background-color: #fafafa;
+    font-weight: 600;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.85);
+    padding: 0 12px;
+  }
+  
+  .ag-header-cell-label {
+    padding: 0;
+  }
+  
+  /* Cell styling */
+  .ag-cell {
+    line-height: 48px;
+    padding: 0 12px;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.65);
+    border-right: 1px solid #f0f0f0;
+    background-color: #ffffff;
+    
+    /* Prevent style changes on paste */
+    &.ag-cell-inline-editing {
+      background-color: #ffffff !important;
+      border: 1px solid #40a9ff !important;
+      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
+    }
+    
+    &.ag-cell-focus {
+      border: 1px solid #40a9ff !important;
+      outline: none !important;
+    }
+  }
+  
+  /* Text cell specific styling */
+  .text-cell {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  
+  /* Number cell styling */
+  .number-cell {
+    text-align: right;
+    padding-right: 16px !important;
+  }
+  
+  /* Date cell styling */
+  .date-cell {
+    text-align: center;
+  }
+  
+  /* Boolean cell styling */
+  .boolean-cell {
+    text-align: center;
+    text-transform: lowercase;
+  }
+  
+  /* Row hover effect */
+  .ag-row-hover {
+    background-color: #fafafa;
+    
+    .ag-cell {
+      background-color: #fafafa !important;
+    }
+  }
+  
+  /* Selected row */
+  .ag-row-selected {
+    background-color: #e6f7ff;
+    
+    .ag-cell {
+      background-color: #e6f7ff !important;
+    }
+  }
+  
+  /* Remove last cell border */
+  .ag-cell:last-child {
+    border-right: none;
+  }
+  
+  /* Cell editor styling */
+  .ag-cell-editor {
+    border: 1px solid #40a9ff !important;
+    background-color: #ffffff !important;
+  }
+  
+  .ag-text-field-input {
+    padding: 4px 8px !important;
+    font-size: 14px !important;
+    background-color: #ffffff !important;
+    color: rgba(0, 0, 0, 0.65) !important;
+  }
+  
+  /* Filter input styling to match NG-ZORRO */
+  .ag-filter-input {
+    border-radius: 4px;
+    border: 1px solid #d9d9d9;
+    padding: 4px 11px;
+    font-size: 14px;
+    transition: all 0.3s;
+  }
+  
+  .ag-filter-input:focus {
+    border-color: #40a9ff;
+    outline: 0;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  }
+  
+  /* Required field styling */
+  .required-cell-empty {
+    background-color: #fff2e8 !important;
+    
+    &.ag-cell-focus {
+      background-color: #fff2e8 !important;
+      border: 1px solid #ffbb96 !important;
+    }
+  }
+  
+  /* Remove cell range selection styles that interfere with pasting */
+  .ag-cell-range-selected:not(.ag-cell-focus) {
+    background-color: rgba(24, 144, 255, 0.1) !important;
+  }
+  
+  .ag-cell-range-selected-1:not(.ag-cell-focus) {
+    background-color: rgba(24, 144, 255, 0.1) !important;
+  }
+  
+  /* Prevent flash on paste */
+  .ag-cell-data-changed {
+    background-color: transparent !important;
+  }
+  
+  .ag-cell-data-changed-animation {
+    background-color: transparent !important;
+  }
+  
+  /* RTL Support for AG-Grid */
+  &.rtl {
+    direction: rtl;
+    
+    .ag-header-cell {
+      text-align: right;
+      padding: 0 12px;
+    }
+    
+    .ag-cell {
+      text-align: right;
+      border-right: none;
+      border-left: 1px solid #f0f0f0;
+    }
+    
+    .ag-cell:first-child {
+      border-left: none;
+    }
+    
+    .ag-numeric-cell {
+      text-align: left;
+    }
+  }
+  
+  /* Checkbox styling */
+  .ag-checkbox-input-wrapper {
+    font-size: 16px;
+    line-height: 48px;
+  }
+  
+  /* Menu styling */
+  .ag-menu {
+    border: 1px solid #f0f0f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+  }
+  
+  .ag-menu-option {
+    height: 32px;
+    line-height: 32px;
+    padding: 0 12px;
+  }
+  
+  .ag-menu-option:hover {
+    background-color: #f5f5f5;
+  }
+}
+
+/* Arabic font support for AG-Grid */
+body.rtl .ag-theme-quartz,
+[lang="ar"] .ag-theme-quartz {
+  font-family: 'Noto Sans Arabic', 'Segoe UI', 'Tahoma', 'Microsoft Sans Serif', sans-serif !important;
 }

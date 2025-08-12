@@ -36,7 +36,7 @@ export class ResourceTypeService {
   }
 
   getAll(): Observable<ResourceType[]> {
-    return this.http.get<ResourceType[]>(`${this.baseUrl}`);
+    return this.http.get<ResourceType[]>(`${this.baseUrl}/all`);
   }
   
   /**
