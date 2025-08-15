@@ -363,7 +363,134 @@ import { Company } from '../../core/models/company.model';
               </div>
             </nz-form-control>
           </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-control>
+              <label nz-checkbox formControlName="hasAttachments" (ngModelChange)="onAttachmentToggle($event)">
+                {{ 'bulk_import.step3.has_attachments' | translate }}
+              </label>
+              <div class="checkbox-help">
+                {{ 'bulk_import.step3.has_attachments_help' | translate }}
+              </div>
+            </nz-form-control>
+          </nz-form-item>
         </form>
+
+        <!-- Attachment Upload Section -->
+        <div *ngIf="importOptionsForm.get('hasAttachments')?.value" class="attachment-section">
+          <nz-divider [nzText]="'bulk_import.step3.attachment_upload' | translate" nzOrientation="left"></nz-divider>
+          
+          <nz-alert
+            nzType="info"
+            [nzMessage]="'bulk_import.step3.attachment_instructions' | translate"
+            nzShowIcon
+            class="mb-4">
+            <div nz-alert-description>
+              <ul class="attachment-instructions">
+                <li>{{ 'bulk_import.step3.attachment_instruction_1' | translate }}</li>
+                <li>{{ 'bulk_import.step3.attachment_instruction_2' | translate }}</li>
+                <li>{{ 'bulk_import.step3.attachment_instruction_3' | translate }}</li>
+              </ul>
+            </div>
+          </nz-alert>
+
+          <div nz-row [nzGutter]="[16, 16]">
+            <div nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>{{ 'bulk_import.step3.linking_strategy' | translate }}</nz-form-label>
+                <nz-form-control>
+                  <nz-select 
+                    [ngModel]="importOptionsForm.get('attachmentLinkingStrategy')?.value"
+                    (ngModelChange)="importOptionsForm.patchValue({attachmentLinkingStrategy: $event})"
+                    [nzPlaceHolder]="'bulk_import.step3.select_linking_strategy' | translate">
+                    <nz-option value="ROW_PREFIX" [nzLabel]="'bulk_import.step3.row_prefix_strategy' | translate"></nz-option>
+                    <nz-option value="RESOURCE_CODE" [nzLabel]="'bulk_import.step3.resource_code_strategy' | translate"></nz-option>
+                  </nz-select>
+                  <div class="strategy-help">
+                    <span *ngIf="importOptionsForm.get('attachmentLinkingStrategy')?.value === 'ROW_PREFIX'">
+                      {{ 'bulk_import.step3.row_prefix_help' | translate }}
+                    </span>
+                    <span *ngIf="importOptionsForm.get('attachmentLinkingStrategy')?.value === 'RESOURCE_CODE'">
+                      {{ 'bulk_import.step3.resource_code_help' | translate }}
+                    </span>
+                  </div>
+                </nz-form-control>
+              </nz-form-item>
+            </div>
+            
+            <div nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>{{ 'bulk_import.step3.attachment_files' | translate }}</nz-form-label>
+                <nz-form-control>
+                  <input 
+                    #attachmentInput 
+                    type="file" 
+                    multiple
+                    accept="*/*"
+                    (change)="onDirectAttachmentFileChange($event)"
+                    style="display: none;">
+                  <button 
+                    nz-button 
+                    nzType="dashed"
+                    nzBlock
+                    (click)="attachmentInput.click()">
+                    <nz-icon nzType="upload"></nz-icon>
+                    <span>{{ 'bulk_import.step3.select_attachments' | translate }}</span>
+                  </button>
+                </nz-form-control>
+              </nz-form-item>
+            </div>
+          </div>
+
+          <!-- Attachment Preview -->
+          <div *ngIf="attachmentFiles().length > 0" class="attachment-preview">
+            <nz-divider [nzText]="'bulk_import.step3.selected_attachments' | translate" nzOrientation="left"></nz-divider>
+            <nz-table 
+              [nzData]="attachmentFiles()" 
+              nzSize="small" 
+              [nzPageSize]="10"
+              [nzShowPagination]="attachmentFiles().length > 10">
+              <thead>
+                <tr>
+                  <th>{{ 'bulk_import.step3.filename' | translate }}</th>
+                  <th>{{ 'bulk_import.step3.size' | translate }}</th>
+                  <th>{{ 'bulk_import.step3.linked_to' | translate }}</th>
+                  <th>{{ 'bulk_import.step3.status' | translate }}</th>
+                  <th>{{ 'bulk_import.step3.actions' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let file of attachmentFiles(); let i = index">
+                  <td>{{ file.name }}</td>
+                  <td>{{ formatFileSize(file.size) }}</td>
+                  <td>
+                    <span *ngIf="getAttachmentLinkInfo(file.name) as linkInfo">
+                      <nz-tag [nzColor]="linkInfo.valid ? 'green' : 'red'">
+                        {{ linkInfo.display }}
+                      </nz-tag>
+                    </span>
+                  </td>
+                  <td>
+                    <nz-tag [nzColor]="getAttachmentLinkInfo(file.name).valid ? 'green' : 'red'">
+                      {{ getAttachmentLinkInfo(file.name).valid ? ('bulk_import.step3.valid' | translate) : ('bulk_import.step3.invalid' | translate) }}
+                    </nz-tag>
+                  </td>
+                  <td>
+                    <button 
+                      nz-button 
+                      nzType="link" 
+                      nzSize="small"
+                      nzDanger
+                      (click)="removeAttachment(i)">
+                      <nz-icon nzType="delete"></nz-icon>
+                      <span>{{ 'bulk_import.step3.remove' | translate }}</span>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </nz-table>
+          </div>
+        </div>
 
         <nz-divider></nz-divider>
 
@@ -692,6 +819,38 @@ import { Company } from '../../core/models/company.model';
       margin-top: 4px;
     }
 
+    .strategy-help {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.45);
+      margin-top: 4px;
+    }
+
+    .attachment-section {
+      margin-top: 24px;
+      padding: 16px;
+      background: #fafafa;
+      border-radius: 6px;
+      border: 1px solid #d9d9d9;
+    }
+
+    .attachment-instructions {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+
+    .attachment-instructions li {
+      margin-bottom: 4px;
+      color: rgba(0, 0, 0, 0.65);
+    }
+
+    .attachment-preview {
+      margin-top: 16px;
+      background: #fff;
+      padding: 16px;
+      border-radius: 6px;
+      border: 1px solid #d9d9d9;
+    }
+
     .validation-results {
       background: #fafafa;
       padding: 16px;
@@ -704,6 +863,10 @@ import { Company } from '../../core/models/company.model';
       padding: 16px;
       border-radius: 6px;
       border: 1px solid #d9d9d9;
+    }
+
+    .mb-4 {
+      margin-bottom: 16px;
     }
 
     .rtl-space {
@@ -1441,6 +1604,79 @@ export class DocumentBulkImportPageComponent implements OnInit {
     } else {
       attachment.errorMessage = 'Filename must contain resource code followed by underscore';
     }
+  }
+
+  // Additional attachment handling methods for direct file input
+  onAttachmentToggle(enabled: boolean): void {
+    if (!enabled) {
+      this.attachmentFiles.set([]);
+      this.attachmentFileList.set([]);
+      this.parsedAttachments.set([]);
+    }
+  }
+
+  onDirectAttachmentFileChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    
+    const files = Array.from(input.files);
+    this.attachmentFiles.set(files);
+    
+    // Parse attachments for validation
+    this.parseAttachmentsForPreview(files);
+    
+    this.message.success(
+      this.translateService.instant('bulk_import.step3.attachments_selected', { count: files.length })
+    );
+    
+    // Reset file input
+    input.value = '';
+  }
+
+  removeAttachment(index: number): void {
+    const currentFiles = this.attachmentFiles();
+    const updatedFiles = currentFiles.filter((_, i) => i !== index);
+    this.attachmentFiles.set(updatedFiles);
+    
+    // Re-parse remaining attachments
+    this.parseAttachmentsForPreview(updatedFiles);
+    
+    this.message.success(this.translateService.instant('bulk_import.step3.attachment_removed'));
+  }
+
+  getAttachmentLinkInfo(filename: string): { valid: boolean; display: string } {
+    const strategy = this.importOptionsForm.get('attachmentLinkingStrategy')?.value || 'ROW_PREFIX';
+    
+    if (strategy === 'ROW_PREFIX') {
+      // Check if filename starts with ROW{number}_
+      const match = filename.match(/^ROW(\d+)_/i);
+      if (match) {
+        const rowNumber = parseInt(match[1]);
+        return {
+          valid: rowNumber > 0,
+          display: `Row ${rowNumber}`
+        };
+      }
+      return {
+        valid: false,
+        display: 'Need ROW{number}_ prefix'
+      };
+    } else if (strategy === 'RESOURCE_CODE') {
+      // Check if filename contains resource code prefix
+      const parts = filename.split('_');
+      if (parts.length >= 2 && parts[0].trim() !== '') {
+        return {
+          valid: true,
+          display: `Code: ${parts[0]}`
+        };
+      }
+      return {
+        valid: false,
+        display: 'Need {code}_ prefix'
+      };
+    }
+    
+    return { valid: false, display: 'Unknown strategy' };
   }
 
   // Multi-company handling methods

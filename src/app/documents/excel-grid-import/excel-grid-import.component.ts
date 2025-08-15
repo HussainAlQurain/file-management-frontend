@@ -237,7 +237,218 @@ import * as XLSX from 'xlsx';
               </nz-form-item>
             </div>
           </div>
+          <div nz-row [nzGutter]="[16, 16]">
+            <div nz-col [nzSpan]="24">
+              <nz-form-item>
+                <nz-form-control>
+                  <label nz-checkbox formControlName="hasAttachments" (ngModelChange)="onAttachmentToggle($event)">
+                    {{ 'excel_import.has_attachments' | translate }}
+                  </label>
+                  <div class="checkbox-help">
+                    {{ 'excel_import.has_attachments_help' | translate }}
+                  </div>
+                </nz-form-control>
+              </nz-form-item>
+            </div>
+          </div>
         </form>
+      </nz-card>
+
+      <!-- Attachment Upload -->
+      <nz-card 
+        *ngIf="selectedResourceType() && importOptionsForm.get('hasAttachments')?.value" 
+        [nzTitle]="'excel_import.attachment_upload' | translate"
+        class="attachment-card">
+        
+        <nz-alert
+          nzType="info"
+          [nzMessage]="'excel_import.attachment_instructions' | translate"
+          nzShowIcon
+          class="mb-4">
+          <div nz-alert-description>
+            <ul class="attachment-instructions">
+              <li>{{ 'excel_import.attachment_instruction_1' | translate }}</li>
+              <li>{{ 'excel_import.attachment_instruction_2' | translate }}</li>
+              <li>{{ 'excel_import.attachment_instruction_3' | translate }}</li>
+            </ul>
+            <div class="strategy-examples" *ngIf="importOptionsForm.get('attachmentLinkingStrategy')?.value">
+              <strong>{{ 'excel_import.examples' | translate }}:</strong>
+              <div *ngIf="importOptionsForm.get('attachmentLinkingStrategy')?.value === 'ROW_PREFIX'">
+                <code>ROW1_contract.pdf</code>, <code>ROW2_invoice.xlsx</code>, <code>ROW3_receipt.jpg</code>
+              </div>
+              <div *ngIf="importOptionsForm.get('attachmentLinkingStrategy')?.value === 'RESOURCE_CODE'">
+                <code>DOC001_file.pdf</code>, <code>INV002_attachment.xlsx</code>, <code>CONTRACT_document.jpg</code>
+              </div>
+            </div>
+          </div>
+        </nz-alert>
+
+        <div nz-row [nzGutter]="[16, 16]">
+          <div nz-col [nzSpan]="12">
+            <nz-form-item>
+              <nz-form-label>{{ 'excel_import.linking_strategy' | translate }}</nz-form-label>
+              <nz-form-control>
+                <nz-select 
+                  [ngModel]="importOptionsForm.get('attachmentLinkingStrategy')?.value"
+                  (ngModelChange)="importOptionsForm.patchValue({attachmentLinkingStrategy: $event})"
+                  [nzPlaceHolder]="'excel_import.select_linking_strategy' | translate">
+                  <nz-option value="ROW_PREFIX" [nzLabel]="'excel_import.row_prefix_strategy' | translate"></nz-option>
+                  <nz-option value="RESOURCE_CODE" [nzLabel]="'excel_import.resource_code_strategy' | translate"></nz-option>
+                </nz-select>
+                <div class="strategy-help">
+                  <span *ngIf="importOptionsForm.get('attachmentLinkingStrategy')?.value === 'ROW_PREFIX'">
+                    {{ 'excel_import.row_prefix_help' | translate }}
+                  </span>
+                  <span *ngIf="importOptionsForm.get('attachmentLinkingStrategy')?.value === 'RESOURCE_CODE'">
+                    {{ 'excel_import.resource_code_help' | translate }}
+                  </span>
+                </div>
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+          
+                      <div nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-label>{{ 'excel_import.attachment_files' | translate }}</nz-form-label>
+                <nz-form-control>
+                  <input 
+                    #attachmentInput 
+                    type="file" 
+                    multiple
+                    accept="*/*"
+                    (change)="onAttachmentFilesSelected($event)"
+                    style="display: none;">
+                  <nz-space nzDirection="vertical" nzSize="small" style="width: 100%;">
+                    <button 
+                      *nzSpaceItem
+                      nz-button 
+                      nzType="dashed"
+                      nzBlock
+                      (click)="attachmentInput.click()">
+                      <nz-icon nzType="upload"></nz-icon>
+                      <span>{{ attachmentFiles().length === 0 ? ('excel_import.select_attachments' | translate) : ('excel_import.upload_more' | translate) }}</span>
+                    </button>
+                    <ng-container *nzSpaceItem>
+                      <div *ngIf="attachmentFiles().length > 0">
+                        <nz-space nzSize="small" style="width: 100%;">
+                          <button 
+                            *nzSpaceItem
+                            nz-button 
+                            nzType="default"
+                            nzSize="small"
+                            (click)="fixAllNames()">
+                            <nz-icon nzType="edit"></nz-icon>
+                            <span>{{ 'excel_import.fix_all_names' | translate }}</span>
+                          </button>
+                          <button 
+                            *nzSpaceItem
+                            nz-button 
+                            nzType="default"
+                            nzSize="small"
+                            nzDanger
+                            (click)="clearAllFiles()">
+                            <nz-icon nzType="delete"></nz-icon>
+                            <span>{{ 'excel_import.clear_all' | translate }}</span>
+                          </button>
+                        </nz-space>
+                      </div>
+                    </ng-container>
+                  </nz-space>
+                </nz-form-control>
+              </nz-form-item>
+            </div>
+        </div>
+
+        <!-- Attachment Preview -->
+        <div *ngIf="attachmentFiles().length > 0" class="attachment-preview">
+          <nz-divider [nzText]="'excel_import.selected_attachments' | translate" nzOrientation="left"></nz-divider>
+          <nz-table 
+            [nzData]="attachmentFiles()" 
+            nzSize="small" 
+            [nzPageSize]="10"
+            [nzShowPagination]="attachmentFiles().length > 10">
+            <thead>
+              <tr>
+                <th width="40px">{{ 'excel_import.order' | translate }}</th>
+                <th>{{ 'excel_import.filename' | translate }}</th>
+                <th>{{ 'excel_import.size' | translate }}</th>
+                <th>{{ 'excel_import.linked_to' | translate }}</th>
+                <th>{{ 'excel_import.status' | translate }}</th>
+                <th>{{ 'excel_import.actions' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let file of attachmentFiles(); let i = index" 
+                  class="draggable-row"
+                  draggable="true"
+                  (dragstart)="onDragStart($event, i)"
+                  (dragover)="onDragOver($event)"
+                  (drop)="onDrop($event, i)"
+                  [class.drag-over]="dragOverIndex === i">
+                <td class="drag-handle">
+                  <nz-icon nzType="drag" style="cursor: move; color: #999;"></nz-icon>
+                  <span class="row-number">{{ i + 1 }}</span>
+                </td>
+                <td>{{ file.name }}</td>
+                <td>{{ formatFileSize(file.size) }}</td>
+                <td>
+                  <span *ngIf="getAttachmentLinkInfo(file.name) as linkInfo">
+                    <nz-tag [nzColor]="linkInfo.valid ? 'green' : 'red'">
+                      {{ linkInfo.display }}
+                    </nz-tag>
+                  </span>
+                </td>
+                <td>
+                  <nz-tag [nzColor]="getAttachmentLinkInfo(file.name).valid ? 'green' : 'red'">
+                    {{ getAttachmentLinkInfo(file.name).valid ? ('excel_import.valid' | translate) : ('excel_import.invalid' | translate) }}
+                  </nz-tag>
+                </td>
+                <td>
+                  <nz-space nzSize="small">
+                    <button 
+                      *nzSpaceItem
+                      nz-button 
+                      nzType="link" 
+                      nzSize="small"
+                      [disabled]="i === 0"
+                      (click)="moveFileUp(i)">
+                      <nz-icon nzType="arrow-up"></nz-icon>
+                    </button>
+                    <button 
+                      *nzSpaceItem
+                      nz-button 
+                      nzType="link" 
+                      nzSize="small"
+                      [disabled]="i === attachmentFiles().length - 1"
+                      (click)="moveFileDown(i)">
+                      <nz-icon nzType="arrow-down"></nz-icon>
+                    </button>
+                    <button 
+                      *nzSpaceItem
+                      nz-button 
+                      nzType="link" 
+                      nzSize="small"
+                      [disabled]="getAttachmentLinkInfo(file.name).valid"
+                      (click)="suggestRename(file, i)">
+                      <nz-icon nzType="edit"></nz-icon>
+                      <span>{{ 'excel_import.suggest_rename' | translate }}</span>
+                    </button>
+                    <button 
+                      *nzSpaceItem
+                      nz-button 
+                      nzType="link" 
+                      nzSize="small"
+                      nzDanger
+                      (click)="removeAttachment(i)">
+                      <nz-icon nzType="delete"></nz-icon>
+                      <span>{{ 'excel_import.remove' | translate }}</span>
+                    </button>
+                  </nz-space>
+                </td>
+              </tr>
+            </tbody>
+          </nz-table>
+        </div>
       </nz-card>
 
       <!-- Excel Grid -->
@@ -565,6 +776,54 @@ import * as XLSX from 'xlsx';
       margin-top: 4px;
     }
 
+    .strategy-help {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.45);
+      margin-top: 4px;
+    }
+
+    .attachment-card {
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+    }
+
+    .attachment-instructions {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+
+    .attachment-instructions li {
+      margin-bottom: 4px;
+      color: rgba(0, 0, 0, 0.65);
+    }
+
+    .strategy-examples {
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: #f0f8ff;
+      border-radius: 4px;
+      border-left: 3px solid #1890ff;
+    }
+
+    .strategy-examples code {
+      background: #fff;
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin: 0 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #1890ff;
+      border: 1px solid #d9d9d9;
+    }
+
+    .attachment-preview {
+      margin-top: 16px;
+      background: #fafafa;
+      padding: 16px;
+      border-radius: 6px;
+      border: 1px solid #d9d9d9;
+    }
+
     .import-errors,
     .created-documents {
       background: #fafafa;
@@ -575,6 +834,36 @@ import * as XLSX from 'xlsx';
 
     .mt-4 {
       margin-top: 16px;
+    }
+
+    .mb-4 {
+      margin-bottom: 16px;
+    }
+
+    /* Drag and drop styles */
+    .draggable-row {
+      transition: background-color 0.2s ease;
+    }
+
+    .draggable-row:hover {
+      background-color: #f5f5f5;
+    }
+
+    .draggable-row.drag-over {
+      background-color: #e6f7ff;
+      border: 2px dashed #1890ff;
+    }
+
+    .drag-handle {
+      text-align: center;
+      cursor: move;
+      user-select: none;
+    }
+
+    .row-number {
+      margin-left: 8px;
+      font-weight: 500;
+      color: #666;
     }
 
     /* RTL Support */
@@ -643,6 +932,11 @@ export class ExcelGridImportComponent implements OnInit, OnDestroy {
   allResourceTypes = signal<ResourceType[]>([]);
   selectedResourceType = signal<ResourceType | null>(null);
   importResult = signal<BulkImportResultDto | null>(null);
+  attachmentFiles = signal<File[]>([]);
+  
+  // Drag and drop state
+  draggedIndex: number | null = null;
+  dragOverIndex: number | null = null;
   
   // Loading states
   isLoadingCompanies = signal(false);
@@ -733,7 +1027,9 @@ export class ExcelGridImportComponent implements OnInit, OnDestroy {
     this.importOptionsForm = this.fb.group({
       skipInvalidRows: [true],
       generateResourceCodes: [true],
-      duplicateResourceTypesIfMissing: [false]
+      duplicateResourceTypesIfMissing: [false],
+      hasAttachments: [false],
+      attachmentLinkingStrategy: ['ROW_PREFIX']
     });
   }
   
@@ -1295,7 +1591,9 @@ export class ExcelGridImportComponent implements OnInit, OnDestroy {
       resourceTypeId: resourceType.id,
       skipInvalidRows: this.importOptionsForm.get('skipInvalidRows')?.value || true,
       generateResourceCodes: this.importOptionsForm.get('generateResourceCodes')?.value || true,
-      duplicateResourceTypesIfMissing: this.importOptionsForm.get('duplicateResourceTypesIfMissing')?.value || false
+      duplicateResourceTypesIfMissing: this.importOptionsForm.get('duplicateResourceTypesIfMissing')?.value || false,
+      hasAttachments: this.importOptionsForm.get('hasAttachments')?.value || false,
+      attachmentLinkingStrategy: this.importOptionsForm.get('attachmentLinkingStrategy')?.value || 'ROW_PREFIX'
     };
     
     // Convert documents to Excel file for backend processing
@@ -1330,7 +1628,15 @@ export class ExcelGridImportComponent implements OnInit, OnDestroy {
     
     this.isImporting.set(true);
     
-    this.bulkImportService.processBulkImport(file, importRequest)
+    const attachments = this.attachmentFiles();
+    const hasAttachments = attachments.length > 0;
+    
+    // Choose the appropriate service method based on whether we have attachments
+    const importObservable = hasAttachments 
+      ? this.bulkImportService.processBulkImportWithAttachments(file, attachments, importRequest)
+      : this.bulkImportService.processBulkImport(file, importRequest);
+    
+    importObservable
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (result: BulkImportResultDto) => {
@@ -1393,6 +1699,233 @@ export class ExcelGridImportComponent implements OnInit, OnDestroy {
   
   resetForNewImport(): void {
     this.importResult.set(null);
+    this.attachmentFiles.set([]);
     this.clearGrid();
+  }
+
+  // Attachment handling methods
+  onAttachmentToggle(enabled: boolean): void {
+    if (!enabled) {
+      this.attachmentFiles.set([]);
+    }
+  }
+
+  onAttachmentFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    
+    const files = Array.from(input.files);
+    this.attachmentFiles.set(files);
+    
+    this.message.success(
+      this.translateService.instant('excel_import.attachments_selected', { count: files.length })
+    );
+    
+    // Reset file input
+    input.value = '';
+  }
+
+  removeAttachment(index: number): void {
+    const currentFiles = this.attachmentFiles();
+    const updatedFiles = currentFiles.filter((_, i) => i !== index);
+    this.attachmentFiles.set(updatedFiles);
+    
+    this.message.success(this.translateService.instant('excel_import.attachment_removed'));
+  }
+
+  suggestRename(file: File, index: number): void {
+    const strategy = this.importOptionsForm.get('attachmentLinkingStrategy')?.value || 'ROW_PREFIX';
+    let suggestedName = '';
+    
+    if (strategy === 'ROW_PREFIX') {
+      // Suggest ROW1_, ROW2_, etc. based on index
+      const rowNumber = index + 1;
+      const extension = file.name.split('.').pop();
+      const baseName = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
+      suggestedName = `ROW${rowNumber}_${baseName}.${extension}`;
+    } else if (strategy === 'RESOURCE_CODE') {
+      // Suggest using a generic code
+      const extension = file.name.split('.').pop();
+      const baseName = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
+      suggestedName = `DOC${(index + 1).toString().padStart(3, '0')}_${baseName}.${extension}`;
+    }
+    
+    this.modal.confirm({
+      nzTitle: this.translateService.instant('excel_import.rename_suggestion_title'),
+      nzContent: this.translateService.instant('excel_import.rename_suggestion_content', { 
+        original: file.name, 
+        suggested: suggestedName 
+      }),
+      nzOkText: this.translateService.instant('excel_import.use_suggested'),
+      nzCancelText: this.translateService.instant('common.cancel'),
+      nzOnOk: () => {
+        // Create a new File object with the suggested name
+        const newFile = new File([file], suggestedName, { type: file.type });
+        const currentFiles = this.attachmentFiles();
+        const updatedFiles = [...currentFiles];
+        updatedFiles[index] = newFile;
+        this.attachmentFiles.set(updatedFiles);
+        
+        this.message.success(
+          this.translateService.instant('excel_import.file_renamed', { name: suggestedName })
+        );
+      }
+    });
+  }
+
+  getAttachmentLinkInfo(filename: string): { valid: boolean; display: string } {
+    const strategy = this.importOptionsForm.get('attachmentLinkingStrategy')?.value || 'ROW_PREFIX';
+    
+    if (strategy === 'ROW_PREFIX') {
+      // Check if filename starts with ROW{number}_
+      const match = filename.match(/^ROW(\d+)_/i);
+      if (match) {
+        const rowNumber = parseInt(match[1]);
+        return {
+          valid: rowNumber > 0,
+          display: `Row ${rowNumber}`
+        };
+      }
+      return {
+        valid: false,
+        display: 'Need ROW{number}_ prefix'
+      };
+    } else if (strategy === 'RESOURCE_CODE') {
+      // Check if filename contains resource code prefix
+      const parts = filename.split('_');
+      if (parts.length >= 2 && parts[0].trim() !== '') {
+        return {
+          valid: true,
+          display: `Code: ${parts[0]}`
+        };
+      }
+      return {
+        valid: false,
+        display: 'Need {code}_ prefix'
+      };
+    }
+    
+    return { valid: false, display: 'Unknown strategy' };
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  // File management methods
+  clearAllFiles(): void {
+    this.modal.confirm({
+      nzTitle: this.translateService.instant('excel_import.clear_all_files_title'),
+      nzContent: this.translateService.instant('excel_import.clear_all_files_content'),
+      nzOkText: this.translateService.instant('common.confirm'),
+      nzCancelText: this.translateService.instant('common.cancel'),
+      nzOkDanger: true,
+      nzOnOk: () => {
+        this.attachmentFiles.set([]);
+        this.message.success(this.translateService.instant('excel_import.all_files_cleared'));
+      }
+    });
+  }
+
+  fixAllNames(): void {
+    const strategy = this.importOptionsForm.get('attachmentLinkingStrategy')?.value || 'ROW_PREFIX';
+    const currentFiles = this.attachmentFiles();
+    
+    if (currentFiles.length === 0) return;
+
+    this.modal.confirm({
+      nzTitle: this.translateService.instant('excel_import.fix_all_names_title'),
+      nzContent: this.translateService.instant('excel_import.fix_all_names_content', { 
+        strategy: strategy === 'ROW_PREFIX' ? 'ROW1_, ROW2_, ROW3_...' : 'DOC001_, DOC002_, DOC003_...'
+      }),
+      nzOkText: this.translateService.instant('excel_import.fix_all'),
+      nzCancelText: this.translateService.instant('common.cancel'),
+      nzOnOk: () => {
+        const renamedFiles = currentFiles.map((file, index) => {
+          let newName = '';
+          const extension = file.name.split('.').pop();
+          const baseName = file.name.replace(/\.[^/.]+$/, '').replace(/^(ROW\d+_|[A-Z0-9]+_)/, '');
+          
+          if (strategy === 'ROW_PREFIX') {
+            newName = `ROW${index + 1}_${baseName}.${extension}`;
+          } else if (strategy === 'RESOURCE_CODE') {
+            newName = `DOC${(index + 1).toString().padStart(3, '0')}_${baseName}.${extension}`;
+          }
+          
+          return new File([file], newName, { type: file.type });
+        });
+        
+        this.attachmentFiles.set(renamedFiles);
+        this.message.success(
+          this.translateService.instant('excel_import.all_files_renamed', { count: renamedFiles.length })
+        );
+      }
+    });
+  }
+
+  // File reordering methods
+  moveFileUp(index: number): void {
+    if (index === 0) return;
+    
+    const currentFiles = this.attachmentFiles();
+    const newFiles = [...currentFiles];
+    [newFiles[index - 1], newFiles[index]] = [newFiles[index], newFiles[index - 1]];
+    this.attachmentFiles.set(newFiles);
+  }
+
+  moveFileDown(index: number): void {
+    const currentFiles = this.attachmentFiles();
+    if (index === currentFiles.length - 1) return;
+    
+    const newFiles = [...currentFiles];
+    [newFiles[index], newFiles[index + 1]] = [newFiles[index + 1], newFiles[index]];
+    this.attachmentFiles.set(newFiles);
+  }
+
+  // Drag and drop methods
+  onDragStart(event: DragEvent, index: number): void {
+    this.draggedIndex = index;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/html', '');
+    }
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  onDrop(event: DragEvent, dropIndex: number): void {
+    event.preventDefault();
+    
+    if (this.draggedIndex === null || this.draggedIndex === dropIndex) {
+      this.draggedIndex = null;
+      this.dragOverIndex = null;
+      return;
+    }
+
+    const currentFiles = this.attachmentFiles();
+    const newFiles = [...currentFiles];
+    const draggedFile = newFiles[this.draggedIndex];
+    
+    // Remove the dragged file
+    newFiles.splice(this.draggedIndex, 1);
+    
+    // Insert at new position
+    const insertIndex = this.draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+    newFiles.splice(insertIndex, 0, draggedFile);
+    
+    this.attachmentFiles.set(newFiles);
+    this.draggedIndex = null;
+    this.dragOverIndex = null;
+    
+    this.message.success(this.translateService.instant('excel_import.file_reordered'));
   }
 }
