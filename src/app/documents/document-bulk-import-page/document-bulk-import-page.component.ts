@@ -32,7 +32,8 @@ import { BulkImportService } from '../../core/services/bulk-import.service';
 import { ResourceTypeService } from '../../core/services/resource-type.service';
 import { CompanyService } from '../../core/services/company.service';
 import { TranslationService } from '../../core/services/translation.service';
-import { BulkImportRequestDto, BulkImportResultDto, BulkImportErrorDto } from '../../core/models/bulk-import.model';
+import { ResourceTypeDuplicationService } from '../../core/services/resource-type-duplication.service';
+import { BulkImportRequestDto, BulkImportResultDto, BulkImportErrorDto, MultiCompanyImportResultDto, BulkAttachmentDto } from '../../core/models/bulk-import.model';
 import { ResourceType } from '../../core/models/resource-type.model';
 import { Company } from '../../core/models/company.model';
 
@@ -349,6 +350,17 @@ import { Company } from '../../core/models/company.model';
               <label nz-checkbox formControlName="generateResourceCodes">
                 {{ 'bulk_import.step3.generate_codes' | translate }}
               </label>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-control>
+              <label nz-checkbox formControlName="duplicateResourceTypesIfMissing">
+                {{ 'bulk_import.step3.duplicate_resource_types' | translate }}
+              </label>
+              <div class="checkbox-help">
+                {{ 'bulk_import.step3.duplicate_resource_types_help' | translate }}
+              </div>
             </nz-form-control>
           </nz-form-item>
         </form>
@@ -674,6 +686,12 @@ import { Company } from '../../core/models/company.model';
       margin-top: 4px;
     }
 
+    .checkbox-help {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.45);
+      margin-top: 4px;
+    }
+
     .validation-results {
       background: #fafafa;
       padding: 16px;
@@ -867,6 +885,7 @@ export class DocumentBulkImportPageComponent implements OnInit {
   private bulkImportService = inject(BulkImportService);
   private resourceTypeService = inject(ResourceTypeService);
   private companyService = inject(CompanyService);
+  private resourceTypeDuplicationService = inject(ResourceTypeDuplicationService);
   public translationService = inject(TranslationService);
   private translateService = inject(TranslateService);
   private fb = inject(FormBuilder);
@@ -883,7 +902,17 @@ export class DocumentBulkImportPageComponent implements OnInit {
   selectedResourceType = signal<ResourceType | null>(null);
   validationResult = signal<BulkImportResultDto | null>(null);
   importResult = signal<BulkImportResultDto | null>(null);
+  multiCompanyImportResult = signal<MultiCompanyImportResultDto | null>(null);
   fileList = signal<NzUploadFile[]>([]);
+  
+  // Attachment support
+  attachmentFiles = signal<File[]>([]);
+  attachmentFileList = signal<NzUploadFile[]>([]);
+  parsedAttachments = signal<BulkAttachmentDto[]>([]);
+  
+  // Multi-company support
+  selectedCompanies = signal<number[]>([]);
+  isMultiCompanyMode = signal(false);
   
   // Loading states
   isLoadingCompanies = signal(false);
@@ -940,12 +969,17 @@ export class DocumentBulkImportPageComponent implements OnInit {
   constructor() {
     this.resourceTypeForm = this.fb.group({
       companyId: [null, [Validators.required]],
-      resourceTypeId: [null, [Validators.required]]
+      resourceTypeId: [null, [Validators.required]],
+      targetCompanyIds: [[]],
+      isMultiCompany: [false]
     });
 
     this.importOptionsForm = this.fb.group({
       skipInvalidRows: [true],
-      generateResourceCodes: [true]
+      generateResourceCodes: [true],
+      duplicateResourceTypesIfMissing: [false],
+      hasAttachments: [false],
+      attachmentLinkingStrategy: ['ROW_PREFIX']
     });
   }
 
@@ -1180,6 +1214,8 @@ export class DocumentBulkImportPageComponent implements OnInit {
     const file = this.uploadedFile();
     const resourceTypeId = this.resourceTypeForm.get('resourceTypeId')?.value;
     const companyId = this.resourceTypeForm.get('companyId')?.value;
+    const isMultiCompany = this.resourceTypeForm.get('isMultiCompany')?.value;
+    const targetCompanyIds = this.resourceTypeForm.get('targetCompanyIds')?.value;
     
     if (!file || !resourceTypeId) return;
 
@@ -1187,31 +1223,108 @@ export class DocumentBulkImportPageComponent implements OnInit {
       resourceTypeId,
       companyId,
       skipInvalidRows: this.importOptionsForm.get('skipInvalidRows')?.value,
-      generateResourceCodes: this.importOptionsForm.get('generateResourceCodes')?.value
+      generateResourceCodes: this.importOptionsForm.get('generateResourceCodes')?.value,
+      duplicateResourceTypesIfMissing: this.importOptionsForm.get('duplicateResourceTypesIfMissing')?.value,
+      hasAttachments: this.importOptionsForm.get('hasAttachments')?.value,
+      attachmentLinkingStrategy: this.importOptionsForm.get('attachmentLinkingStrategy')?.value
     };
 
+    // Set target companies for multi-company import
+    if (isMultiCompany && targetCompanyIds && targetCompanyIds.length > 0) {
+      request.targetCompanyIds = targetCompanyIds;
+    }
+
     this.isProcessing.set(true);
-    this.bulkImportService.processBulkImport(file, request)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (result) => {
-          this.importResult.set(result);
-          this.isProcessing.set(false);
-          this.nextStep();
-          
-          if (result.failedRows === 0) {
-            this.message.success(this.translateService.instant('bulk_import.messages.import_successful', { 0: result.successfulRows }));
-          } else if (result.successfulRows > 0) {
-            this.message.warning(this.translateService.instant('bulk_import.messages.import_partial', { 0: result.successfulRows, 1: result.failedRows }));
-          } else {
-            this.message.error(this.translateService.instant('bulk_import.messages.import_failed', { 0: result.failedRows }));
+    
+    const attachments = this.attachmentFiles();
+    const hasAttachments = attachments.length > 0;
+    
+    if (isMultiCompany) {
+      // Multi-company import
+      this.bulkImportService.processMultiCompanyImport(file, attachments, request)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (result: MultiCompanyImportResultDto) => {
+            this.multiCompanyImportResult.set(result);
+            this.handleMultiCompanyImportResult(result);
+            this.isProcessing.set(false);
+            this.nextStep();
+          },
+          error: () => {
+            this.isProcessing.set(false);
+            this.message.error(this.translateService.instant('bulk_import.messages.import_processing_failed'));
           }
-        },
-        error: () => {
-          this.isProcessing.set(false);
-          this.message.error(this.translateService.instant('bulk_import.messages.import_processing_failed'));
-        }
-      });
+        });
+    } else if (hasAttachments) {
+      // Single company with attachments
+      this.bulkImportService.processBulkImportWithAttachments(file, attachments, request)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (result: BulkImportResultDto) => {
+            this.importResult.set(result);
+            this.handleSingleCompanyImportResult(result);
+            this.isProcessing.set(false);
+            this.nextStep();
+          },
+          error: () => {
+            this.isProcessing.set(false);
+            this.message.error(this.translateService.instant('bulk_import.messages.import_processing_failed'));
+          }
+        });
+    } else {
+      // Regular single company import
+      this.bulkImportService.processBulkImport(file, request)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (result: BulkImportResultDto) => {
+            this.importResult.set(result);
+            this.handleSingleCompanyImportResult(result);
+            this.isProcessing.set(false);
+            this.nextStep();
+          },
+          error: () => {
+            this.isProcessing.set(false);
+            this.message.error(this.translateService.instant('bulk_import.messages.import_processing_failed'));
+          }
+        });
+    }
+  }
+
+  private handleSingleCompanyImportResult(result: BulkImportResultDto): void {
+    if (result.failedRows === 0) {
+      const message = this.translateService.instant('bulk_import.messages.import_successful')
+        .replace('{count}', result.successfulRows.toString());
+      this.message.success(message);
+    } else if (result.successfulRows > 0) {
+      const message = this.translateService.instant('bulk_import.messages.import_partial')
+        .replace('{success}', result.successfulRows.toString())
+        .replace('{failed}', result.failedRows.toString());
+      this.message.warning(message);
+    } else {
+      const message = this.translateService.instant('bulk_import.messages.import_failed')
+        .replace('{count}', result.failedRows.toString());
+      this.message.error(message);
+    }
+  }
+
+  private handleMultiCompanyImportResult(result: MultiCompanyImportResultDto): void {
+    if (result.totalFailedRows === 0) {
+      const message = this.translateService.instant('bulk_import.messages.multi_company_import_successful')
+        .replace('{success}', result.totalSuccessfulRows.toString())
+        .replace('{companies}', result.totalProcessedCompanies.toString());
+      this.message.success(message);
+    } else if (result.totalSuccessfulRows > 0) {
+      const message = this.translateService.instant('bulk_import.messages.multi_company_import_partial')
+        .replace('{success}', result.totalSuccessfulRows.toString())
+        .replace('{failed}', result.totalFailedRows.toString())
+        .replace('{companies}', result.totalProcessedCompanies.toString());
+      this.message.warning(message);
+    } else {
+      const message = this.translateService.instant('bulk_import.messages.multi_company_import_failed')
+        .replace('{failed}', result.totalFailedRows.toString())
+        .replace('{companies}', result.totalProcessedCompanies.toString());
+      this.message.error(message);
+    }
   }
 
   nextStep(): void {
@@ -1231,14 +1344,119 @@ export class DocumentBulkImportPageComponent implements OnInit {
     this.currentStep.set(0);
     this.uploadedFile.set(null);
     this.fileList.set([]);
+    this.attachmentFiles.set([]);
+    this.attachmentFileList.set([]);
+    this.parsedAttachments.set([]);
     this.selectedResourceType.set(null);
     this.validationResult.set(null);
     this.importResult.set(null);
+    this.multiCompanyImportResult.set(null);
+    this.selectedCompanies.set([]);
+    this.isMultiCompanyMode.set(false);
     this.resourceTypeForm.reset();
     this.importOptionsForm.patchValue({
       skipInvalidRows: true,
-      generateResourceCodes: true
+      generateResourceCodes: true,
+      duplicateResourceTypesIfMissing: false,
+      hasAttachments: false,
+      attachmentLinkingStrategy: 'ROW_PREFIX'
     });
+  }
+
+  // Attachment handling methods
+  onAttachmentFileChange(info: NzUploadChangeParam): void {
+    console.log('Attachment file change event:', info);
+    
+    let newFileList = [...info.fileList];
+    
+    // Update the file list for display purposes
+    this.attachmentFileList.set(newFileList);
+    
+    // Extract actual File objects
+    const actualFiles: File[] = [];
+    newFileList.forEach(nzFile => {
+      if (nzFile.originFileObj) {
+        actualFiles.push(nzFile.originFileObj as File);
+      }
+    });
+    
+    this.attachmentFiles.set(actualFiles);
+    this.importOptionsForm.patchValue({ hasAttachments: actualFiles.length > 0 });
+    
+    // Parse attachments for validation
+    this.parseAttachmentsForPreview(actualFiles);
+  }
+
+  private parseAttachmentsForPreview(files: File[]): void {
+    const linkingStrategy = this.importOptionsForm.get('attachmentLinkingStrategy')?.value || 'ROW_PREFIX';
+    const parsedAttachments: BulkAttachmentDto[] = [];
+    
+    files.forEach(file => {
+      const attachment: BulkAttachmentDto = {
+        originalFilename: file.name,
+        linkedRowIdentifier: '',
+        mimeType: file.type,
+        sizeBytes: file.size
+      };
+      
+      if (linkingStrategy === 'ROW_PREFIX') {
+        this.parseRowPrefixLinking(attachment);
+      } else if (linkingStrategy === 'RESOURCE_CODE') {
+        this.parseResourceCodeLinking(attachment);
+      }
+      
+      parsedAttachments.push(attachment);
+    });
+    
+    this.parsedAttachments.set(parsedAttachments);
+  }
+
+  private parseRowPrefixLinking(attachment: BulkAttachmentDto): void {
+    const filename = attachment.originalFilename;
+    if (filename && filename.toUpperCase().startsWith('ROW')) {
+      try {
+        const parts = filename.split('_', 2);
+        if (parts.length >= 1) {
+          const rowPart = parts[0].toUpperCase().replace('ROW', '');
+          const rowNumber = parseInt(rowPart);
+          attachment.rowNumber = rowNumber;
+          attachment.linkedRowIdentifier = 'ROW' + rowNumber;
+        }
+      } catch (e) {
+        attachment.errorMessage = 'Invalid row number format in filename';
+      }
+    } else {
+      attachment.errorMessage = 'Filename must start with ROW{number}_ format';
+    }
+  }
+
+  private parseResourceCodeLinking(attachment: BulkAttachmentDto): void {
+    const filename = attachment.originalFilename;
+    if (filename && filename.includes('_')) {
+      const parts = filename.split('_', 2);
+      if (parts.length >= 1) {
+        attachment.resourceCode = parts[0];
+        attachment.linkedRowIdentifier = parts[0];
+      }
+    } else {
+      attachment.errorMessage = 'Filename must contain resource code followed by underscore';
+    }
+  }
+
+  // Multi-company handling methods
+  onMultiCompanyToggle(enabled: boolean): void {
+    this.isMultiCompanyMode.set(enabled);
+    if (enabled) {
+      this.resourceTypeForm.get('targetCompanyIds')?.setValidators([Validators.required]);
+    } else {
+      this.resourceTypeForm.get('targetCompanyIds')?.clearValidators();
+      this.resourceTypeForm.get('targetCompanyIds')?.setValue([]);
+    }
+    this.resourceTypeForm.get('targetCompanyIds')?.updateValueAndValidity();
+  }
+
+  onCompanySelectionChange(companyIds: number[]): void {
+    this.selectedCompanies.set(companyIds);
   }
 
   getFieldTypeColor(type: string): string {

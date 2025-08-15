@@ -271,10 +271,20 @@
         "created_at": "Created At",
         "actions": "Actions"
       },
-      "actions": {
-        "edit": "Edit Resource Type",
-        "delete": "Delete Resource Type",
-        "view": "View Details"
+              "actions": {
+          "edit": "Edit Resource Type",
+          "duplicate": "Duplicate to Companies",
+          "delete": "Delete Resource Type",
+          "view": "View Details"
+        },
+      "duplicate": {
+        "title": "Duplicate Resource Type",
+        "message": "Duplicate '{name}' to other companies",
+        "select_companies": "Select target companies",
+        "confirm": "Duplicate",
+        "success": "Successfully duplicated to {count} companies",
+        "partial": "Partially completed: {successful} successful, {failed} failed",
+        "failed": "Duplication failed for {count} companies"
       },
       "empty": {
         "message": "No resource types found",
@@ -763,7 +773,24 @@
     "total_rows": "Total rows",
     "valid_rows": "Valid rows",
     "invalid_rows": "Invalid rows",
+    "import_options": "Import Options",
+    "skip_invalid_rows": "Skip invalid rows and continue import",
+    "generate_resource_codes": "Auto-generate resource codes if not provided",
+    "duplicate_resource_types": "Duplicate resource types to target companies if they don't exist",
+    "duplicate_resource_types_help": "When importing to multiple companies, automatically create missing resource types",
     "import_results": "Import Results",
+    "import_errors": "Import Errors",
+    "created_documents": "Created Documents",
+    "error_row": "Row",
+    "error_field": "Field",
+    "error_value": "Value",
+    "error_message": "Error Message",
+    "error_severity": "Severity",
+    "document_title": "Title",
+    "resource_code": "Resource Code",
+    "created_at": "Created At",
+    "actions": "Actions",
+    "view": "View",
     "view_documents": "View Documents",
     "import_more": "Import More",
     "error_loading_companies": "Failed to load companies",
@@ -869,6 +896,8 @@
       "severity": "Severity",
       "skip_invalid": "Skip invalid rows and continue with valid data",
       "generate_codes": "Auto-generate resource codes for empty values",
+      "duplicate_resource_types": "Duplicate resource types to target companies if they don't exist",
+      "duplicate_resource_types_help": "When importing to multiple companies, automatically create missing resource types",
       "start_import": "Start Import"
     },
     "step4": {
@@ -898,10 +927,13 @@
       "validation_successful": "File validation successful",
       "validation_issues": "File validated with {0} issues",
       "validation_failed": "Failed to validate file",
-      "import_successful": "Successfully imported {0} documents",
-      "import_partial": "Partially completed: {0} successful, {1} failed",
-      "import_failed": "Import failed: {0} rows had errors",
-      "import_processing_failed": "Failed to process import"
+      "import_successful": "Successfully imported {count} documents",
+      "import_partial": "Partially completed: {success} successful, {failed} failed",
+      "import_failed": "Import failed: {count} rows had errors",
+      "import_processing_failed": "Failed to process import",
+      "multi_company_import_successful": "Successfully imported {success} documents across {companies} companies",
+      "multi_company_import_partial": "Partially completed: {success} successful, {failed} failed across {companies} companies",
+      "multi_company_import_failed": "Import failed: {failed} rows had errors across {companies} companies"
     },
     "field_types": {
       "TEXT": "Text",

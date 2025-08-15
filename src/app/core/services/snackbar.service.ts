@@ -36,4 +36,14 @@ export class SnackbarService {
       ...config
     });
   }
+  
+  warning(message: string, action: string = 'Close', config?: MatSnackBarConfig): MatSnackBarRef<TextOnlySnackBar> {
+    return this.snackBar.open(message, action, {
+      duration: 7000,
+      horizontalPosition: 'right',
+      verticalPosition: 'top',
+      panelClass: ['snackbar-warning'],
+      ...config
+    });
+  }
 }

@@ -27,6 +27,9 @@ import { NzPageHeaderModule } from 'ng-zorro-antd/page-header';
 import { NzBreadCrumbModule } from 'ng-zorro-antd/breadcrumb';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzUploadModule, NzUploadChangeParam } from 'ng-zorro-antd/upload';
+import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
+import { NzTableModule } from 'ng-zorro-antd/table';
+import { NzTagModule } from 'ng-zorro-antd/tag';
 
 import { ResourceTypeService } from '../../core/services/resource-type.service';
 import { CompanyService } from '../../core/services/company.service';
@@ -59,7 +62,10 @@ import * as XLSX from 'xlsx';
     NzDividerModule,
     NzPageHeaderModule,
     NzBreadCrumbModule,
-    NzUploadModule
+    NzUploadModule,
+    NzCheckboxModule,
+    NzTableModule,
+    NzTagModule
   ],
   template: `
     <div class="excel-grid-container" [class.rtl]="translationService.isRTL()">
@@ -191,6 +197,49 @@ import * as XLSX from 'xlsx';
         </div>
       </nz-alert>
 
+      <!-- Import Options -->
+      <nz-card 
+        *ngIf="selectedResourceType()" 
+        [nzTitle]="'excel_import.import_options' | translate"
+        class="options-card">
+        <form nz-form [formGroup]="importOptionsForm" nzLayout="vertical">
+          <div nz-row [nzGutter]="[16, 16]">
+            <div nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-control>
+                  <label nz-checkbox formControlName="skipInvalidRows">
+                    {{ 'excel_import.skip_invalid_rows' | translate }}
+                  </label>
+                </nz-form-control>
+              </nz-form-item>
+            </div>
+            <div nz-col [nzSpan]="12">
+              <nz-form-item>
+                <nz-form-control>
+                  <label nz-checkbox formControlName="generateResourceCodes">
+                    {{ 'excel_import.generate_resource_codes' | translate }}
+                  </label>
+                </nz-form-control>
+              </nz-form-item>
+            </div>
+          </div>
+          <div nz-row [nzGutter]="[16, 16]">
+            <div nz-col [nzSpan]="24">
+              <nz-form-item>
+                <nz-form-control>
+                  <label nz-checkbox formControlName="duplicateResourceTypesIfMissing">
+                    {{ 'excel_import.duplicate_resource_types' | translate }}
+                  </label>
+                  <div class="checkbox-help">
+                    {{ 'excel_import.duplicate_resource_types_help' | translate }}
+                  </div>
+                </nz-form-control>
+              </nz-form-item>
+            </div>
+          </div>
+        </form>
+      </nz-card>
+
       <!-- Excel Grid -->
       <nz-card 
         *ngIf="selectedResourceType()" 
@@ -268,6 +317,75 @@ import * as XLSX from 'xlsx';
           [nzMessage]="getImportResultMessage()"
           nzShowIcon>
         </nz-alert>
+
+        <!-- Import Errors -->
+        <div *ngIf="importResult()!.errors && importResult()!.errors.length > 0" class="import-errors mt-4">
+          <nz-divider [nzText]="'excel_import.import_errors' | translate" nzOrientation="left"></nz-divider>
+          <nz-table 
+            [nzData]="importResult()!.errors" 
+            nzSize="small" 
+            [nzPageSize]="10"
+            [nzShowPagination]="importResult()!.errors.length > 10">
+            <thead>
+              <tr>
+                <th>{{ 'excel_import.error_row' | translate }}</th>
+                <th>{{ 'excel_import.error_field' | translate }}</th>
+                <th>{{ 'excel_import.error_value' | translate }}</th>
+                <th>{{ 'excel_import.error_message' | translate }}</th>
+                <th>{{ 'excel_import.error_severity' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let error of importResult()!.errors">
+                <td>{{ error.rowNumber }}</td>
+                <td>{{ error.field || '-' }}</td>
+                <td>{{ error.value || '-' }}</td>
+                <td>{{ error.errorMessage }}</td>
+                <td>
+                  <nz-tag [nzColor]="error.severity === 'ERROR' ? 'red' : 'orange'">
+                    {{ error.severity }}
+                  </nz-tag>
+                </td>
+              </tr>
+            </tbody>
+          </nz-table>
+        </div>
+
+        <!-- Created Documents -->
+        <div *ngIf="importResult()!.createdDocuments && importResult()!.createdDocuments.length > 0" class="created-documents mt-4">
+          <nz-divider [nzText]="'excel_import.created_documents' | translate" nzOrientation="left"></nz-divider>
+          <nz-table 
+            [nzData]="importResult()!.createdDocuments" 
+            nzSize="small" 
+            [nzPageSize]="10"
+            [nzShowPagination]="importResult()!.createdDocuments.length > 10">
+            <thead>
+              <tr>
+                <th>{{ 'excel_import.document_title' | translate }}</th>
+                <th>{{ 'excel_import.resource_code' | translate }}</th>
+                <th>{{ 'excel_import.company' | translate }}</th>
+                <th>{{ 'excel_import.created_at' | translate }}</th>
+                <th>{{ 'excel_import.actions' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let doc of importResult()!.createdDocuments">
+                <td>{{ doc.title }}</td>
+                <td>
+                  <nz-tag>{{ doc.resourceCode }}</nz-tag>
+                </td>
+                <td>{{ doc.company?.name || '-' }}</td>
+                <td>{{ doc.createdAt | date:'short' }}</td>
+                <td>
+                  <a nz-button nzType="link" nzSize="small" [routerLink]="['/documents', doc.id]">
+                    <nz-icon nzType="eye"></nz-icon>
+                    <span>{{ 'excel_import.view' | translate }}</span>
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </nz-table>
+        </div>
 
         <div class="result-actions" *ngIf="importResult()!.successfulRows > 0">
           <nz-divider></nz-divider>
@@ -356,6 +474,7 @@ import * as XLSX from 'xlsx';
     }
 
     .selection-card,
+    .options-card,
     .grid-card,
     .results-card {
       margin: 0 24px 24px 24px;
@@ -440,6 +559,24 @@ import * as XLSX from 'xlsx';
       margin-top: 24px;
     }
 
+    .checkbox-help {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.45);
+      margin-top: 4px;
+    }
+
+    .import-errors,
+    .created-documents {
+      background: #fafafa;
+      padding: 16px;
+      border-radius: 6px;
+      border: 1px solid #d9d9d9;
+    }
+
+    .mt-4 {
+      margin-top: 16px;
+    }
+
     /* RTL Support */
     .excel-grid-container.rtl .instructions-list {
       padding-left: 0;
@@ -462,6 +599,7 @@ import * as XLSX from 'xlsx';
       }
 
       .selection-card,
+      .options-card,
       .grid-card,
       .results-card,
       .instructions-alert {
@@ -569,8 +707,9 @@ export class ExcelGridImportComponent implements OnInit, OnDestroy {
     }
   };
   
-  // Form
+  // Forms
   selectionForm: FormGroup;
+  importOptionsForm: FormGroup;
   
   // Computed values
   hasData = signal(false);
@@ -589,6 +728,12 @@ export class ExcelGridImportComponent implements OnInit, OnDestroy {
     this.selectionForm = this.fb.group({
       companyId: [null, [Validators.required]],
       resourceTypeId: [null, [Validators.required]]
+    });
+
+    this.importOptionsForm = this.fb.group({
+      skipInvalidRows: [true],
+      generateResourceCodes: [true],
+      duplicateResourceTypesIfMissing: [false]
     });
   }
   
@@ -668,6 +813,24 @@ export class ExcelGridImportComponent implements OnInit, OnDestroy {
           }
         },
         cellClass: 'text-cell'
+      },
+      {
+        field: 'company',
+        headerName: 'Company *',
+        editable: true,
+        cellEditor: 'agSelectCellEditor',
+        cellEditorParams: {
+          values: this.companies().map(c => c.name)
+        },
+        cellClassRules: {
+          'required-cell-empty': (params) => {
+            return params.value === null || params.value === undefined || params.value === '';
+          }
+        },
+        cellClass: 'select-cell',
+        valueFormatter: (params: ValueFormatterParams) => {
+          return params.value || '';
+        }
       },
       {
         field: 'resourceCode',
@@ -1078,11 +1241,21 @@ export class ExcelGridImportComponent implements OnInit, OnDestroy {
       });
       
       if (hasContent) {
+        // Find company by name
+        const companyName = row.company;
+        const company = this.companies().find(c => c.name === companyName);
+        
+        // If no company specified or company not found, use default from form
+        if (!company && companyName) {
+          console.warn(`Company not found: ${companyName} (row ${index + 1}), using default company`);
+        }
+        
         const doc: any = {
           title: row.title || '',
+          company: companyName || '', // Add company name for per-row processing
           resourceCode: row.resourceCode || `DOC-${Date.now()}-${index}`,
           resourceTypeId: resourceType.id,
-          companyId: this.selectionForm.get('companyId')?.value,
+          companyId: company?.id || this.selectionForm.get('companyId')?.value, // Fallback to form value
           fieldValues: {}
         };
         
@@ -1120,17 +1293,16 @@ export class ExcelGridImportComponent implements OnInit, OnDestroy {
     const importRequest: BulkImportRequestDto = {
       companyId: this.selectionForm.get('companyId')?.value!,
       resourceTypeId: resourceType.id,
-      skipInvalidRows: true,
-      generateResourceCodes: true
+      skipInvalidRows: this.importOptionsForm.get('skipInvalidRows')?.value || true,
+      generateResourceCodes: this.importOptionsForm.get('generateResourceCodes')?.value || true,
+      duplicateResourceTypesIfMissing: this.importOptionsForm.get('duplicateResourceTypesIfMissing')?.value || false
     };
-    
-    // Log documents for debugging
-    console.log('Documents to import:', documents);
     
     // Convert documents to Excel file for backend processing
     const excelData = documents.map(doc => {
       const row: any = {
         'Title*': doc.title,
+        'Company*': doc.company,
         'Resource Code*': doc.resourceCode
       };
       
@@ -1166,11 +1338,9 @@ export class ExcelGridImportComponent implements OnInit, OnDestroy {
           this.isImporting.set(false);
           
           if (result.successfulRows > 0) {
-            this.message.success(
-              this.translateService.instant('excel_import.import_success', {
-                count: result.successfulRows
-              })
-            );
+            const message = this.translateService.instant('excel_import.import_success')
+              .replace('{count}', result.successfulRows.toString());
+            this.message.success(message);
           }
           
           if (result.failedRows > 0) {
@@ -1209,18 +1379,15 @@ export class ExcelGridImportComponent implements OnInit, OnDestroy {
     if (!result) return '';
     
     if (result.failedRows === 0) {
-      return this.translateService.instant('excel_import.all_imported', {
-        count: result.successfulRows
-      });
+      return this.translateService.instant('excel_import.all_imported')
+        .replace('{count}', result.successfulRows.toString());
     } else if (result.successfulRows === 0) {
-      return this.translateService.instant('excel_import.none_imported', {
-        count: result.failedRows
-      });
+      return this.translateService.instant('excel_import.none_imported')
+        .replace('{count}', result.failedRows.toString());
     } else {
-      return this.translateService.instant('excel_import.partial_imported', {
-        success: result.successfulRows,
-        failed: result.failedRows
-      });
+      return this.translateService.instant('excel_import.partial_imported')
+        .replace('{success}', result.successfulRows.toString())
+        .replace('{failed}', result.failedRows.toString());
     }
   }
   

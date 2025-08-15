@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, TemplateRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
@@ -13,9 +13,14 @@ import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
+import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 
 import { ResourceTypeService } from '../../../core/services/resource-type.service';
+import { ResourceTypeDuplicationService } from '../../../core/services/resource-type-duplication.service';
+import { CompanyService } from '../../../core/services/company.service';
 import { ResourceType } from '../../../core/models/resource-type.model';
+import { Company } from '../../../core/models/company.model';
+import { ResourceTypeDuplicationRequestDto } from '../../../core/models/bulk-import.model';
 import { SnackbarService } from '../../../core/services/snackbar.service';
 import { TranslationService } from '../../../core/services/translation.service';
 
@@ -34,7 +39,8 @@ import { TranslationService } from '../../../core/services/translation.service';
     NzSpinModule,
     NzTagModule,
     NzEmptyModule,
-    NzDropDownModule
+    NzDropDownModule,
+    NzCheckboxModule
   ],
   template: `
     <div class="resource-types-admin-container" [attr.dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
@@ -94,10 +100,10 @@ import { TranslationService } from '../../../core/services/translation.service';
                 <span class="resource-type-name">{{ rt.name }}</span>
               </td>
               <td>
-                @if (rt.companyName) {
+                @if (rt.company?.name || rt.companyName) {
                   <div class="company-cell">
                     <nz-icon nzType="apartment" class="company-icon"></nz-icon>
-                    <span class="company-name">{{ rt.companyName }}</span>
+                    <span class="company-name">{{ rt.company?.name || rt.companyName }}</span>
                   </div>
                 } @else {
                   <span class="no-data">{{ 'common.not_available' | translate }}</span>
@@ -136,6 +142,10 @@ import { TranslationService } from '../../../core/services/translation.service';
                         <nz-icon nzType="edit" nzTheme="outline"></nz-icon>
                         {{ 'admin.resource_types.actions.edit' | translate }}
                       </li>
+                      <li nz-menu-item (click)="onDuplicateResourceType(rt)">
+                        <nz-icon nzType="copy" nzTheme="outline"></nz-icon>
+                        {{ 'admin.resource_types.actions.duplicate' | translate }}
+                      </li>
                       <li nz-menu-divider></li>
                       <li nz-menu-item (click)="onDeleteResourceType(rt)" class="delete-action">
                         <nz-icon nzType="delete" nzTheme="outline"></nz-icon>
@@ -162,6 +172,62 @@ import { TranslationService } from '../../../core/services/translation.service';
         }
       </nz-card>
     </div>
+
+    <!-- Duplicate Modal Template -->
+    <ng-template #duplicateModalTemplate let-modal>
+      <div style="padding: 16px;">
+        <p style="margin-bottom: 20px; color: rgba(0, 0, 0, 0.85); font-size: 14px;">
+          Duplicate '<strong>{{ currentResourceType()?.name }}</strong>' to other companies
+        </p>
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 12px; font-weight: 600; color: rgba(0, 0, 0, 0.85); font-size: 14px;">
+            Select target companies:
+          </label>
+          <div style="max-height: 250px; overflow-y: auto; border: 1px solid #d9d9d9; border-radius: 6px; padding: 12px; background-color: #fafafa;">
+            @if (availableCompaniesForDuplication().length === 0) {
+              <div style="text-align: center; padding: 20px; color: rgba(0, 0, 0, 0.45);">
+                No companies available for duplication
+              </div>
+            } @else {
+              @for (company of availableCompaniesForDuplication(); track company.id) {
+                <div 
+                  class="company-item" 
+                  [class.selected]="selectedCompanyIds().includes(company.id)"
+                  (click)="toggleCompanySelection(company.id)"
+                  style="
+                    display: flex; 
+                    align-items: center; 
+                    margin: 8px 0; 
+                    padding: 12px; 
+                    border-radius: 6px; 
+                    background-color: white; 
+                    border: 1px solid #e8e8e8; 
+                    cursor: pointer; 
+                    transition: background-color 0.2s;
+                  "
+                  [style.background-color]="selectedCompanyIds().includes(company.id) ? '#e6f7ff' : 'white'"
+                  [style.border-color]="selectedCompanyIds().includes(company.id) ? '#1890ff' : '#e8e8e8'"
+                >
+                  <input 
+                    type="checkbox" 
+                    [checked]="selectedCompanyIds().includes(company.id)"
+                    (click)="$event.stopPropagation()"
+                    (change)="toggleCompanySelection(company.id)"
+                    style="margin-right: 12px; width: 16px; height: 16px; cursor: pointer; transform: scale(1.2);"
+                  />
+                  <label style="cursor: pointer; font-size: 14px; color: rgba(0, 0, 0, 0.85); flex: 1; user-select: none;">
+                    {{ company.name }}
+                  </label>
+                </div>
+              }
+            }
+          </div>
+        </div>
+        <div style="font-size: 12px; color: rgba(0, 0, 0, 0.45); margin-top: 12px; padding: 8px; background-color: #f0f8ff; border-radius: 4px; border-left: 3px solid #1890ff;">
+          💡 Select one or more companies to duplicate this resource type to.
+        </div>
+      </div>
+    </ng-template>
   `,
   styles: [`
     .resource-types-admin-container {
@@ -463,16 +529,27 @@ import { TranslationService } from '../../../core/services/translation.service';
 })
 export class ResourceTypeListPageComponent implements OnInit {
   private resourceTypeService = inject(ResourceTypeService);
+  private resourceTypeDuplicationService = inject(ResourceTypeDuplicationService);
+  private companyService = inject(CompanyService);
   private snackbar = inject(SnackbarService);
   private modal = inject(NzModalService);
   private translateService = inject(TranslateService);
   protected translationService = inject(TranslationService);
 
+  @ViewChild('duplicateModalTemplate', { static: true }) duplicateModalTemplate!: TemplateRef<any>;
+
   isLoading = signal(true);
   resourceTypes = signal<ResourceType[]>([]);
+  companies = signal<Company[]>([]);
+  
+  // Modal-specific signals
+  currentResourceType = signal<ResourceType | null>(null);
+  availableCompaniesForDuplication = signal<Company[]>([]);
+  selectedCompanyIds = signal<number[]>([]);
 
   ngOnInit(): void {
     this.fetchAllResourceTypes();
+    this.loadCompanies();
   }
 
   fetchAllResourceTypes(): void {
@@ -506,6 +583,136 @@ export class ResourceTypeListPageComponent implements OnInit {
           this.snackbar.error('Failed to delete resource type: ' + (err.error?.message || err.message));
         });
       }
+    });
+  }
+
+  loadCompanies(): void {
+    console.log('Loading companies...');
+    this.companyService.getAccessibleCompanies().subscribe({
+      next: (companies) => {
+        console.log('Companies loaded:', companies);
+        this.companies.set(companies);
+      },
+      error: (err) => {
+        console.error('Error loading companies:', err);
+      }
+    });
+  }
+
+  onDuplicateResourceType(resourceType: ResourceType): void {
+    // Get available companies (excluding the current one)
+    const allCompanies = this.companies();
+    console.log('All companies:', allCompanies);
+    console.log('Resource type company ID:', resourceType.companyId);
+    
+    // If no companies are loaded, try to load them first
+    if (allCompanies.length === 0) {
+      console.log('No companies loaded, loading them now...');
+      this.loadCompanies();
+      // Wait a bit and try again
+      setTimeout(() => {
+        this.onDuplicateResourceType(resourceType);
+      }, 1000);
+      return;
+    }
+    
+    const availableCompanies = allCompanies.filter(c => c.id !== resourceType.companyId);
+    console.log('Available companies for duplication:', availableCompanies);
+    
+    if (availableCompanies.length === 0) {
+      this.snackbar.warning('No other companies available for duplication');
+      return;
+    }
+
+    // Set up modal data
+    this.currentResourceType.set(resourceType);
+    this.availableCompaniesForDuplication.set(availableCompanies);
+    this.selectedCompanyIds.set([]);
+
+    // Create modal using template
+    const modalRef = this.modal.create({
+      nzTitle: 'Duplicate Resource Type',
+      nzContent: this.duplicateModalTemplate,
+      nzFooter: [
+        {
+          label: 'Cancel',
+          type: 'default',
+          onClick: () => modalRef.destroy()
+        },
+        {
+          label: 'Duplicate',
+          type: 'primary',
+          onClick: () => {
+            const selectedIds = this.selectedCompanyIds();
+            if (selectedIds.length === 0) {
+              this.snackbar.warning('Please select at least one company');
+              return false;
+            }
+            
+            this.performDuplication(resourceType.id, selectedIds).then(() => {
+              modalRef.destroy();
+            }).catch(() => {
+              // Error handling is done in performDuplication
+            });
+            return false; // Prevent auto-close
+          }
+        }
+      ],
+      nzWidth: 520,
+      nzMaskClosable: false
+    });
+  }
+
+  toggleCompanySelection(companyId: number): void {
+    const currentSelected = this.selectedCompanyIds();
+    if (currentSelected.includes(companyId)) {
+      this.selectedCompanyIds.set(currentSelected.filter(id => id !== companyId));
+    } else {
+      this.selectedCompanyIds.set([...currentSelected, companyId]);
+    }
+    console.log('Selected company IDs:', this.selectedCompanyIds());
+  }
+
+
+
+
+
+
+
+  private performDuplication(resourceTypeId: number, targetCompanyIds: number[]): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.resourceTypeDuplicationService.duplicateToMultipleCompanies(resourceTypeId, targetCompanyIds)
+        .subscribe({
+          next: (results) => {
+            const successful = results.filter(r => r.successful).length;
+            const failed = results.filter(r => !r.successful).length;
+            
+            if (failed === 0) {
+              this.snackbar.success(
+                this.translateService.instant('admin.resource_types.duplicate.success', { count: successful })
+              );
+            } else if (successful > 0) {
+              this.snackbar.warning(
+                this.translateService.instant('admin.resource_types.duplicate.partial', { 
+                  successful, 
+                  failed 
+                })
+              );
+            } else {
+              this.snackbar.error(
+                this.translateService.instant('admin.resource_types.duplicate.failed', { count: failed })
+              );
+            }
+            
+            // Refresh the resource types list
+            this.fetchAllResourceTypes();
+            resolve();
+          },
+          error: (err) => {
+            this.snackbar.error('Duplication failed: ' + (err.error?.message || err.message));
+            reject(err);
+          }
+        });
     });
   }
 

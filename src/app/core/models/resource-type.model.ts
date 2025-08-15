@@ -4,8 +4,17 @@ export interface ResourceType {
   name: string; // Add name field
   description?: string;
   companyId: number;
-  companyName?: string;
+  company?: Company; // Add company object
+  companyName?: string; // Keep for backward compatibility
   fields: FieldDefinitionDto[]; // Changed from ResourceTypeField[]
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Company {
+  id: number;
+  name: string;
+  description?: string;
   createdAt: string;
   updatedAt: string;
 }
