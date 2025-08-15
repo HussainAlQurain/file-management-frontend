@@ -20,6 +20,7 @@ import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzStepsModule } from 'ng-zorro-antd/steps';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzCollapseModule } from 'ng-zorro-antd/collapse';
@@ -391,6 +392,15 @@ import { Company } from '../../core/models/company.model';
                 <li>{{ 'bulk_import.step3.attachment_instruction_2' | translate }}</li>
                 <li>{{ 'bulk_import.step3.attachment_instruction_3' | translate }}</li>
               </ul>
+              <div class="strategy-examples" *ngIf="importOptionsForm.get('attachmentLinkingStrategy')?.value">
+                <strong>{{ 'bulk_import.step3.examples' | translate }}:</strong>
+                <div *ngIf="importOptionsForm.get('attachmentLinkingStrategy')?.value === 'ROW_PREFIX'">
+                  <code>ROW1_contract.pdf</code>, <code>ROW2_invoice.xlsx</code>, <code>ROW3_receipt.jpg</code>
+                </div>
+                <div *ngIf="importOptionsForm.get('attachmentLinkingStrategy')?.value === 'RESOURCE_CODE'">
+                  <code>DOC001_file.pdf</code>, <code>INV002_attachment.xlsx</code>, <code>CONTRACT_document.jpg</code>
+                </div>
+              </div>
             </div>
           </nz-alert>
 
@@ -429,14 +439,42 @@ import { Company } from '../../core/models/company.model';
                     accept="*/*"
                     (change)="onDirectAttachmentFileChange($event)"
                     style="display: none;">
-                  <button 
-                    nz-button 
-                    nzType="dashed"
-                    nzBlock
-                    (click)="attachmentInput.click()">
-                    <nz-icon nzType="upload"></nz-icon>
-                    <span>{{ 'bulk_import.step3.select_attachments' | translate }}</span>
-                  </button>
+                  <nz-space nzDirection="vertical" nzSize="small" style="width: 100%;">
+                    <button 
+                      *nzSpaceItem
+                      nz-button 
+                      nzType="dashed"
+                      nzBlock
+                      (click)="attachmentInput.click()">
+                      <nz-icon nzType="upload"></nz-icon>
+                      <span>{{ attachmentFiles().length === 0 ? ('bulk_import.step3.select_attachments' | translate) : ('bulk_import.step3.upload_more' | translate) }}</span>
+                    </button>
+                    <ng-container *nzSpaceItem>
+                      <div *ngIf="attachmentFiles().length > 0">
+                        <nz-space nzSize="small" style="width: 100%;">
+                          <button 
+                            *nzSpaceItem
+                            nz-button 
+                            nzType="default"
+                            nzSize="small"
+                            (click)="fixAllNames()">
+                            <nz-icon nzType="edit"></nz-icon>
+                            <span>{{ 'bulk_import.step3.fix_all_names' | translate }}</span>
+                          </button>
+                          <button 
+                            *nzSpaceItem
+                            nz-button 
+                            nzType="default"
+                            nzSize="small"
+                            nzDanger
+                            (click)="clearAllFiles()">
+                            <nz-icon nzType="delete"></nz-icon>
+                            <span>{{ 'bulk_import.step3.clear_all' | translate }}</span>
+                          </button>
+                        </nz-space>
+                      </div>
+                    </ng-container>
+                  </nz-space>
                 </nz-form-control>
               </nz-form-item>
             </div>
@@ -452,6 +490,7 @@ import { Company } from '../../core/models/company.model';
               [nzShowPagination]="attachmentFiles().length > 10">
               <thead>
                 <tr>
+                  <th width="40px">{{ 'bulk_import.step3.order' | translate }}</th>
                   <th>{{ 'bulk_import.step3.filename' | translate }}</th>
                   <th>{{ 'bulk_import.step3.size' | translate }}</th>
                   <th>{{ 'bulk_import.step3.linked_to' | translate }}</th>
@@ -460,7 +499,17 @@ import { Company } from '../../core/models/company.model';
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let file of attachmentFiles(); let i = index">
+                <tr *ngFor="let file of attachmentFiles(); let i = index" 
+                    class="draggable-row"
+                    draggable="true"
+                    (dragstart)="onDragStart($event, i)"
+                    (dragover)="onDragOver($event)"
+                    (drop)="onDrop($event, i)"
+                    [class.drag-over]="dragOverIndex === i">
+                  <td class="drag-handle">
+                    <nz-icon nzType="drag" style="cursor: move; color: #999;"></nz-icon>
+                    <span class="row-number">{{ i + 1 }}</span>
+                  </td>
                   <td>{{ file.name }}</td>
                   <td>{{ formatFileSize(file.size) }}</td>
                   <td>
@@ -476,15 +525,46 @@ import { Company } from '../../core/models/company.model';
                     </nz-tag>
                   </td>
                   <td>
-                    <button 
-                      nz-button 
-                      nzType="link" 
-                      nzSize="small"
-                      nzDanger
-                      (click)="removeAttachment(i)">
-                      <nz-icon nzType="delete"></nz-icon>
-                      <span>{{ 'bulk_import.step3.remove' | translate }}</span>
-                    </button>
+                    <nz-space nzSize="small">
+                      <button 
+                        *nzSpaceItem
+                        nz-button 
+                        nzType="link" 
+                        nzSize="small"
+                        [disabled]="i === 0"
+                        (click)="moveFileUp(i)">
+                        <nz-icon nzType="arrow-up"></nz-icon>
+                      </button>
+                      <button 
+                        *nzSpaceItem
+                        nz-button 
+                        nzType="link" 
+                        nzSize="small"
+                        [disabled]="i === attachmentFiles().length - 1"
+                        (click)="moveFileDown(i)">
+                        <nz-icon nzType="arrow-down"></nz-icon>
+                      </button>
+                      <button 
+                        *nzSpaceItem
+                        nz-button 
+                        nzType="link" 
+                        nzSize="small"
+                        [disabled]="getAttachmentLinkInfo(file.name).valid"
+                        (click)="suggestRename(file, i)">
+                        <nz-icon nzType="edit"></nz-icon>
+                        <span>{{ 'bulk_import.step3.suggest_rename' | translate }}</span>
+                      </button>
+                      <button 
+                        *nzSpaceItem
+                        nz-button 
+                        nzType="link" 
+                        nzSize="small"
+                        nzDanger
+                        (click)="removeAttachment(i)">
+                        <nz-icon nzType="delete"></nz-icon>
+                        <span>{{ 'bulk_import.step3.remove' | translate }}</span>
+                      </button>
+                    </nz-space>
                   </td>
                 </tr>
               </tbody>
@@ -1041,6 +1121,50 @@ import { Company } from '../../core/models/company.model';
         padding: 24px 16px;
       }
     }
+
+    /* Drag and drop styles */
+    .draggable-row {
+      transition: background-color 0.2s ease;
+    }
+
+    .draggable-row:hover {
+      background-color: #f5f5f5;
+    }
+
+    .draggable-row.drag-over {
+      background-color: #e6f7ff;
+      border: 2px dashed #1890ff;
+    }
+
+    .drag-handle {
+      text-align: center;
+      cursor: move;
+      user-select: none;
+    }
+
+    .row-number {
+      margin-left: 8px;
+      font-weight: 500;
+      color: #666;
+    }
+
+    .strategy-examples {
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: #f0f8ff;
+      border-radius: 4px;
+      border-left: 3px solid #1890ff;
+    }
+
+    .strategy-examples code {
+      background: #fff;
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin: 0 4px;
+      font-size: 12px;
+      color: #1890ff;
+      border: 1px solid #d9d9d9;
+    }
   `],
   providers: [NzMessageService]
 })
@@ -1056,6 +1180,7 @@ export class DocumentBulkImportPageComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private message = inject(NzMessageService);
+  private modal = inject(NzModalService);
 
   // Signals
   currentStep = signal(0);
@@ -1072,6 +1197,10 @@ export class DocumentBulkImportPageComponent implements OnInit {
   attachmentFiles = signal<File[]>([]);
   attachmentFileList = signal<NzUploadFile[]>([]);
   parsedAttachments = signal<BulkAttachmentDto[]>([]);
+  
+  // Drag and drop state
+  draggedIndex: number | null = null;
+  dragOverIndex: number | null = null;
   
   // Multi-company support
   selectedCompanies = signal<number[]>([]);
@@ -1742,5 +1871,158 @@ export class DocumentBulkImportPageComponent implements OnInit {
 
   getCreatedCountMessage(count: number): string {
     return this.translateService.instant('bulk_import.step4.created_count', { 0: count });
+  }
+
+  // File management methods
+  clearAllFiles(): void {
+    this.modal.confirm({
+      nzTitle: this.translateService.instant('bulk_import.step3.clear_all_files_title'),
+      nzContent: this.translateService.instant('bulk_import.step3.clear_all_files_content'),
+      nzOkText: this.translateService.instant('common.confirm'),
+      nzCancelText: this.translateService.instant('common.cancel'),
+      nzOkDanger: true,
+      nzOnOk: () => {
+        this.attachmentFiles.set([]);
+        this.message.success(this.translateService.instant('bulk_import.step3.all_files_cleared'));
+      }
+    });
+  }
+
+  fixAllNames(): void {
+    const strategy = this.importOptionsForm.get('attachmentLinkingStrategy')?.value || 'ROW_PREFIX';
+    const currentFiles = this.attachmentFiles();
+    
+    if (currentFiles.length === 0) return;
+
+    this.modal.confirm({
+      nzTitle: this.translateService.instant('bulk_import.step3.fix_all_names_title'),
+      nzContent: this.translateService.instant('bulk_import.step3.fix_all_names_content', { 
+        strategy: strategy === 'ROW_PREFIX' ? 'ROW1_, ROW2_, ROW3_...' : 'DOC001_, DOC002_, DOC003_...'
+      }),
+      nzOkText: this.translateService.instant('bulk_import.step3.fix_all'),
+      nzCancelText: this.translateService.instant('common.cancel'),
+      nzOnOk: () => {
+        const renamedFiles = currentFiles.map((file, index) => {
+          let newName = '';
+          const extension = file.name.split('.').pop();
+          const baseName = file.name.replace(/\.[^/.]+$/, '').replace(/^(ROW\d+_|[A-Z0-9]+_)/, '');
+          
+          if (strategy === 'ROW_PREFIX') {
+            newName = `ROW${index + 1}_${baseName}.${extension}`;
+          } else if (strategy === 'RESOURCE_CODE') {
+            newName = `DOC${(index + 1).toString().padStart(3, '0')}_${baseName}.${extension}`;
+          }
+          
+          return new File([file], newName, { type: file.type });
+        });
+        
+        this.attachmentFiles.set(renamedFiles);
+        this.message.success(
+          this.translateService.instant('bulk_import.step3.all_files_renamed', { count: renamedFiles.length })
+        );
+      }
+    });
+  }
+
+  // File reordering methods
+  moveFileUp(index: number): void {
+    if (index === 0) return;
+    
+    const currentFiles = this.attachmentFiles();
+    const newFiles = [...currentFiles];
+    [newFiles[index - 1], newFiles[index]] = [newFiles[index], newFiles[index - 1]];
+    this.attachmentFiles.set(newFiles);
+  }
+
+  moveFileDown(index: number): void {
+    const currentFiles = this.attachmentFiles();
+    if (index === currentFiles.length - 1) return;
+    
+    const newFiles = [...currentFiles];
+    [newFiles[index], newFiles[index + 1]] = [newFiles[index + 1], newFiles[index]];
+    this.attachmentFiles.set(newFiles);
+  }
+
+  // Drag and drop methods
+  onDragStart(event: DragEvent, index: number): void {
+    this.draggedIndex = index;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/html', '');
+    }
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  onDrop(event: DragEvent, dropIndex: number): void {
+    event.preventDefault();
+    
+    if (this.draggedIndex === null || this.draggedIndex === dropIndex) {
+      this.draggedIndex = null;
+      this.dragOverIndex = null;
+      return;
+    }
+
+    const currentFiles = this.attachmentFiles();
+    const newFiles = [...currentFiles];
+    const draggedFile = newFiles[this.draggedIndex];
+    
+    // Remove the dragged file
+    newFiles.splice(this.draggedIndex, 1);
+    
+    // Insert at new position
+    const insertIndex = this.draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+    newFiles.splice(insertIndex, 0, draggedFile);
+    
+    this.attachmentFiles.set(newFiles);
+    this.draggedIndex = null;
+    this.dragOverIndex = null;
+    
+    this.message.success(this.translateService.instant('bulk_import.step3.file_reordered'));
+  }
+
+  suggestRename(file: File, index: number): void {
+    const strategy = this.importOptionsForm.get('attachmentLinkingStrategy')?.value || 'ROW_PREFIX';
+    let suggestedName = '';
+    
+    if (strategy === 'ROW_PREFIX') {
+      // Suggest ROW1_, ROW2_, etc. based on index
+      const rowNumber = index + 1;
+      const extension = file.name.split('.').pop();
+      const baseName = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
+      suggestedName = `ROW${rowNumber}_${baseName}.${extension}`;
+    } else if (strategy === 'RESOURCE_CODE') {
+      // Suggest using a generic code
+      const extension = file.name.split('.').pop();
+      const baseName = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
+      suggestedName = `DOC${(index + 1).toString().padStart(3, '0')}_${baseName}.${extension}`;
+    }
+    
+    this.modal.confirm({
+      nzTitle: this.translateService.instant('bulk_import.step3.rename_suggestion_title'),
+      nzContent: this.translateService.instant('bulk_import.step3.rename_suggestion_content', { 
+        original: file.name, 
+        suggested: suggestedName 
+      }),
+      nzOkText: this.translateService.instant('bulk_import.step3.use_suggested'),
+      nzCancelText: this.translateService.instant('common.cancel'),
+      nzOnOk: () => {
+        // Create a new File object with the suggested name
+        const newFile = new File([file], suggestedName, { type: file.type });
+        const currentFiles = this.attachmentFiles();
+        const updatedFiles = [...currentFiles];
+        updatedFiles[index] = newFile;
+        this.attachmentFiles.set(updatedFiles);
+        
+        this.message.success(
+          this.translateService.instant('bulk_import.step3.file_renamed', { name: suggestedName })
+        );
+      }
+    });
   }
 } 
